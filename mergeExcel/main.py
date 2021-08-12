@@ -12,19 +12,15 @@ def get_files(path):
             fs.append(os.path.join(root, file))
     return fs
 
-# 合并文件
-
 
 def merge():
     files = get_files('F:\other\excel')
     arr = []
     for i in files:
         arr.append(pd.read_excel(i, skiprows=4))
-    writer = pd.ExcelWriter('F:\other\excel\merge.xlsx')
+    writer = pd.ExcelWriter('F:\other\merge.xlsx')
     pd.concat(arr).to_excel(writer, 'Sheet1', index=False)
     writer.save()
-
-# 弹出完成框
 
 
 def alert():
@@ -33,7 +29,7 @@ def alert():
     # 设置标题
     myWindow.title('完毕！')
     # 设置窗口大小
-    myWindow.geometry('380x300')
+    myWindow.geometry('300x200')
     tkinter.Label(myWindow, text="OK, Success!").pack()
     # 进入消息循环
     myWindow.mainloop()
