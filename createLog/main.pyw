@@ -158,7 +158,7 @@ class LOG_GUI():
     def change_col_type(self, sheet1Table):
         try:
             cn = pyodbc.connect(
-                'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
+                'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
             cn.autocommit = True
             cr = cn.cursor()
             # 执行存储过程，创建sheet2子表
@@ -173,7 +173,7 @@ class LOG_GUI():
     def option_col(self, table_name, new_col_name, new_col_type, option_variable, old_col_name):
         try:
             cn = pyodbc.connect(
-                'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
+                'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
             cn.autocommit = True
             cr = cn.cursor()
             # 执行存储过程，创建log相关表
@@ -188,7 +188,7 @@ class LOG_GUI():
     def create_log(self, main_table, sub_table, poid):
         try:
             cn = pyodbc.connect(
-                'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
+                'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
             cn.autocommit = True
             cr = cn.cursor()
             # 检测是否存在数据库
