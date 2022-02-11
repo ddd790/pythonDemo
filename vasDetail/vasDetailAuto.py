@@ -4,6 +4,7 @@ import re
 import pandas as pd
 import pyodbc
 import datetime
+import numpy as np
 from tkinter import *
 
 
@@ -15,6 +16,9 @@ class VAS_GUI():
         self.get_files()
 
     def get_files(self):
+        # 追加的dataFrame的title
+        self.add_data_title = ['PO', 'Item', 'Material', 'ItemSum',
+                               'Sumxxl', 'Sum48', 'Sum44', 'HG', 'PU', 'SZ']
         networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\F21'
         self.local_vas_detail_file = 'd:\excelVasDetailFile'
         # 删除目录内文件
@@ -36,8 +40,11 @@ class VAS_GUI():
             for lfile in lfiles:
                 self.read_excel(os.path.join(lroot, lfile))
 
+        # 根据priceList表 查询item中包含【/】的数据，并将item进行合计
+        self.get_price_list_data()
         # 更新数据库
         self.update_db()
+
         print('已经完成计算操作！')
 
     def compare_xls_file(self):
@@ -117,28 +124,35 @@ class VAS_GUI():
             itemValMap[itemVal] = hgValList
             if styleType == 0:
                 # 上装尺码是>=48 or 尺码！=S,M,L,XL
-                if (self.is_number(tempSizeVal) and int(tempSizeVal) >= 48) or (self.is_number(tempSizeVal) == False and str(sizeVal).strip() not in smallSize):
-                    for itemIndex in range(0, len(dataItem)):
-                        tempVal = int(data.iloc[val, itemIndex]) if type(
-                            data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
-                        filterVal[dataItem[itemIndex]] = tempVal
+                for itemIndex in range(0, len(dataItem)):
+                    tempVal = int(data.iloc[val, itemIndex]) if type(
+                        data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
+                    filterVal[dataItem[itemIndex]] = tempVal
+                    if (self.is_number(tempSizeVal) and int(tempSizeVal) >= 48) or (self.is_number(tempSizeVal) == False and str(sizeVal).strip() not in smallSize):
+                        print('over 48')
+                    else:
+                        filterVal['Quantity'] = 0
                     filterVal['HG'] = '\\'.join(itemValMap[itemVal])
-                    filterData.append(filterVal)
+                filterData.append(filterVal)
+
             elif styleType == 1:
                 # 裤子尺码是>=44
-                if self.is_number(tempSizeVal) and int(tempSizeVal) >= 44:
-                    for itemIndex in range(0, len(dataItem)):
-                        tempVal = int(data.iloc[val, itemIndex]) if type(
-                            data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
-                        filterVal[dataItem[itemIndex]] = tempVal
+                for itemIndex in range(0, len(dataItem)):
+                    tempVal = int(data.iloc[val, itemIndex]) if type(
+                        data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
+                    filterVal[dataItem[itemIndex]] = tempVal
+                    if self.is_number(tempSizeVal) and int(tempSizeVal) >= 44:
+                        print('over 44')
+                    else:
+                        filterVal['Quantity'] = 0
                     filterVal['HG'] = '\\'.join(itemValMap[itemVal])
-                    filterData.append(filterVal)
+                filterData.append(filterVal)
 
         if len(filterData) <= 0:
             return
         # 循环筛选后的结果,item相同的，进行itemSum的计算
-        sumTitle = ['PO', 'Item', 'Material', 'ItemSum',
-                    'Sumxxl', 'Sum48', 'Sum44', 'HG', 'PU', 'SZ', 'Grid Value']
+        sumTitle = ['PO', 'Item', 'Material', 'ItemSum', 'Sumxxl',
+                    'Sum48', 'Sum44', 'HG', 'PU', 'SZ', 'Grid Value']
         po = filterData[0][dataItem[0]]
         item = filterData[0][dataItem[1]]
         material = filterData[0][dataItem[2]]
@@ -322,6 +336,123 @@ class VAS_GUI():
                 return 0
         except:
             return 2
+
+    # 查询一部报关走货计划_明细数据
+    def select_db_price_info(self):
+        cn = pyodbc.connect(
+            'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
+        # 查询目前的【一部报关走货计划_明细】表的记录
+        searchSql = "select 订单PO号, 款式缩写, 面料, ITEM from 一部报关走货计划_明细 WHERE ITEM LIKE '%/%'"
+        cn.autocommit = True
+        cr = cn.cursor()
+        cr.execute(searchSql)
+        self.priceListData = cr.fetchall()
+        cr.close()
+        cn.close()
+
+    # 根据【一部报关走货计划_明细】数据，查询出item中满足条件的数据（满足条件格式为：反斜线分割数字，【数字/数字/数字】）
+    def get_price_list_data(self):
+        # 查询priceList数据
+        self.select_db_price_info()
+        # priceList的列
+        self.price_list_data = pd.DataFrame(columns=self.add_data_title)
+        # 重复列表
+        price_list_same_array = []
+        # 追加满足条件格式的数据
+        for po, style, ma, item in self.priceListData:
+            temp_same_key = str(po) + '-' + str(style) + \
+                '-' + str(ma) + '-' + str(item)
+            if temp_same_key in price_list_same_array:
+                continue
+            price_list_same_array.append(temp_same_key)
+            # 是否满足条件flag
+            temp_item_flag = True
+            temp_item_list = str(item).split('/')
+            for temp_item in temp_item_list:
+                # 如果不是数字，跳出循环
+                if not self.is_number(temp_item):
+                    temp_item_flag = False
+                    break
+            # 满足条件的数据，放到dataFrame中
+            if temp_item_flag:
+                temp_data_list = {self.add_data_title[0]: po, self.add_data_title[1]: item,
+                                  self.add_data_title[2]: str(style)+'-'+str(ma), self.add_data_title[3]: 0,
+                                  self.add_data_title[4]: 0, self.add_data_title[5]: 0, self.add_data_title[6]: 0,
+                                  self.add_data_title[7]: '', self.add_data_title[8]: '', self.add_data_title[9]: ''}
+                self.price_list_data = self.price_list_data.append(
+                    temp_data_list, ignore_index=True)
+        # 计算满足条件item的itemSum
+        self.compute_item_val()
+
+    # 计算满足条件item的itemSum
+    def compute_item_val(self):
+        temp_item_dic = {}
+        temp_hg_dic = {}
+        temp_pu_dic = {}
+        temp_sz_dic = {}
+        temp_hg_arr = []
+        temp_pu_arr = []
+        temp_sz_arr = []
+        for temp_table_val in self.table_value:
+            for index, row in self.price_list_data.iterrows():
+                temp_item_list = str(row['Item']).split('/')
+                # Sumxxl, Sum48, Sum44赋值
+                if row['PO'] == temp_table_val[0] and row['Material'] == temp_table_val[2]:
+                    row['Sumxxl'] = temp_table_val[4]
+                    row['Sum48'] = temp_table_val[5]
+                    row['Sum44'] = temp_table_val[6]
+                    # ItemSum进行相加
+                    if str(temp_table_val[1]) in temp_item_list:
+                        temp_item_key = row['PO'] + '-' + \
+                            row['Material'] + '-' + row['Item']
+                        if temp_item_key in temp_item_dic.keys():
+                            temp_item_dic[temp_item_key] = sum(
+                                (temp_item_dic[temp_item_key], temp_table_val[3]))
+                            temp_hg_arr = str(
+                                temp_hg_dic[temp_item_key]).split('/')
+                            temp_pu_arr = str(
+                                temp_pu_dic[temp_item_key]).split('/')
+                            temp_sz_arr = str(
+                                temp_sz_dic[temp_item_key]).split('/')
+                        else:
+                            temp_item_dic[temp_item_key] = int(
+                                temp_table_val[3])
+                            temp_hg_arr = []
+                            temp_pu_arr = []
+                            temp_sz_arr = []
+                        # ItemSum赋值
+                        row['ItemSum'] = temp_item_dic[temp_item_key]
+                        # hg赋值
+                        if str(temp_table_val[7]).strip() != '':
+                            temp_hg_arr.append(temp_table_val[7])
+                        temp_hg_dic[temp_item_key] = '/'.join(
+                            list(set(temp_hg_arr)))
+                        row['HG'] = self.cut_first_str(
+                            temp_hg_dic[temp_item_key])
+                        # pu赋值
+                        if str(temp_table_val[8]).strip() != '':
+                            temp_pu_arr.append(temp_table_val[8])
+                        temp_pu_dic[temp_item_key] = '/'.join(
+                            list(set(temp_pu_arr)))
+                        row['PU'] = self.cut_first_str(
+                            temp_pu_dic[temp_item_key])
+                        # sz赋值
+                        if str(temp_table_val[9]).strip() != '':
+                            temp_sz_arr.append(temp_table_val[9])
+                        temp_sz_dic[temp_item_key] = '/'.join(
+                            list(set(temp_sz_arr)))
+                        row['SZ'] = self.cut_first_str(
+                            temp_sz_dic[temp_item_key])
+        # 追加整理好的数据
+        self.table_value = np.vstack(
+            (self.table_value, self.price_list_data.values))
+
+    # 去掉第一个【/】
+    def cut_first_str(self, str_val):
+        if str(str_val).strip() != '' and str(str_val)[0] == '/':
+            res_str = str(str_val).replace(str(str_val)[0], '')
+            return res_str
+        return str_val
 
     def is_number(self, s):
         try:

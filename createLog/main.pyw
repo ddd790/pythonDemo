@@ -64,21 +64,29 @@ class LOG_GUI():
         self.commit_button.grid(row=6, column=2)
 
     def log_form_frame(self, logFrame):
+        # 项目列表
+        self.log_department_type = ["只建子表", "主表子表都建LOG"]
+        # radiobox
+        self.radio_val = IntVar()
+        self.type_radio_1 = Radiobutton(
+            logFrame, text=self.log_department_type[0], variable=self.radio_val, value=0).grid(sticky=W, row=1, column=1)
+        self.type_radio_2 = Radiobutton(
+            logFrame, text=self.log_department_type[1], variable=self.radio_val, value=1).grid(sticky=W, row=1, column=2)
         # 标签
         self.main_table_label = Label(logFrame, text="主表名：")
-        self.main_table_label.grid(row=1, column=1)
+        self.main_table_label.grid(row=2, column=1)
         self.sub_table_label = Label(logFrame, text="子表名：")
-        self.sub_table_label.grid(row=2, column=1)
+        self.sub_table_label.grid(row=3, column=1)
         self.poid_label = Label(logFrame, text="POID列：")
-        self.poid_label.grid(row=3, column=1)
+        self.poid_label.grid(row=4, column=1)
 
         # 录入框
         self.main_table_text = Text(logFrame, width=20, height=1)
-        self.main_table_text.grid(row=1, column=2)  # 主表名数据录入框
+        self.main_table_text.grid(row=2, column=2)  # 主表名数据录入框
         self.sub_table_text = Text(logFrame, width=20, height=1)
-        self.sub_table_text.grid(row=2, column=2)  # 子表名数据录入框
+        self.sub_table_text.grid(row=3, column=2)  # 子表名数据录入框
         self.poid_text = Text(logFrame, width=20, height=1)
-        self.poid_text.grid(row=3, column=2)  # poid录入框
+        self.poid_text.grid(row=4, column=2)  # poid录入框
 
         self.poid_label = Label(logFrame, text="※POID可以不填，默认是【自动编号】")
         self.poid_label.grid(row=4, column=2)
@@ -199,41 +207,73 @@ class LOG_GUI():
             cr.execute("exec createLogTable '" +
                        main_table + "','" + sub_table + "'")
             # 创建触发器
-            trigger_sql = """CREATE TRIGGER """ + sub_table + """_after_insert
-                        on """ + sub_table + """
-                        after insert
-                        AS
-                        BEGIN
-                            DECLARE @ExcelServerRCID nvarchar(1000);
-                            DECLARE @POID nvarchar(500);
-                            SELECT @POID = """ + poid + """, @ExcelServerRCID = ExcelServerRCID from Inserted;
-                            DECLARE @optionType nvarchar(6);
-                            DECLARE @optionName nvarchar(500);
-                            SELECT @optionName=操作人 from """ + main_table + """ where ExcelServerRCID = @ExcelServerRCID;
-                            DECLARE @logNumber INT;
-                            SELECT @logNumber = COUNT(*) FROM """ + sub_table + """_old_log where """ + poid + """ = @POID;
-                            IF (@logNumber = 0)
-                                BEGIN
-                                    set @optionType = 'insert';
-                                    insert into """ + sub_table + """_old_log SELECT * from inserted where ExcelServerRCID = @ExcelServerRCID;
-                                    insert into """ + sub_table + """_Log SELECT *, @optionType AS 操作类型, GETDATE() AS 操作时间, @optionName AS 操作用户 from inserted where ExcelServerRCID = @ExcelServerRCID;
-                                END
-                            ELSE
-                                BEGIN
-                                    DECLARE @diffFlag INT;
-                                    SELECT @diffFlag = COUNT(*) FROM (select * from """ + sub_table + """_old_log where ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID EXCEPT select * from inserted where ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID) as T;
-                                    IF (@diffFlag = 1)
-                                        BEGIN
-                                            set @optionType = 'update';
-                                            INSERT INTO """ + sub_table + """_Log SELECT *, @optionType AS 操作类型, GETDATE() AS 操作时间, @optionName AS 操作用户 from inserted WHERE ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID;
-                                        END
-                                    DELETE FROM """ + sub_table + """_old_log WHERE ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID;
-                                    insert into """ + sub_table + """_old_log SELECT * from inserted;
-                                END
-                        END"""
+            trigger_sql = self.create_trigger_sql(
+                poid, main_table, sub_table, 0)
             cr.execute(trigger_sql)
             # 创建【删除日志存储过程】
-            del_proc_sql = """create proc """ + sub_table + """_Del_Log
+            del_proc_sql = self.create_del_proc_sql(poid, sub_table)
+            cr.execute(del_proc_sql)
+            # 如果是2部，则主表也生成log
+            if self.radio_val.get() == 1:
+                cr.execute("exec createMainLogTable '" +
+                           main_table + "','" + sub_table + "'")
+                trigger_sql = self.create_trigger_sql(
+                    poid, main_table, sub_table, 1)
+                cr.execute(trigger_sql)
+                del_proc_sql = self.create_del_proc_sql(poid, main_table)
+                cr.execute(del_proc_sql)
+            cr.close()
+            cn.close()
+            copyTxt = "exec " + sub_table + "_Del_Log;"
+            if self.radio_val.get() == 1:
+                copyTxt += "\n exec " + main_table + "_Del_Log;"
+            pyperclip.copy(copyTxt)
+            tmessage.showinfo('创建成功', '将【exec ' + sub_table +
+                              '_Del_Log;】加入到【insertDelLog】存储过程中，并保存！\n（命令已经复制到剪贴板，直接粘贴到对应的位置即可！）')
+        except:
+            tmessage.showerror('错误', '人生苦短,数据库出错了,请稍后操作！')
+
+    def create_trigger_sql(self, poid, main_table, sub_table, redio_flag):
+        insert_flag = 'insert'
+        if redio_flag == 1:
+            sub_table = main_table
+            insert_flag = 'insert,update'
+        trigger_sql = """CREATE TRIGGER """ + sub_table + """_after_insert
+                    on """ + sub_table + """
+                    after """ + insert_flag + """
+                    AS
+                    BEGIN
+                        DECLARE @ExcelServerRCID nvarchar(1000);
+                        DECLARE @POID nvarchar(500);
+                        SELECT @POID = """ + poid + """, @ExcelServerRCID = ExcelServerRCID from Inserted;
+                        DECLARE @optionType nvarchar(6);
+                        DECLARE @optionName nvarchar(500);
+                        SELECT @optionName=操作人 from """ + main_table + """ where ExcelServerRCID = @ExcelServerRCID;
+                        DECLARE @logNumber INT;
+                        SELECT @logNumber = COUNT(*) FROM """ + sub_table + """_old_log where """ + poid + """ = @POID;
+                        IF (@logNumber = 0)
+                            BEGIN
+                                set @optionType = 'insert';
+                                insert into """ + sub_table + """_old_log SELECT * from inserted where ExcelServerRCID = @ExcelServerRCID;
+                                insert into """ + sub_table + """_Log SELECT *, @optionType AS 操作类型, GETDATE() AS 操作时间, @optionName AS 操作用户 from inserted where ExcelServerRCID = @ExcelServerRCID;
+                            END
+                        ELSE
+                            BEGIN
+                                DECLARE @diffFlag INT;
+                                SELECT @diffFlag = COUNT(*) FROM (select * from """ + sub_table + """_old_log where ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID EXCEPT select * from inserted where ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID) as T;
+                                IF (@diffFlag = 1)
+                                    BEGIN
+                                        set @optionType = 'update';
+                                        INSERT INTO """ + sub_table + """_Log SELECT *, @optionType AS 操作类型, GETDATE() AS 操作时间, @optionName AS 操作用户 from inserted WHERE ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID;
+                                    END
+                                DELETE FROM """ + sub_table + """_old_log WHERE ExcelServerRCID = @ExcelServerRCID AND """ + poid + """ = @POID;
+                                insert into """ + sub_table + """_old_log SELECT * from inserted;
+                            END
+                    END"""
+        return trigger_sql
+
+    def create_del_proc_sql(self, poid, sub_table):
+        del_proc_sql = """create proc """ + sub_table + """_Del_Log
                         as
                         BEGIN
                         DECLARE @logNumber INT;
@@ -266,14 +306,7 @@ class LOG_GUI():
                                     DROP TABLE #temp1;
                             END
                         END"""
-            cr.execute(del_proc_sql)
-            cr.close()
-            cn.close()
-            pyperclip.copy("exec " + sub_table + "_Del_Log;")
-            tmessage.showinfo('创建成功', '将【exec ' + sub_table +
-                              '_Del_Log;】加入到【insertDelLog】存储过程中，并保存！\n（命令已经复制到剪贴板，直接粘贴到对应的位置即可！）')
-        except:
-            tmessage.showerror('错误', '人生苦短,数据库出错了,请稍后操作！')
+        return del_proc_sql
 
 
 def gui_start():

@@ -21,14 +21,48 @@ class VAS_GUI():
         self.init_window_name.geometry('600x300')
         # tab页
         tab = ttk.Notebook(self.init_window_name, height=300, width=580)
-        # VasDetail大码合成
+        # VasDetail大码
         vasDeatilFrame = Frame(tab)
         self.vas_form_frame(vasDeatilFrame)
-        tab.add(vasDeatilFrame, text="VasDetail大码合成")
+        tab.add(vasDeatilFrame, text="VasDetail大码计算")
+        # 追加item组合
+        # vasAddItemFrame = Frame(tab)
+        # self.vas_add_item_frame(vasAddItemFrame)
+        # tab.add(vasDeatilFrame, text="追加item组合")
         tab.pack()
 
+    # def vas_add_item_frame(self, vasDeatilFrame):
+    #     # 项目列表
+    #     self.vas_detail_type = ["上衣/套装", "裤子"]
+    #     # 标签
+    #     self.type_label = Label(vasDeatilFrame, text="表格类型：")
+    #     self.type_label.grid(sticky=W, row=1, column=1)
+
+    #     # radiobox
+    #     self.radio_val = IntVar()
+    #     self.type_radio_1 = Radiobutton(
+    #         vasDeatilFrame, text=self.vas_detail_type[0], variable=self.radio_val, value=0).grid(sticky=W, row=2, column=1)
+    #     self.type_radio_2 = Radiobutton(
+    #         vasDeatilFrame, text=self.vas_detail_type[1], variable=self.radio_val, value=1).grid(sticky=W, row=2, column=2)
+
+    #     # open file
+    #     self.open_file = Button(vasDeatilFrame, text="选择vars_detail文件夹",
+    #                             bg="lightblue", width=18, command=self.open_file)
+    #     self.open_file.grid(sticky=W, row=4, column=1)
+
+    #     # 按钮
+    #     self.commit_button = Button(vasDeatilFrame, text="点击计算大码",
+    #                                 bg="lightblue", width=18, command=self.commit_form)
+    #     self.commit_button.grid(sticky=W, row=4, column=2)
+
+    #     # 显示文字框
+    #     self.file_show_label = Label(
+    #         vasDeatilFrame, text="", wraplength=200)
+    #     self.file_show_label.grid(
+    #         sticky=W, row=5, column=1, columnspan=10)
+
     def vas_form_frame(self, vasDeatilFrame):
-        # 运动项目列表
+        # 项目列表
         self.vas_detail_type = ["上衣/套装", "裤子"]
         # 标签
         self.type_label = Label(vasDeatilFrame, text="表格类型：")
@@ -161,23 +195,28 @@ class VAS_GUI():
             itemValMap[itemVal] = hgValList
             if self.radio_val.get() == 0:
                 # 上装尺码是>=48 or 尺码！=S,M,L,XL
-                if (self.is_number(tempSizeVal) and int(tempSizeVal) >= 48) or (self.is_number(tempSizeVal) == False and str(sizeVal).strip() not in smallSize):
-                    for itemIndex in range(0, len(dataItem)):
-                        tempVal = int(data.iloc[val, itemIndex]) if type(
-                            data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
-                        filterVal[dataItem[itemIndex]] = tempVal
+                for itemIndex in range(0, len(dataItem)):
+                    tempVal = int(data.iloc[val, itemIndex]) if type(
+                        data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
+                    filterVal[dataItem[itemIndex]] = tempVal
+                    if (self.is_number(tempSizeVal) and int(tempSizeVal) >= 48) or (self.is_number(tempSizeVal) == False and str(sizeVal).strip() not in smallSize):
+                        print('over 48')
+                    else:
+                        filterVal['Quantity'] = 0
                     filterVal['HG'] = '\\'.join(itemValMap[itemVal])
-                    filterData.append(filterVal)
+                filterData.append(filterVal)
             else:
                 # 裤子尺码是>=44
-                if self.is_number(tempSizeVal) and int(tempSizeVal) >= 44:
-                    filterVal = {}
-                    for itemIndex in range(0, len(dataItem)):
-                        tempVal = int(data.iloc[val, itemIndex]) if type(
-                            data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
-                        filterVal[dataItem[itemIndex]] = tempVal
+                for itemIndex in range(0, len(dataItem)):
+                    tempVal = int(data.iloc[val, itemIndex]) if type(
+                        data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
+                    filterVal[dataItem[itemIndex]] = tempVal
+                    if self.is_number(tempSizeVal) and int(tempSizeVal) >= 44:
+                        print('over 44')
+                    else:
+                        filterVal['Quantity'] = 0
                     filterVal['HG'] = '\\'.join(itemValMap[itemVal])
-                    filterData.append(filterVal)
+                filterData.append(filterVal)
 
         if len(filterData) <= 0:
             return
