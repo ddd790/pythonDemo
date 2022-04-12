@@ -89,12 +89,12 @@ class LOG_GUI():
         self.poid_text.grid(row=4, column=2)  # poid录入框
 
         self.poid_label = Label(logFrame, text="※POID可以不填，默认是【自动编号】")
-        self.poid_label.grid(row=4, column=2)
+        self.poid_label.grid(row=5, column=2)
 
         # 按钮
         self.commit_button = Button(logFrame, text="生成log表",
                                     bg="lightblue", width=10, command=self.commit_form)
-        self.commit_button.grid(row=5, column=2)
+        self.commit_button.grid(row=6, column=2)
 
     def col_type_form_frame(self, typeFrame):
         # 标签

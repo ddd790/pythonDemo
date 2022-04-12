@@ -15,13 +15,13 @@ class VAS_GUI():
         self.add_data_title = ['version', '订单PO号', '款式缩写', '面料', '英文品名', '辅料表面料描述', '是否半里子', '前身里代号', '前身里料品色号', '袖里代号', '袖里料品色号',
                                '后袖笼拼接料代码', '后袖笼拼接料品色号', '第三种里料代码', '第三种里料品色号', '扣代号', '国外扣供应商品号色号', '内扣或两种以上扣代号', '内扣或两种以上扣型号',
                                '内部辅料档', '胸衬', '领呢', '领座', '上衣口袋布成份', '肩垫', '袖笼条', '防抻条', '第二种以上小面料', '特殊用料', '订单COMMENTS', '钎子', '拉链', '裤膝',
-                               '裤子兜布', '腰里代码', '腰里明细', '腰衬', '腰面夹牙腰面包条', '马甲前身里', '马甲后背里', '马甲后背面']
+                               '裤子兜布', '腰里代码', '腰里明细', '腰衬', '腰面夹牙腰面包条', '马甲前身里', '马甲后背里', '马甲后背面', '三角牌扣', '三角牌扣供应商品号色号']
         # 特殊用料的排除列
         self.spe_data = ['前身里料品色号', '袖里料品色号', '后袖笼拼接料品色号',
                          '第三种里料品色号', '国外扣供应商品号色号', '内扣或两种以上扣型号', '上衣口袋布成份']
         # 根据勤哲的key匹配对应trimList中的key和value
         self.trimList_key_to_qizhe_key()
-        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\F21'
+        networked_directory = r'\\192.168.0.6\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
         self.local_vas_detail_file = 'd:\excelTrimListFile'
         # 删除目录内文件
         if os.path.exists(self.local_vas_detail_file):
@@ -42,7 +42,7 @@ class VAS_GUI():
             for lfile in lfiles:
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(
                     lfile).split('-')[2].split('.')[0])
-
+        # print(self.table_value)
         # 更新数据库
         self.update_db()
         print('已经完成计算操作！')
@@ -266,22 +266,23 @@ class VAS_GUI():
         trim_list_title_list.append({'CHEST PIECE': 1})
         trim_list_title_list.append({'UNDER COLLAR': 3})
         trim_list_title_list.append({'UNDER COLLAR STAND': 3})
-        trim_list_title_list.append({'COAT POCKETING': 4})
+        trim_list_title_list.append(
+            {'COAT POCKETING': 4, 'COAT POCKETING OUTSIDE': 2})
         trim_list_title_list.append({'SHOULDER PAD': 1})
-        trim_list_title_list.append({'SLEEVE HEAD': 1})
+        trim_list_title_list.append({'SLEEVE HEAD': 2})
         trim_list_title_list.append({'SEAM SLIPPAGE': 1})
         trim_list_title_list.append(
             {'ZROH LAPEL': 1, 'ZROH UPPER POCKET': 1, 'ZROH LOWER POCKET': 1,
              'ZROH LOWER POCKET FACING': 1, 'ZROH BAND': 1, 'TUX SATIN': 1, 'TUX FUSE SATIN': 1})
         trim_list_title_list.append(
             {'INSIDE PATCH': 2, 'INSIDE PIPING': 2, 'OUTSIDE PIPING': 2,
-             'HANGER LOOP': 2, 'PIPING ON FACING': 2})
+             'HANGER LOOP': 2, 'PIPING ON FACING': 2, 'TUX SATIN PANT': 3, 'SPECIAL FEATURE': 1})
         trim_list_title_list.append(
             {'Comments 1': 1, 'Comments 2': 1, 'Comments 3': 1, 'Comments 4': 1})
         trim_list_title_list.append({'VEST BUCKLE': 2})
         trim_list_title_list.append(
             {'ZIPPER': 2, 'ZIP INS BREAST BESOM PKT': 2})
-        trim_list_title_list.append({'PANT LINING': 2})
+        trim_list_title_list.append({'PANT LINING': 3})
         trim_list_title_list.append({'PANT POCKETING': 2})
         trim_list_title_list.append({'WAISTBAND': 1})
         trim_list_title_list.append({'WAISTBAND': 2})
@@ -290,6 +291,8 @@ class VAS_GUI():
         trim_list_title_list.append({'VEST INSIDE FRONT LINING': 2})
         trim_list_title_list.append({'VEST INSIDE BACK LINING': 2})
         trim_list_title_list.append({'VEST IOUTSIDE BACK LINING': 2})
+        trim_list_title_list.append({'LINING TAB BUTTON': 1})
+        trim_list_title_list.append({'LINING TAB BUTTON': 2})
         # 根据勤哲数据库中的字段，进行对照整理。整理形式例：{'钎子':[{'VEST BUCKLE':2},{'ZIP INS BREAST BESOM PKT':2}]}
         self.arrange_qinzhe_key = {}
         for qinIdx in range(len(self.add_data_title)):

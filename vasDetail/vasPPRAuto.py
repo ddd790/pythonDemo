@@ -20,7 +20,7 @@ class VAS_GUI():
                       'PurchasingMethod', 'Vasby', 'VASVendor', 'VASVendorName', 'TrackingNbr', 'RequiredQty', 'RemainingQty', 'Exfactorydate', 'Changedon', 'Cr', 'shippingDate', 'PPRType', 'deleteFlag', 'CreateDate']
 
         # 循环文件，处理合并，并存入数据库
-        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\Ada\VAS-PPR'
+        self.local_vas_detail_file = r'\\192.168.0.6\01-业务一部资料\Ada\VAS-PPR'
         self.df_data = pd.DataFrame(columns=self.dbCol)
 
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
