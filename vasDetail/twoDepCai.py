@@ -1,10 +1,8 @@
 from dataclasses import replace
 import os
-import shutil
 import pandas as pd
 import datetime
 import pymssql
-import numpy as np
 import math
 from tkinter import *
 
@@ -22,7 +20,7 @@ class VAS_GUI():
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title
         self.add_data_title = ['文件名', '品名', 'title',
-                               'value', 'color', 'FinalOrder', 'SheetType']
+                               'value', 'color', 'FinalOrder', 'SheetType', 'fileName', 'shippingDate']
         # 不需要追加的字段
         self.other_str = ['STANDARD', 'TALL', 'nan', 'Standard', 'Tall']
         networked_directory = r'\\192.168.0.6\02-业务二部资料\业务2部\2022大货\SUITSHOP\新郎装原始裁单'
@@ -54,6 +52,8 @@ class VAS_GUI():
         for lroot, ldirs, lfiles in os.walk(self.local_cai_detail_file):
             for lfile in lfiles:
                 print('文件名：' + str(lfile).split('.')[0])
+                if not lfile.__contains__('&'):
+                    print('文件名错误，不包含&和时间')
                 self.fileNameList.append(str(lfile).split('.')[0])
                 df = pd.read_excel(os.path.join(lroot, lfile),
                                    sheet_name=None, nrows=1000, skiprows=[0, 1])
@@ -77,6 +77,9 @@ class VAS_GUI():
         for sheetName in sheetList:
             sheet_title_flag = True
             sheet_title_error_content = []
+            temp_date = fileName.split('&')[1]
+            shippingDate = temp_date[:4] + '-' + temp_date[4:6] + \
+                '-' + temp_date[6:8] + ' 00:00:00.00'
             # sheet页名字中有0的，需要读取3列，其他情况读取2列
             if sheetName.__contains__('0'):
                 for i in range(0, 100, 4):
@@ -117,7 +120,8 @@ class VAS_GUI():
                                     sheet_title_flag = False
                                     sheet_title_error_content.append(i + 3)
                                 temp_dict = {}
-                                temp_dict[self.add_data_title[0]] = fileName
+                                temp_dict[self.add_data_title[0]] = fileName.split('&')[
+                                    0]
                                 temp_dict[self.add_data_title[1]
                                           ] = sheetName[:-1]
                                 temp_dict[self.add_data_title[2]
@@ -130,6 +134,9 @@ class VAS_GUI():
                                           ] = df_three_col[d]
                                 temp_dict[self.add_data_title[6]] = 4 if sheetName.__contains__(
                                     'Tuxedo') else 3
+                                temp_dict[self.add_data_title[7]] = fileName
+                                temp_dict[self.add_data_title[8]
+                                          ] = shippingDate
                                 table_data = table_data.append(
                                     temp_dict, ignore_index=True)
                     except:
@@ -164,7 +171,8 @@ class VAS_GUI():
                                     sheet_title_flag = False
                                     sheet_title_error_content.append(i + 2)
                                 temp_dict = {}
-                                temp_dict[self.add_data_title[0]] = fileName
+                                temp_dict[self.add_data_title[0]] = fileName.split('&')[
+                                    0]
                                 temp_dict[self.add_data_title[1]] = sheetName
                                 temp_dict[self.add_data_title[2]] = title.split('.')[
                                     0].split(':')[0] if 'Unnamed' not in title.split('.')[
@@ -176,6 +184,9 @@ class VAS_GUI():
                                           ] = df_second_col[d]
                                 temp_dict[self.add_data_title[6]] = 2 if sheetName.__contains__(
                                     'Tuxedo') else 1
+                                temp_dict[self.add_data_title[7]] = fileName
+                                temp_dict[self.add_data_title[8]
+                                          ] = shippingDate
                                 table_data = table_data.append(
                                     temp_dict, ignore_index=True)
                     except:
@@ -202,7 +213,7 @@ class VAS_GUI():
         # 组装删除的值
         del_tuple = tuple(self.fileNameList)
         # 删除已经存在的文件
-        delSql = 'delete from D_TwoDepCai where 文件名 = (%s)'
+        delSql = 'delete from D_TwoDepCai where fileName = (%s)'
         cursor.executemany(delSql, del_tuple)
         # 组装插入的值
         insertValue = []
@@ -212,7 +223,7 @@ class VAS_GUI():
         for colVal in dbCol:
             if colVal == 'CreateDate':
                 insertSql += '%s'
-            elif colVal == 'FinalOrder':
+            elif colVal == 'FinalOrder' or colVal == 'SheetType':
                 insertSql += '%d, '
             else:
                 insertSql += '%s, '

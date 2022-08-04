@@ -21,7 +21,7 @@ class VAS_GUI():
         # 数据库名
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title
-        self.add_data_title = ['FileName', 'FileNameJ', 'Version', 'Item', 'PO', 'Material', 'MaterialNo', 'Component', 'FabricNo', 'Qty', 'ZROH',
+        self.add_data_title = ['FileName', 'FileNameJ', 'Version', 'Item', 'PO', 'Material', 'MaterialNo', 'Description', 'Component', 'FabricNo', 'Qty', 'ZROH',
                                'FabricDis', 'ExfactDate', 'ShipDate', 'Season', 'Price', 'Brand', 'District', 'Via', 'Style', 'ContanctPerson', 'Note',
                                'Rmk', 'HSCode']
         # 数字类型的字段
@@ -61,7 +61,6 @@ ________________________________________________________________________________
                         shutil.copy(os.path.join(root, file),
                                     self.local_pdf_detail_file)
         # 保留相同文件中最大的记录
-        # self.compare_pdf_file()
 
         # 查询已存在的记录
         self.select_po_old_value()
@@ -261,6 +260,8 @@ ________________________________________________________________________________
                 # 款号
                 detail_info.append(self.get_value_two_word(
                     temp_info_list[1], None, '-'))
+                # Description
+                detail_info.append(temp_info_list[3].strip())
                 # 成分
                 detail_info.append(self.get_value_two_word(
                     temp_info_list[10], self.keyword['cloth_content'], None))
@@ -377,7 +378,7 @@ ________________________________________________________________________________
         conn.close()
 
     def select_po_old_value(self):
-        # 建立连接并获取辅料填写的数据（采购表）
+        # 建立连接并获取PO数据
         conn = pymssql.connect(
             self.serverName, self.userName, self.passWord, self.dbName)
         cursor = conn.cursor()

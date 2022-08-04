@@ -131,10 +131,14 @@ class VAS_GUI():
         # 描述数据，基数列的数据
         disVal = []
         for tempIndex in formartExcelTitle:
+            str_arr = df[tempIndex].values
+            for arr_i in range(len(str_arr)):
+                str_arr[arr_i] = str(str_arr[arr_i]).replace(
+                    '=', '').replace('"', '')
             if tempIndex != 0 and tempIndex % 2 == 0:
-                disVal.append(df[tempIndex].values)
+                disVal.append(str_arr)
             elif tempIndex % 2 != 0:
-                dataVal.append(df[tempIndex].values)
+                dataVal.append(str_arr)
 
         valueDf = pd.DataFrame(dataVal, columns=excelTitle)
         valueDf['version'] = version

@@ -31,11 +31,11 @@ class VAS_GUI():
         self.add_factory_title = ['ERPID', '创建日期', '工厂代码', '工厂名称', '英文名称', '工厂简称', '所在国家', '所在地区', '法人代表', '联系人', '地址', '英文地址', '电话',
                                   '传真', '邮编', '电子邮件', '主要产品', '主要客户', '人民币开户', '帐号', '税号', '工厂类别', '联系人一', '电话一', '传真一', '手机一',
                                   '邮箱一', '备注', '联系人二', '电话二', '传真二', '手机二', '邮箱二', '付款方式', '收款银行', '开户银行', '收款行地址', 'SwiftCode',
-                                  '每月产量', '合作日期', '工商注册日期', '是否停用', '停用日期', '停用原因']
-        self.select_sql_factory = '''SELECT f.ID as ERPID,f.EstablishDate as 创建日期,f.Code as 工厂代码,f.Name as 工厂名称,f.ENName as 英文名称,f.FactoryNo as 工厂简称, a.Name AS 所在国家, b.Name AS 所在地区,f.LawDelegate as 法人代表,f.LinkMan as 联系人,f.CNAddress as 地址,f.ENAddress as 英文地址,f.Telephone as 电话,f.Fax as 传真,f.PostCode as 邮编,f.Email as 电子邮件,f.Product as 主要产品,f.Customer as 主要客户,f.RMBAccount as 人民币开户,f.Account as 帐号,f.TaxCode as 税号,f.CustomType as 工厂类别,f.Relation1 as 联系人一,f.Phone1 as 电话一,f.Faxs1 as 传真一,f.HandPhone1 as 手机一,f.Email1 as 邮箱一,f.Remark as 备注,f.Relation2 as 联系人二,f.Phone2 as 电话二,f.Faxs2 as 传真二,f.HandPhone2 as 手机二,f.Email2 as 邮箱二,c.Name AS 付款方式,d.Name AS 收款银行,e.Name AS 开户银行,f.BankAddress AS 收款行地址,f.SwiftCode,f.OutPut AS 每月产量,f.CooperationDate AS 合作日期,f.RegisterDate AS 工商注册日期,
+                                  '每月产量', '合作日期', '工商注册日期', '是否停用', '停用日期', '停用原因', 'P_KEY']
+        self.select_sql_factory = '''SELECT f.ID as ERPID,f.CREATEDATE as 创建日期,f.Code as 工厂代码,f.Name as 工厂名称,f.ENName as 英文名称,f.FatherDept as 工厂简称, a.Name AS 所在国家, b.Name AS 所在地区,f.LawDelegate as 法人代表,f.LinkMan as 联系人,f.CNAddress as 地址,f.ENAddress as 英文地址,f.Telephone as 电话,f.Fax as 传真,f.PostCode as 邮编,f.Email as 电子邮件,f.Product as 主要产品,f.Customer as 主要客户,f.RMBAccount as 人民币开户,f.Account as 帐号,f.TaxCode as 税号,f.CustomType as 工厂类别,f.Relation1 as 联系人一,f.Phone1 as 电话一,f.Faxs1 as 传真一,f.HandPhone1 as 手机一,f.Email1 as 邮箱一,f.Remark as 备注,f.Relation2 as 联系人二,f.Phone2 as 电话二,f.Faxs2 as 传真二,f.HandPhone2 as 手机二,f.Email2 as 邮箱二,c.Name AS 付款方式,d.Name AS 收款银行,e.Name AS 开户银行,f.BankAddress AS 收款行地址,f.SwiftCode,f.OutPut AS 每月产量,f.CooperationDate AS 合作日期,f.RegisterDate AS 工商注册日期,
         CASE
         WHEN f.IsStop = 1 THEN '是' ELSE '否' 
-        END AS 是否停用,f.StopDate AS 停用日期,f.StopRemark AS 停用原因 FROM Factory f 
+        END AS 是否停用,f.StopDate AS 停用日期,f.StopRemark AS 停用原因, concat(f.Name, f.Account) AS P_KEY FROM Factory f 
         LEFT JOIN SelectInfo a ON a.ID = f.ProduceArea
         LEFT JOIN SelectInfo b ON b.ID = f.FactoryArea
         LEFT JOIN SelectInfo c ON c.ID = f.BalanceType
@@ -46,19 +46,18 @@ class VAS_GUI():
         self.add_customer_title = ['ERPID', '客户简码', '客户代码', '发展日期', '客户名称', '英文名称', '客户简称', '所属地区', '地址', '英文地址', '电话', '成立日期',
                                    '分管部门', '传真', '电子邮件', '网址', '备注', '电话一', '手机一', '邮箱一', '传真一', '联系人二', '电话二', '传真二', '手机二', '邮箱二', '联系人一']
         self.select_sql_customer = '''SELECT a.ID as ERPID,a.AbCode as 客户简码, a.CustomNo as 客户代码,a.DevelopmentDate as 发展日期,a.CustomName as 客户名称,a.EnglishName as 英文名称,a.AbName as 客户简称,b.Name as 所属地区,a.Address as 地址,a.EnglishAddress as 英文地址, a.TelNo as 电话,a.FoundDate as 成立日期,a.ManageDepart as 分管部门,a.FaxNo as 传真,a.Email as 电子邮件,a.WebSite as 网址,a.Remark as 备注, a.Phone1 as 电话一, a.HandPhone1 as 手机一, a.Email1 as 邮箱一,a.Faxs1 as 传真一,  a.Relation2 as 联系人二, a.Phone2 as 电话二, a.Faxs2 as 传真二, a.HandPhone2 as 手机二, a.Email2 as 邮箱二, a.Relation1 as 联系人一
-        FROM Custom a
-        LEFT JOIN SelectInfo b ON b.ID = a.AreaID'''
+        FROM Custom a LEFT JOIN SelectInfo b ON b.ID = a.AreaID'''
 
         # 追加的dataFrame的title 供应商基础信息 （ProviderTypeFalg = 61 是面料供应商， ProviderTypeFalg = 62 是辅料供应商）
         self.add_provider_title = ['ERPID', '供应商代码', '供应商名称', '英文名称', '简称', '地址', '英文地址', '所属地区', '量产付款方式', '合同币种', '发展日期', '停用标志',
                                    '停用日期', '供应类型', '员工数量', '注册资金', '年销售额', '开户银行', '开户行地址', 'SwiftCode', '帐号', '电话', '传真',
                                    '邮编', '电子邮件', '法人代表', '供应商类别', '备注', '面辅料通用', '税号', '所属国别', '客户指定供应商', '供应商来源',
                                    '联系人一', '电话一', '传真一', '手机一', '邮箱一', '联系人二', '电话二', '传真二', '手机二', '邮箱二',
-                                   '供应商是否为离岸帐户', '创建人', '最后修改人', '创建日期', '修改日期']
+                                   '供应商是否为离岸帐户', '创建人', '最后修改人', '创建日期', '修改日期', 'P_KEY', '预付比例']
         self.select_sql_provider = '''SELECT a.ID as ERPID,a.ProviderNo as 供应商代码,a.ProviderName as 供应商名称,a.EnglishName as 英文名称,a.AbName as 简称,a.Address as 地址,a.EnglishAddress as 英文地址,b.Name as 所属地区,c.Name as 量产付款方式,d.Name as 合同币种,a.DevelopmentDate AS 发展日期, 
         CASE
         WHEN a.StopFlag = 1 THEN '是' ELSE '否' 
-        END as 停用标志,a.StopDate as 停用日期,e.Name as 供应类型,a.EmployeeCount as 员工数量,a.TotalCapital as 注册资金,a.SaleOneYear as 年销售额, f.Name as 开户银行,f.BankAddress as 开户行地址,f.SwiftCode,f.Account as 帐号,a.TelephoneNo as 电话,a.FaxNo as 传真, a.PostCode as 邮编,a.Email as 电子邮件,a.ArtificialPerson as 法人代表,a.CustomType as 供应商类别,a.Remark as 备注,a.IsUniversal as 面辅料通用,a.TaxNo as 税号,a.ExtraField1 as 所属国别,a.IsAppoint as 客户指定供应商,a.ExtraField3 as 供应商来源, a.Relation1 as 联系人一, a.Phone1 as 电话一, a.Faxs1 as 传真一, a.HandPhone1 as 手机一, a.Email1 as 邮箱一,a.Relation2 as 联系人二,a.Phone2 as 电话二,a.Faxs2 as 传真二,a.HandPhone2 as 手机二,a.Email2 as 邮箱二,'' as 供应商是否为离岸帐户, ac.Name AS 创建人, am.Name AS 最后修改人, a.CreateDate AS 创建日期, a.LastModifiedDate AS 修改日期 FROM Provider a
+        END as 停用标志,a.StopDate as 停用日期,e.Name as 供应类型,a.EmployeeCount as 员工数量,a.TotalCapital as 注册资金,a.SaleOneYear as 年销售额, f.Name as 开户银行,f.BankAddress as 开户行地址,f.SwiftCode,f.Account as 帐号,a.TelephoneNo as 电话,a.FaxNo as 传真, a.PostCode as 邮编,a.Email as 电子邮件,a.ArtificialPerson as 法人代表,a.CustomType as 供应商类别,a.Remark as 备注,a.IsUniversal as 面辅料通用,a.TaxNo as 税号,a.ExtraField1 as 所属国别,a.IsAppoint as 客户指定供应商,a.ExtraField3 as 供应商来源, a.Relation1 as 联系人一, a.Phone1 as 电话一, a.Faxs1 as 传真一, a.HandPhone1 as 手机一, a.Email1 as 邮箱一,a.Relation2 as 联系人二,a.Phone2 as 电话二,a.Faxs2 as 传真二,a.HandPhone2 as 手机二,a.Email2 as 邮箱二,'' as 供应商是否为离岸帐户, ac.Name AS 创建人, am.Name AS 最后修改人, a.CreateDate AS 创建日期, a.LastModifiedDate AS 修改日期, concat(a.ProviderName, f.Account) AS P_KEY, a.AdvancedPaymentProportion AS 预付比例 FROM Provider a
         LEFT JOIN  SelectInfo b ON b.ID = a.Area
         LEFT JOIN  SelectInfo c ON c.ID = a.PaymentWay
         LEFT JOIN  SysMonetaryUnit d ON d.ID = a.MonetaryUnit
@@ -76,12 +75,13 @@ class VAS_GUI():
                                    '报关品名描述', '密度', '克重', '成份', '成分中文', '采购备注', '颜色英', '颜色', '规格', '采购价', '采购转换比率', '是否停用',
                                    '供方', '常采供应商', '原始类别', '采购单位', '纱支', '建单日期', '最后修改日期', '建单人', '最后修改人']
         self.select_sql_material = '''SELECT a.ID as ERPID, 
+	    CASE WHEN pt.Name IS NULL THEN '' ELSE pt.Name END +
         CASE WHEN pd.ProviderName IS NULL THEN '' ELSE pd.ProviderName END + 
         CASE WHEN a.Name IS NULL THEN '' ELSE a.Name END + 
-        CASE WHEN mxt.SizeName IS NULL THEN '' ELSE mxt.SizeName END + 
-        CASE WHEN mxt.ColorName IS NULL THEN '' ELSE mxt.ColorName END + 
+        CASE WHEN mxt.SizeName IS NULL THEN '' ELSE REPLACE(mxt.SizeName,'?','') END + 
+        CASE WHEN mxt.ColorName IS NULL THEN '' ELSE REPLACE(mxt.ColorName,'?','') END + 
         CASE WHEN mt.Name IS NULL THEN '' ELSE mt.Name END + 
-        CASE WHEN mxt.Price IS NULL THEN '' ELSE 
+        CASE WHEN mxt.Price IS NULL THEN '0' ELSE 
         CASE WHEN mxt.Price = 0 THEN '0' else
         CASE WHEN mxt.Price <= 0.0001 THEN '0.0001' ELSE 
         convert(nvarchar(50), CONVERT(decimal(20,10),mxt.Price))
@@ -93,29 +93,28 @@ class VAS_GUI():
         CASE 
         WHEN a.Type = 61 THEN '面料' ELSE '辅料' 
         END as 物料类型, 
-        mc.Name as 物料大类,sc.Name as 物料小类,mt.Name as 采购币种,mu1.Name as 单位,a.InvoiceName as 开票品名,a.MaterialInfo as 报关品名描述,a.Density as 密度,a.Breadth as 克重,a.Element as 成份,a.EnElement as 成分中文,a.PurchaseRemark as 采购备注,mxt.ColorNameEN as 颜色英,mxt.ColorName as 颜色,mxt.SizeName as 规格, 
-        CASE WHEN mxt.Price = 0 THEN 0 else
+        mc.Name as 物料大类,sc.Name as 物料小类,mt.Name as 采购币种,mu1.Name as 单位,a.InvoiceName as 开票品名,a.MaterialInfo as 报关品名描述,a.Density as 密度,a.Breadth as 克重,a.Element as 成份,a.EnElement as 成分中文,a.PurchaseRemark as 采购备注,mxt.ColorNameEN as 颜色英,REPLACE(mxt.ColorName,'?','') as 颜色,REPLACE(mxt.SizeName,'?','') as 规格, 
+        CASE WHEN mxt.Price = 0 OR mxt.Price IS NULL THEN 0 else
         CASE WHEN 
-		  mxt.Price <= 0.0001 THEN 0.0001 ELSE 
+        mxt.Price <= 0.0001 THEN 0.0001 ELSE 
         mxt.Price
         end
         END as 采购价,a.ConvertRate as 采购转换比率, 
         CASE
         WHEN mxt.IsBreakDown = 1 THEN '是' ELSE '否' 
-        END as 是否停用,pt.Name as 供方,pd.ProviderName as 常采供应商,si.Name as 原始类别,mu2.Name as 采购单位,a.Expand8 as 纱支,a.CreateDate as 建单日期,a.LastModifiedDate as 最后修改日期, a.CreateUserName as 建单人, a.LastModifiedUserName as 最后修改人
-        FROM MX_MaterialCategory AS a
+        END as 是否停用,pt.Name as 供方,pd.ProviderName as 常采供应商,si.Name as 原始类别,mu2.Name as 采购单位,a.Expand8 as 纱支,mxt.CreateDate as 建单日期,mxt.LastModifiedDate as 最后修改日期, mxt.CreateUserName as 建单人, am.Name as 最后修改人
+        FROM MX_Material mxt
+        LEFT JOIN MX_MaterialCategory a ON mxt.MaterialCategoryID = a.ID
         LEFT JOIN MaterialClass mc ON mc.ID = a.Class
-        LEFT JOIN AC_User ac ON a.CreateUserID = ac.ID
-        LEFT JOIN AC_User am ON a.LastModifiedUserID = am.ID
+        LEFT JOIN AC_User am ON mxt.LastModifiedUserID = am.ID
         LEFT JOIN MX_MaterialCategoryImage m ON a.ID = m.MaterialCategoryID
         LEFT JOIN view_MaterialSubClass sc ON a.SubClass = sc.ID
         LEFT JOIN view_MoneyType mt ON a.MonetaryUnit = mt.ID
         LEFT JOIN view_MaterialUnitNo mu1 ON a.UnitNo = mu1.ID
-        LEFT JOIN view_MaterialUnitNo mu2 ON a.UnitNo = mu2.ID
+        LEFT JOIN view_MaterialUnitNo mu2 ON a.PurchaseUnit = mu2.ID
         LEFT JOIN view_ProviderType pt ON a.ProviderType = pt.ID
         LEFT JOIN view_Provider pd ON a.Provider = pd.ID
         LEFT JOIN selectinfo si ON a.PurchaseClass = si.ID
-        LEFT JOIN MX_Material mxt ON mxt.MaterialCategoryID = a.ID
         WHERE (a.Type = 61 or a.Type = 62)'''
 
         # 自定义字段，需要对sql中的汉字进行转码的字段
@@ -135,6 +134,9 @@ class VAS_GUI():
             if not option_data.empty:
                 self.update_db(key, option_data)
 
+        # 删除重复key的数据
+        print('开始删除物料重复数据！' + str(datetime.datetime.now()).split('.')[0])
+        self.del_repeat_data()
         print('所有表操作完毕！' + str(datetime.datetime.now()).split('.')[0])
 
     def select_column_value(self, table_name):
@@ -198,7 +200,7 @@ class VAS_GUI():
             data_value[time_row] = pd.to_datetime(
                 data_value[time_row]).dt.floor('d')
             data_value[time_row] = np.where(
-                data_value[time_row].notnull(), data_value[time_row].dt.strftime('%Y-%m-%d %H:%M:%S'), '')
+                data_value[time_row].notnull(), data_value[time_row].dt.strftime('%Y-%m-%d %H:%M:%S'), None)
         table_value.append([tuple(None if isinstance(i, float) and math.isnan(
             i) else i for i in t) for t in data_value.values])
         for tabVal in table_value:
@@ -221,9 +223,19 @@ class VAS_GUI():
         conn.close()
 
     def del_zero(self, strNum):
-        strNum = str(strNum).rstrip('0')
-        strNum = str(strNum).rstrip('.')
+        if strNum[-1] == '0' and (strNum[-2] != '币' and strNum[-2] != '元'):
+            strNum = str(strNum).rstrip('0')
+            strNum = str(strNum).rstrip('.')
         return strNum
+
+    def del_repeat_data(self):
+        # 建立连接并获取cursor
+        conn = pymssql.connect(
+            self.serverName, self.userName, self.passWord, self.dbName)
+        cursor = conn.cursor()
+        cursor.execute('''DELETE A FROM dbo.D_Material_Erp A INNER JOIN (SELECT MIN(MID) AS MID FROM dbo.D_Material_Erp WHERE 是否停用 = '否' GROUP BY 物料编码 HAVING COUNT(物料编码) > 1) B ON A.MID = B.MID''')
+        conn.commit()
+        conn.close()
 
 
 def gui_start():

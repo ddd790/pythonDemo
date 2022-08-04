@@ -37,8 +37,8 @@ class VAS_GUI():
                                  self.local_vas_detail_file)
 
         # 修改时间有误的list
-        errorTimeFileList = ['TRIMLIST-4900118168-V1', 'TRIMLIST-4900117745-V3',
-                             'TRIMLIST-4900120872-V2', 'TRIMLIST-4900118169-V1']
+        errorTimeFileList = [
+            'TRIMLIST-4900118168-V1', 'TRIMLIST-4900117745-V3']
         # 循环本地临时文件，处理合并
         self.table_value = []
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
@@ -51,7 +51,11 @@ class VAS_GUI():
                 #     os.path.join(lroot, lfile)))
                 create_time = mtime.strftime('%Y-%m-%d %H:%M:%S')
                 if lfile.split('.')[0] in errorTimeFileList:
-                    create_time = '2022-04-03 10:32:54'
+                    create_time = '2021-07-13 10:32:54'
+                if lfile.split('.')[0] == 'TRIMLIST-4900120872-V2':
+                    create_time = '2021-09-23 10:32:54'
+                if lfile.split('.')[0] == 'TRIMLIST-4900118169-V1':
+                    create_time = '2021-08-23 10:32:54'
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(
                     lfile).split('-')[2].split('.')[0], create_time)
         # print(self.table_value)
@@ -143,10 +147,14 @@ class VAS_GUI():
         # 描述数据，基数列的数据
         disVal = []
         for tempIndex in formartExcelTitle:
+            str_arr = df[tempIndex].values
+            for arr_i in range(len(str_arr)):
+                str_arr[arr_i] = str(str_arr[arr_i]).replace(
+                    '=', '').replace('"', '')
             if tempIndex != 0 and tempIndex % 2 == 0:
-                disVal.append(df[tempIndex].values)
+                disVal.append(str_arr)
             elif tempIndex % 2 != 0:
-                dataVal.append(df[tempIndex].values)
+                dataVal.append(str_arr)
 
         valueDf = pd.DataFrame(dataVal, columns=excelTitle)
         valueDf['version'] = version[1:]

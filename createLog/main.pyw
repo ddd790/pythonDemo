@@ -13,9 +13,9 @@ class LOG_GUI():
         # 设置标题
         self.init_window_name.title('EXCEL服务器工具！')
         # 设置窗口大小
-        self.init_window_name.geometry('300x200')
+        self.init_window_name.geometry('300x240')
         # tab页
-        tab = ttk.Notebook(self.init_window_name, height=200, width=280)
+        tab = ttk.Notebook(self.init_window_name, height=240, width=280)
         # 追加log的tab
         logFrame = Frame(tab)
         self.log_form_frame(logFrame)
@@ -79,6 +79,8 @@ class LOG_GUI():
         self.sub_table_label.grid(row=3, column=1)
         self.poid_label = Label(logFrame, text="POID列：")
         self.poid_label.grid(row=4, column=1)
+        self.poid_label = Label(logFrame, text="操作人列：")
+        self.poid_label.grid(row=5, column=1)
 
         # 录入框
         self.main_table_text = Text(logFrame, width=20, height=1)
@@ -87,14 +89,20 @@ class LOG_GUI():
         self.sub_table_text.grid(row=3, column=2)  # 子表名数据录入框
         self.poid_text = Text(logFrame, width=20, height=1)
         self.poid_text.grid(row=4, column=2)  # poid录入框
+        self.option_user = Text(logFrame, width=20, height=1)
+        self.option_user.grid(row=5, column=2)  # 操作人录入框
 
-        self.poid_label = Label(logFrame, text="※POID可以不填，默认是【自动编号】")
-        self.poid_label.grid(row=5, column=2)
+        self.poid_label = Label(
+            logFrame, text="※【POID】默认字段名是【自动编号】")
+        self.poid_label.grid(row=6, column=1, columnspan=2)
+        self.option_label = Label(
+            logFrame, text="※【操作人】默认字段名是【操作人】")
+        self.option_label.grid(row=7, column=1, columnspan=2)
 
         # 按钮
         self.commit_button = Button(logFrame, text="生成log表",
                                     bg="lightblue", width=10, command=self.commit_form)
-        self.commit_button.grid(row=6, column=2)
+        self.commit_button.grid(row=8, column=2)
 
     def col_type_form_frame(self, typeFrame):
         # 标签
@@ -129,16 +137,20 @@ class LOG_GUI():
             1.0, END).strip().replace("\n", "")
         poid = self.poid_text.get(
             1.0, END).strip().replace("\n", "")
+        option_user = self.option_user.get(
+            1.0, END).strip().replace("\n", "")
         if main_table == sub_table:
             tmessage.showerror('错误', '主表和子表的名字不能相同！')
         elif main_table != '' and sub_table != '':
             if poid == '':
                 poid = '自动编号'
+            if option_user == '':
+                option_user = '操作人'
             # 确认信息，resurn 'True' or 'False'
             infoMess = tmessage.askyesno(
                 title='提示', message='主表：【' + main_table + '】，子表：【' + sub_table + '】, POID：【' + poid + '】\n是否确认要进行操作？')
             if infoMess:
-                self.create_log(main_table, sub_table, poid)
+                self.create_log(main_table, sub_table, poid, option_user)
         else:
             tmessage.showerror('错误', '主表和子表的名字不能为空！')
 
@@ -193,7 +205,7 @@ class LOG_GUI():
         except:
             tmessage.showerror('错误', '人生苦短,数据库出错了,请稍后操作！')
 
-    def create_log(self, main_table, sub_table, poid):
+    def create_log(self, main_table, sub_table, poid, option_user):
         try:
             cn = pyodbc.connect(
                 'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
@@ -208,7 +220,7 @@ class LOG_GUI():
                        main_table + "','" + sub_table + "'")
             # 创建触发器
             trigger_sql = self.create_trigger_sql(
-                poid, main_table, sub_table, 0)
+                poid, main_table, sub_table, 0, option_user)
             cr.execute(trigger_sql)
             # 创建【删除日志存储过程】
             del_proc_sql = self.create_del_proc_sql(poid, sub_table)
@@ -233,8 +245,9 @@ class LOG_GUI():
         except:
             tmessage.showerror('错误', '人生苦短,数据库出错了,请稍后操作！')
 
-    def create_trigger_sql(self, poid, main_table, sub_table, redio_flag):
+    def create_trigger_sql(self, poid, main_table, sub_table, redio_flag, option_name):
         insert_flag = 'insert'
+
         if redio_flag == 1:
             sub_table = main_table
             insert_flag = 'insert,update'
@@ -248,7 +261,7 @@ class LOG_GUI():
                         SELECT @POID = """ + poid + """, @ExcelServerRCID = ExcelServerRCID from Inserted;
                         DECLARE @optionType nvarchar(6);
                         DECLARE @optionName nvarchar(500);
-                        SELECT @optionName=操作人 from """ + main_table + """ where ExcelServerRCID = @ExcelServerRCID;
+                        SELECT @optionName=""" + option_name + """ from """ + main_table + """ where ExcelServerRCID = @ExcelServerRCID;
                         DECLARE @logNumber INT;
                         SELECT @logNumber = COUNT(*) FROM """ + sub_table + """_old_log where """ + poid + """ = @POID;
                         IF (@logNumber = 0)

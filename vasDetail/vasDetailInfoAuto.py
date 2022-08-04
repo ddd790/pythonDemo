@@ -169,6 +169,7 @@ class VAS_GUI():
         return new_file_name
 
     def csv_to_dataframe(self, io):
+        csv = ''
         for decode in ('gbk', 'utf-8', 'gb18030'):
             try:
                 csv = pd.read_csv(
