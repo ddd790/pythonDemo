@@ -81,10 +81,10 @@ class VAS_GUI():
         dbCol = ['PO', 'Item', 'ExFactoryDate', 'SplitFrom', 'POShipDate', 'StockCategory', 'Material', 'GridValue', 'Quantity',
                  'Priority', 'PackageID', 'BG', 'CT', 'CL', 'CS', 'HB', 'HG', 'HT', 'SL', 'SB', 'SH', 'IB', 'OB', 'OI', 'OO', 'CI', 'PT', 'PB', 'SF', 'SZ', 'ST', 'TK', 'UC', 'NL', 'LS', 'PU', 'MO', 'MH', 'MI', 'TS', 'PF', 'PI', 'PL', 'PP', 'TP', 'FSCP', 'FSEP', 'FSSP', 'CreateDate']
         # sql服务器名
-        serverName = '192.168.0.6'
+        serverName = '192.168.0.11'
         # 登陆用户名和密码
         userName = 'sa'
-        passWord = 'MS_guanli09'
+        passWord = 'jiangbin@007'
         # 建立连接并获取cursor
         conn = pymssql.connect(serverName, userName, passWord, "ESApp1")
         cursor = conn.cursor()

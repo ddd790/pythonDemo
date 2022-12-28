@@ -18,12 +18,12 @@ class VAS_GUI():
         # 排除列
         self.out_column = ['FUSIBLE', 'CHEST PIECE', 'SLEEVE HEAD', 'Vendor', 'Date', 'THREAD', 'THREAD BTN HOLE LAPEL', 'WAISTBAND FUSIBLE',
                            'BARTACKS OUT', 'BARTACKS IN', 'SADDLE STITCH', 'OUTSIDE STITCH', 'INSIDE STITCH', 'COAT POCKETING',
-                           'COAT POCKETING OUTSIDE', 'PANT POCKETING', 'INSIDE PANT BUTTON', 'ZIPPER', 'ZROH PANT M', 'PANT THREAD']
+                           'COAT POCKETING OUTSIDE', 'PANT POCKETING', 'INSIDE PANT BUTTON', 'ZIPPER', 'ZROH PANT M', 'PANT THREAD', 'VEST POCKETING', 'VEST POCKETING OUTSIDE']
         # 根据勤哲的key匹配对应trimList中的key和value
         self.local_trim_list_file = 'd:\\trimlistToBom'
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
-        self.en_cn_file = r'\\192.168.0.6\01-业务一部资料\软件\trimlistToBom\en_cn.xlsx'
-        self.cn_sample_file = r'\\192.168.0.6\01-业务一部资料\A-Serena\2 - 辅料表\样例'
+        self.en_cn_file = r'\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\en_cn.xlsx'
+        self.cn_sample_file = r'\\192.168.0.3\01-业务一部资料\A-Serena\2 - 辅料表\样例'
         # 删除目录内文件
         if os.path.exists(self.trim_list_file_finish):
             shutil.rmtree(self.trim_list_file_finish)
@@ -68,10 +68,10 @@ class VAS_GUI():
         ws = wb.active
         # 调整第列宽
         ws.column_dimensions['A'].width = 32.25
-        ws.column_dimensions['B'].width = 45.38
+        ws.column_dimensions['B'].width = 46
         ws.column_dimensions['C'].width = 21.3
-        ws.column_dimensions['D'].width = 60
-        ws.column_dimensions['E'].width = 8.75
+        ws.column_dimensions['D'].width = 55
+        ws.column_dimensions['E'].width = 10
 
         # 定义表头颜色样式为橙色
         header_fill = PatternFill('solid', fgColor='FFFF00')
@@ -105,7 +105,7 @@ class VAS_GUI():
             RowDimension(ws, index=base_step, height=True)
             for cell in row:
                 cell.alignment = align_center
-                cell.font = Font(size=12)
+                cell.font = Font(size=11)
                 if str(cell.value).__contains__('接缝滑移'):
                     # 设置单元格填充颜色
                     cell.fill = header_fill_lan
@@ -186,8 +186,11 @@ class VAS_GUI():
         for tempIndex in formartExcelTitle:
             str_arr = df[tempIndex].values
             for arr_i in range(len(str_arr)):
-                str_arr[arr_i] = str(str_arr[arr_i]).replace(
+                add_value = str(str_arr[arr_i]).replace(
                     '=', '').replace('"', '')
+                if len(add_value) > 0:
+                    add_value = self.remove_zero(add_value)
+                str_arr[arr_i] = add_value
             if tempIndex != 0 and tempIndex % 2 == 0:
                 disVal.append(str_arr)
             elif tempIndex % 2 != 0:
@@ -316,7 +319,7 @@ class VAS_GUI():
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
         elif type.__contains__('Vests'):
-            arrangeVal.append(['钎子', 'BG87-006JZ', '古铜色', '', ''])
+            arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])
             arrangeVal.append(['兜布', 'ECO-8301', '黑', '146cm', ''])
             arrangeVal.append(['前身衬', 'PE206 ', '黑', '148cm', ''])
             arrangeVal.append(['腰兜牌衬', '2346-2HE', '白', '', ''])
@@ -365,18 +368,20 @@ class VAS_GUI():
     def get_file_name_by_num_style(self, num, style):
         # 根据类型和数字返回对应的文件名
         file_content_name = ''
-        if style.__contains__('coats') and style.__contains__('Pants') and style.__contains__('Vests'):
+        if (style.__contains__('coats') and style.__contains__('Pants') and style.__contains__('Vests')) or (style.__contains__('3 Piece Suits')):
             file_content_name = '三'
-        elif style.__contains__('coats') and style.__contains__('Pants'):
+        elif (style.__contains__('coats') and style.__contains__('Pants')) or (style.__contains__('coats') and style.__contains__('Vests')):
             file_content_name = '套'
+        # elif style.__contains__('coats') and style.__contains__('Vests'):
+        #     file_content_name = '套'
         elif style.__contains__('coats'):
             file_content_name = '上衣'
         elif style.__contains__('Pants'):
             file_content_name = '裤子'
         elif style.__contains__('Vests'):
             file_content_name = '马'
-        elif style.__contains__('3 Piece Suits'):
-            file_content_name = '三'
+        # elif style.__contains__('3 Piece Suits'):
+        #     file_content_name = '三'
         else:
             file_content_name = '套'
         last_file_name = ''
@@ -390,6 +395,9 @@ class VAS_GUI():
                 diff_time = mtime - last_time
                 if file_content_name == '套':
                     if str(file).__contains__(file_content_name) and str(file).__contains__(str(num)) and not str(file).__contains__('三') and diff_time.days > 0:
+                        last_time = mtime
+                        last_file_name = file
+                    elif str(file).__contains__(file_content_name) and str(file).__contains__(str(num)) and (str(file).__contains__('假') or str(file).__contains__('两')) and diff_time.days > 0:
                         last_time = mtime
                         last_file_name = file
                 else:
@@ -414,6 +422,11 @@ class VAS_GUI():
         # 转为字典
         cn_column_dic = dict(zip(key_result, value_result))
         return cn_column_dic
+    
+    def remove_zero(self, str):
+        while str[0] == "0":
+            str = str[1:]
+        return str
 
 
 def gui_start():

@@ -18,10 +18,10 @@ class VAS_GUI():
 
     def set_init_window(self):
         # sql服务器名
-        self.serverName = '192.168.0.6'
+        self.serverName = '192.168.0.11'
         # 登陆用户名和密码
         self.userName = 'sa'
-        self.passWord = 'MS_guanli09'
+        self.passWord = 'jiangbin@007'
         # 数据库名
         self.dbName = 'ESApp1'
         self.local_po_file = 'd:\\4DepPo'
@@ -85,9 +85,9 @@ class VAS_GUI():
     def commit_form(self):
         # 追加的dataFrame的title
         self.add_data_title = ['TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期',
-                               '目的港', '贸易方式', '走货方式', '商标', 'version']
+                               '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号']
         self.add_data_title_size = ['TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期',
-                                    '目的港', '贸易方式', '走货方式', '商标', 'version', 'option', 'size', 'quantity']
+                                    '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', 'option', 'size', 'quantity']
         # 数字类型的字段
         self.number_item = ['订单数量', 'quantity', 'version']
         # 录入DB的POdataframe
@@ -106,38 +106,38 @@ class VAS_GUI():
                                'Total', 'Supplier', 'Booking']
         # NEXT订单的po号集合，用于删除重复的新建记录
         self.nextPoList = []
+        # 循环文件，处理合并
+        for lroot, ldirs, lfiles in os.walk(self.local_po_file):
+            if len(lfiles) == 0:
+                tmessage.showerror('错误', '没有找到任何文件！')
+                return
+            for lfile in lfiles:
+                ctime = parser.parse(time.ctime(os.path.getctime(
+                    os.path.join(lroot, lfile))))
+                create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
+                self.file_to_dataframe(os.path.join(lroot, lfile), str(
+                    lfile).split('.')[0], self.radio_val.get(), create_time)
+        # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX")
+        self.table_data['客户'] = str(
+            self.costmer_option[self.radio_val.get()])
+        self.table_data['CreateDate'] = str(
+            datetime.datetime.now()).split('.')[0]
+        # NEXT size的dataframe
+        self.table_data_next_size['CreateDate'] = str(
+            datetime.datetime.now()).split('.')[0]
+        self.table_value = []
+        self.table_value.append([tuple(row)
+                                for row in self.table_data.values])
+        # NEXT的 size的dataframe
+        self.table_value_next_size = []
+        self.table_value_next_size.append(
+            [tuple(row) for row in self.table_data_next_size.values])
+        # 更新PO表
+        self.update_db()
+        if self.radio_val.get() == 0:
+            # 更新NEXT的size表(0为新增，1为更新)
+            self.update_next_size_db(self.radio_type.get())
         try:
-            # 循环文件，处理合并
-            for lroot, ldirs, lfiles in os.walk(self.local_po_file):
-                if len(lfiles) == 0:
-                    tmessage.showerror('错误', '没有找到任何文件！')
-                    return
-                for lfile in lfiles:
-                    ctime = parser.parse(time.ctime(os.path.getctime(
-                        os.path.join(lroot, lfile))))
-                    create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
-                    self.file_to_dataframe(os.path.join(lroot, lfile), str(
-                        lfile).split('.')[0], self.radio_val.get(), create_time)
-            # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX")
-            self.table_data['客户'] = str(
-                self.costmer_option[self.radio_val.get()])
-            self.table_data['CreateDate'] = str(
-                datetime.datetime.now()).split('.')[0]
-            # NEXT size的dataframe
-            self.table_data_next_size['CreateDate'] = str(
-                datetime.datetime.now()).split('.')[0]
-            self.table_value = []
-            self.table_value.append([tuple(row)
-                                    for row in self.table_data.values])
-            # NEXT的 size的dataframe
-            self.table_value_next_size = []
-            self.table_value_next_size.append(
-                [tuple(row) for row in self.table_data_next_size.values])
-            # 更新PO表
-            self.update_db()
-            if self.radio_val.get() == 0:
-                # 更新NEXT的size表(0为新增，1为更新)
-                self.update_next_size_db(self.radio_type.get())
             tmessage.showinfo('成功', '恭喜操作成功，请到勤哲系统中查看结果吧！')
         except:
             tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部孙适老师！')
@@ -154,10 +154,11 @@ class VAS_GUI():
     def excel_to_dataframe_next_add(self, io, fileDate):
         # 读取文件
         excel_header = []
-        for h_idx in range(1, 21):
-            excel_header.append('列' + str(h_idx))
         excelData = pd.read_excel(
             io, header=None, keep_default_na=False)
+        excelCol = excelData.shape[1] + 1
+        for h_idx in range(1, excelCol):
+            excel_header.append('列' + str(h_idx))
         df = pd.DataFrame(excelData.values, columns=excel_header)
         df.dropna(axis=0, how='all')
         # 款号
@@ -200,7 +201,7 @@ class VAS_GUI():
         # 订单数量
         qty_list = self.check_str_key(df['列9'])
         # 颜色，尺码，配码数量的list
-        next_size_num_list = self.get_color_num_next(df)
+        next_size_num_list = self.get_color_num_next(df, excelCol)
         # 组装数据进行存储
         po_df = pd.DataFrame(data=None, columns=self.add_data_title)
         po_df[self.add_data_title[0]] = type_list
@@ -214,16 +215,19 @@ class VAS_GUI():
         po_df[self.add_data_title[8]] = trans_list
         po_df[self.add_data_title[9]] = ''
         po_df[self.add_data_title[10]] = 1
+        po_df[self.add_data_title[11]] = ''
+        po_df[self.add_data_title[12]] = ''
+        po_df[self.add_data_title[13]] = ''
         self.table_data = self.table_data.append(po_df, ignore_index=True)
         # NEXT的size数据的组装
         for n_idx in range(len(po_list)):
             po_df_size = pd.DataFrame(
                 data=None, columns=self.add_data_title_size)
-            po_df_size[self.add_data_title_size[11]
+            po_df_size[self.add_data_title_size[14]
                        ] = next_size_num_list[n_idx]['sizeNo']
-            po_df_size[self.add_data_title_size[12]
+            po_df_size[self.add_data_title_size[15]
                        ] = next_size_num_list[n_idx]['size']
-            po_df_size[self.add_data_title_size[13]
+            po_df_size[self.add_data_title_size[16]
                        ] = next_size_num_list[n_idx]['num']
             po_df_size[self.add_data_title_size[0]] = type_list[n_idx]
             po_df_size[self.add_data_title_size[1]] = po_list[n_idx]
@@ -236,6 +240,9 @@ class VAS_GUI():
             po_df_size[self.add_data_title_size[8]] = trans_list[n_idx]
             po_df_size[self.add_data_title_size[9]] = ''
             po_df_size[self.add_data_title_size[10]] = 1
+            po_df_size[self.add_data_title_size[11]] = ''
+            po_df_size[self.add_data_title_size[12]] = ''
+            po_df_size[self.add_data_title_size[13]] = ''
             self.table_data_next_size = self.table_data_next_size.append(
                 po_df_size, ignore_index=True)
         self.nextPoList.extend(po_list)
@@ -286,9 +293,11 @@ class VAS_GUI():
         return res_list
 
     # 提取NEXT配色配码信息
-    def get_color_num_next(self, next_df):
+    def get_color_num_next(self, next_df, excelCol):
         # 配色配码的列
-        cols = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        cols = []
+        for h_idx in range(10, excelCol - 2):
+            cols.append(h_idx)
         res_df = next_df[next_df.columns[cols]]
         # 按照Click here.....（列12）进行分组
         color_size_num_list = []
@@ -354,6 +363,7 @@ class VAS_GUI():
         dbCol = self.add_data_title[:]
         dbCol.append('客户')
         dbCol.append('CreateDate')
+        print(dbCol)
         # 建立连接并获取cursor
         conn = pymssql.connect(
             self.serverName, self.userName, self.passWord, self.dbName)
@@ -384,6 +394,7 @@ class VAS_GUI():
     def update_next_size_db(self, insertType):
         dbCol = self.add_data_title_size[:]
         dbCol.append('CreateDate')
+        print(dbCol)
         # 建立连接并获取cursor
         conn = pymssql.connect(
             self.serverName, self.userName, self.passWord, self.dbName)
@@ -409,6 +420,7 @@ class VAS_GUI():
                 else:
                     insertSql += '%s, '
             insertSql += ')'
+        print(insertSql)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

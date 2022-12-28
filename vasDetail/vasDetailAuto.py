@@ -19,7 +19,7 @@ class VAS_GUI():
         # 追加的dataFrame的title
         self.add_data_title = ['PO', 'Item', 'Material', 'ItemSum',
                                'Sumxxl', 'Sum48', 'Sum44', 'HG', 'PU', 'SZ']
-        networked_directory = r'\\192.168.0.6\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
+        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
         self.local_vas_detail_file = 'd:\excelVasDetailFile'
         # 删除目录内文件
         if os.path.exists(self.local_vas_detail_file):
@@ -292,7 +292,7 @@ class VAS_GUI():
         strCol = ",".join(str(i) for i in dbCol)
         todayTime = str(datetime.datetime.now()).split('.')[0]
         cn = pyodbc.connect(
-            'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
+            'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
         cn.autocommit = True
         cr = cn.cursor()
         # 删除数据
@@ -313,7 +313,7 @@ class VAS_GUI():
     # 查询已有PO相关数据
     def select_db_po_info(self):
         cn = pyodbc.connect(
-            'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
+            'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
         # 查询目前的【一部PO大表订单信息_明细】表的记录
         searchSql = "select 订单PO号, 款式缩写, 面料, 品名 from 一部PO大表订单信息_明细"
         cn.autocommit = True
@@ -340,7 +340,7 @@ class VAS_GUI():
     # 查询一部报关走货计划_明细数据
     def select_db_price_info(self):
         cn = pyodbc.connect(
-            'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
+            'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
         # 查询目前的【一部报关走货计划_明细】表的记录
         searchSql = "select 订单PO号, 款式缩写, 面料, ITEM from 一部报关走货计划_明细 WHERE ITEM LIKE '%/%'"
         cn.autocommit = True

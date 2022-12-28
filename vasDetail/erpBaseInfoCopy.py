@@ -20,10 +20,10 @@ class VAS_GUI():
         # erp数据库名
         self.dbNameErp = 'MDFNEW'
         # sql服务器名
-        self.serverName = '192.168.0.6'
+        self.serverName = '192.168.0.11'
         # 登陆用户名和密码
         self.userName = 'sa'
-        self.passWord = 'MS_guanli09'
+        self.passWord = 'jiangbin@007'
         # 数据库名
         self.dbName = 'ESApp1'
         # 工厂信息列

@@ -12,10 +12,10 @@ class VAS_GUI():
     def get_files(self):
         print('数据操作进行中......' + str(datetime.datetime.now()).split('.')[0])
         # sql服务器名
-        self.serverName = '192.168.0.6'
+        self.serverName = '192.168.0.11'
         # 登陆用户名和密码
         self.userName = 'sa'
-        self.passWord = 'MS_guanli09'
+        self.passWord = 'jiangbin@007'
         # 数据库名
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title
@@ -24,7 +24,7 @@ class VAS_GUI():
         # 数字类型的字段
         self.number_item = ['数量', 'version']
         # 根据勤哲的key匹配对应trimList中的key和value
-        self.local_trim_list_file = r'\\192.168.0.6\03-业务三部共享\EXPRESS 工艺\大货 工艺书\勤哲BOM最新PDF文件'
+        self.local_trim_list_file = r'\\192.168.0.3\03-业务三部共享\EXPRESS 工艺\大货 工艺书\勤哲BOM最新PDF文件'
         self.local_pdf_detail_file = 'd:\\3DepTrimlistPdfTemp'
         # 删除目录内文件
         if os.path.exists(self.local_pdf_detail_file):

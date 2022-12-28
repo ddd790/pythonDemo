@@ -21,7 +21,7 @@ class VAS_GUI():
                          '第三种里料品色号', '国外扣供应商品号色号', '内扣或两种以上扣型号', '上衣口袋布成份']
         # 根据勤哲的key匹配对应trimList中的key和value
         self.trimList_key_to_qizhe_key()
-        networked_directory = r'\\192.168.0.6\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
+        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息\临时'
         self.local_vas_detail_file = 'd:\excelTrimListFile'
         # 删除目录内文件
         if os.path.exists(self.local_vas_detail_file):
@@ -73,19 +73,19 @@ class VAS_GUI():
         dbCol = self.add_data_title[:]
         dbCol.append('CreateDate')
         # sql服务器名
-        serverName = '192.168.0.6'
+        serverName = '192.168.0.11'
         # 登陆用户名和密码
         userName = 'sa'
-        passWord = 'MS_guanli09'
+        passWord = 'jiangbin@007'
         # 建立连接并获取cursor
         conn = pymssql.connect(serverName, userName, passWord, "ESApp1")
         cursor = conn.cursor()
-        cursor.execute('TRUNCATE TABLE D_TrimListInfo')
+        cursor.execute('TRUNCATE TABLE D_TrimListInfo_test')
         # 组装插入的值
         insertValue = []
         for tabVal in self.table_value:
             insertValue += tabVal
-        insertSql = 'INSERT INTO D_TrimListInfo VALUES ('
+        insertSql = 'INSERT INTO D_TrimListInfo_test VALUES ('
         for colVal in dbCol:
             if colVal == 'CreateDate':
                 insertSql += '%s'

@@ -12,10 +12,10 @@ class VAS_GUI():
     def get_files(self):
         print('文件操作进行中......')
         # sql服务器名
-        self.serverName = '192.168.0.6'
+        self.serverName = '192.168.0.11'
         # 登陆用户名和密码
         self.userName = 'sa'
-        self.passWord = 'MS_guanli09'
+        self.passWord = 'jiangbin@007'
         # 数据库名
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title
@@ -23,7 +23,7 @@ class VAS_GUI():
                                'value', 'color', 'FinalOrder', 'SheetType', 'fileName', 'shippingDate']
         # 不需要追加的字段
         self.other_str = ['STANDARD', 'TALL', 'nan', 'Standard', 'Tall']
-        networked_directory = r'\\192.168.0.6\02-业务二部资料\业务2部\2022大货\SUITSHOP\新郎装原始裁单'
+        networked_directory = r'\\192.168.0.3\02-业务二部资料\业务2部\2022大货\SUITSHOP\新郎装原始裁单'
         self.local_cai_detail_file = 'd:\caidan'
         # 删除目录内文件
         # if os.path.exists(self.local_cai_detail_file):

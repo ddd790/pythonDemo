@@ -14,10 +14,10 @@ class VAS_GUI():
     def get_files(self):
         print('数据操作进行中......')
         # sql服务器名
-        self.serverName = '192.168.0.6'
+        self.serverName = '192.168.0.11'
         # 登陆用户名和密码
         self.userName = 'sa'
-        self.passWord = 'MS_guanli09'
+        self.passWord = 'jiangbin@007'
         # 数据库名
         self.dbName = 'ESApp1'
         # trimlist文件的列对应的表

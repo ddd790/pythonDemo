@@ -377,7 +377,7 @@ class VAS_GUI():
         strCol = ",".join(str(i) for i in dbCol)
         todayTime = str(datetime.datetime.now()).split('.')[0]
         cn = pyodbc.connect(
-            'DRIVER={SQL Server};SERVER=192.168.0.6;DATABASE=ESApp1;UID=sa;PWD=MS_guanli09')
+            'DRIVER={SQL Server};SERVER=192.168.0.11;DATABASE=ESApp1;UID=sa;PWD=jiangbin@007')
         cn.autocommit = True
         cr = cn.cursor()
         # 循环插入数据

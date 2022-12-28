@@ -10,17 +10,17 @@ class VAS_GUI():
     def commit_batch(self):
         print('数据操作进行中......')
         # sql服务器名
-        self.serverName = '192.168.0.6'
+        self.serverName = '192.168.0.11'
         # 登陆用户名和密码
         self.userName = 'sa'
-        self.passWord = 'MS_guanli09'
+        self.passWord = 'jiangbin@007'
 
         # 数据库的列
         self.dbCol = ['PurchasingSeas', 'PurchasingDoc', 'Vendor', 'VendorName', 'SupplVendor', 'SupplierName', 'LabelType', 'TLMat', 'VendorMatNo', 'Description', 'VASUs',
                       'PurchasingMethod', 'Vasby', 'VASVendor', 'VASVendorName', 'TrackingNbr', 'RequiredQty', 'RemainingQty', 'Exfactorydate', 'Changedon', 'Cr', 'shippingDate', 'PPRType', 'deleteFlag', 'CreateDate']
 
         # 循环文件，处理合并，并存入数据库
-        self.local_vas_detail_file = r'\\192.168.0.6\01-业务一部资料\Ada\VAS-PPR'
+        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\Ada\VAS-PPR'
         self.df_data = pd.DataFrame(columns=self.dbCol)
 
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
