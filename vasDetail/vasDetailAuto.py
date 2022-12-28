@@ -129,7 +129,7 @@ class VAS_GUI():
                         data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
                     filterVal[dataItem[itemIndex]] = tempVal
                     if (self.is_number(tempSizeVal) and int(tempSizeVal) >= 48) or (self.is_number(tempSizeVal) == False and str(sizeVal).strip() not in smallSize):
-                        print('over 48')
+                        pass
                     else:
                         filterVal['Quantity'] = 0
                     filterVal['HG'] = '\\'.join(itemValMap[itemVal])
@@ -142,7 +142,7 @@ class VAS_GUI():
                         data.iloc[val, itemIndex]) is int else str(data.iloc[val, itemIndex]).strip()
                     filterVal[dataItem[itemIndex]] = tempVal
                     if self.is_number(tempSizeVal) and int(tempSizeVal) >= 44:
-                        print('over 44')
+                        pass
                     else:
                         filterVal['Quantity'] = 0
                     filterVal['HG'] = '\\'.join(itemValMap[itemVal])

@@ -72,16 +72,16 @@ class VAS_GUI():
     def file_to_dataframe(self, io, lfile):
         pdf = pdfplumber.open(io)
         df_title = []
-        df_values = []
         count = 0  # 页数
         # 款号, 品名, 面料号
         style_no = ''
         goods_name = ''
         fabric_no = ''
         for page in pdf.pages:
+            df_values = []
             count += 1
             if count == 1:
-                page.extract_text()  # 抓取当前页的全部信息
+                # page.extract_text()  # 抓取当前页的全部信息
                 # 文件前面的非表格内容
                 file_txt = str(page.extract_text()).split(
                     'Material Description')[0]
@@ -90,7 +90,7 @@ class VAS_GUI():
                 goods_name = re.sub(r'[0-9]+', '', self.get_value_two_word(
                     file_txt, style_no, 'Wash/Fin: ').split(' - ')[2].replace('\n', '')).strip()
                 fabric_no = file_txt.split('Mat. One ID#: ')[
-                    1].replace('\n', '').strip()[0:8].strip()
+                    1].replace('\n', '').strip()[0:len(style_no)].strip()
             for table in page.extract_tables():
                 # title的行
                 title_count = 0
@@ -101,49 +101,51 @@ class VAS_GUI():
                         df_values.append(row)
                     title_count += 1
 
-        # title颜色list
-        color_list = []
-        for idx in range(len(df_title)):
-            if idx > 6 and idx < len(df_title) - 1 and df_title[idx] == '':
-                df_title[idx] = df_title[idx+1].replace('\n', '')
-                df_title[idx+1] = '^_^'
-                color_list.append(df_title[idx].replace('\n', ''))
+            # title颜色list
+            color_list = []
+            for idx in range(len(df_title)):
+                if idx > 6 and idx < len(df_title) - 1 and df_title[idx] == '':
+                    df_title[idx] = df_title[idx+1].replace('\n', '')
+                    df_title[idx+1] = '^_^'
+                    temp_color = df_title[idx].replace('\n', '')
+                    if temp_color not in color_list:
+                        color_list.append(temp_color)
 
-        df = pd.DataFrame(df_values, columns=df_title)
-        df.loc[:, self.add_data_title[0]] = style_no
-        df.loc[:, self.add_data_title[1]] = goods_name
-        df.loc[:, self.add_data_title[2]] = fabric_no
-        # 删除错位的笑脸列（^_^）
-        temp_df = df.drop('^_^', axis=1)
-        # 修改换行的列，并生成最终dataframe
-        pdf_df = pd.DataFrame(data=None, columns=self.add_data_title)
-        for color in color_list:
-            p_key = style_no + '^*^' + goods_name + '^*^' + fabric_no + '^*^' + color
-            temp_version = 1
-            if self.old_version.__contains__(p_key):
-                temp_version = int(self.old_version[p_key]) + 1
-                self.delete_key.append(p_key)
-            # ['款号', '品名', '面料号', '用料品号', '供应商', '供应商品号', '数量', '规格', '物料说明', '物料颜色', '成衣颜色']
-            pdf_df[self.add_data_title[0]] = temp_df[self.add_data_title[0]]
-            pdf_df[self.add_data_title[1]] = temp_df[self.add_data_title[1]]
-            pdf_df[self.add_data_title[2]] = temp_df[self.add_data_title[2]]
-            pdf_df[self.add_data_title[3]] = temp_df['Material Description'].map(
-                lambda x: str(x).split('\n')[0])
-            pdf_df[self.add_data_title[4]] = temp_df['Supplier'].map(
-                lambda x: str(x).replace('\n', ''))
-            pdf_df[self.add_data_title[5]
-                   ] = temp_df['Quality/Supplier#'].map(lambda x: str(x).replace('\n', ''))
-            pdf_df[self.add_data_title[6]] = temp_df['Qty'].map(
-                lambda x: str(x).replace('\n', ''))
-            pdf_df[self.add_data_title[7]] = temp_df['Size'].map(
-                lambda x: str(x).replace('\n', ''))
-            pdf_df[self.add_data_title[8]] = temp_df['Placement'].map(
-                lambda x: str(x).replace('\n', ''))
-            pdf_df[self.add_data_title[9]] = temp_df[color].map(
-                lambda x: str(x).replace('\n', '').replace('-', ''))
-            pdf_df[self.add_data_title[10]] = color
-            pdf_df[self.add_data_title[11]] = temp_version
-            self.table_data = self.table_data.append(pdf_df, ignore_index=True)
+            df = pd.DataFrame(df_values, columns=df_title)
+            df.loc[:, self.add_data_title[0]] = style_no
+            df.loc[:, self.add_data_title[1]] = goods_name
+            df.loc[:, self.add_data_title[2]] = fabric_no
+            # 删除错位的笑脸列（^_^）
+            temp_df = df.drop('^_^', axis=1)
+            # 修改换行的列，并生成最终dataframe
+            pdf_df = pd.DataFrame(data=None, columns=self.add_data_title)
+            for color in color_list:
+                p_key = style_no + '^*^' + goods_name + '^*^' + fabric_no + '^*^' + color
+                temp_version = 1
+                if self.old_version.__contains__(p_key):
+                    temp_version = int(self.old_version[p_key]) + 1
+                    self.delete_key.append(p_key)
+                # ['款号', '品名', '面料号', '用料品号', '供应商', '供应商品号', '数量', '规格', '物料说明', '物料颜色', '成衣颜色']
+                pdf_df[self.add_data_title[0]] = temp_df[self.add_data_title[0]]
+                pdf_df[self.add_data_title[1]] = temp_df[self.add_data_title[1]]
+                pdf_df[self.add_data_title[2]] = temp_df[self.add_data_title[2]]
+                pdf_df[self.add_data_title[3]] = temp_df['Material Description'].map(
+                    lambda x: str(x).split('\n')[0])
+                pdf_df[self.add_data_title[4]] = temp_df['Supplier'].map(
+                    lambda x: str(x).replace('\n', ''))
+                pdf_df[self.add_data_title[5]
+                    ] = temp_df['Quality/Supplier#'].map(lambda x: str(x).replace('\n', ''))
+                pdf_df[self.add_data_title[6]] = temp_df['Qty'].map(
+                    lambda x: str(x).replace('\n', ''))
+                pdf_df[self.add_data_title[7]] = temp_df['Size'].map(
+                    lambda x: str(x).replace('\n', ''))
+                pdf_df[self.add_data_title[8]] = temp_df['Placement'].map(
+                    lambda x: str(x).replace('\n', ''))
+                pdf_df[self.add_data_title[9]] = temp_df[color].map(
+                    lambda x: str(x).replace('\n', '').replace('-', ''))
+                pdf_df[self.add_data_title[10]] = color
+                pdf_df[self.add_data_title[11]] = temp_version
+                self.table_data = self.table_data.append(pdf_df, ignore_index=True)
 
     # 获取一个字符串中两个字母中间的值(one为None时从第一位取, two为None时取到最后)
     def get_value_two_word(self, txt_str, one, two):

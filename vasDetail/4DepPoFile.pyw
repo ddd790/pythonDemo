@@ -85,9 +85,9 @@ class VAS_GUI():
     def commit_form(self):
         # 追加的dataFrame的title
         self.add_data_title = ['TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期',
-                               '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号']
+                               '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', '来单日期']
         self.add_data_title_size = ['TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期',
-                                    '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', 'option', 'size', 'quantity']
+                                    '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', '来单日期', 'option', 'size', 'quantity']
         # 数字类型的字段
         self.number_item = ['订单数量', 'quantity', 'version']
         # 录入DB的POdataframe
@@ -218,6 +218,7 @@ class VAS_GUI():
         po_df[self.add_data_title[11]] = ''
         po_df[self.add_data_title[12]] = ''
         po_df[self.add_data_title[13]] = ''
+        po_df[self.add_data_title[14]] = ''
         self.table_data = self.table_data.append(po_df, ignore_index=True)
         # NEXT的size数据的组装
         for n_idx in range(len(po_list)):
@@ -243,6 +244,7 @@ class VAS_GUI():
             po_df_size[self.add_data_title_size[11]] = ''
             po_df_size[self.add_data_title_size[12]] = ''
             po_df_size[self.add_data_title_size[13]] = ''
+            po_df_size[self.add_data_title_size[14]] = ''
             self.table_data_next_size = self.table_data_next_size.append(
                 po_df_size, ignore_index=True)
         self.nextPoList.extend(po_list)
@@ -296,7 +298,7 @@ class VAS_GUI():
     def get_color_num_next(self, next_df, excelCol):
         # 配色配码的列
         cols = []
-        for h_idx in range(10, excelCol - 2):
+        for h_idx in range(10, excelCol - 1):
             cols.append(h_idx)
         res_df = next_df[next_df.columns[cols]]
         # 按照Click here.....（列12）进行分组
@@ -363,7 +365,6 @@ class VAS_GUI():
         dbCol = self.add_data_title[:]
         dbCol.append('客户')
         dbCol.append('CreateDate')
-        print(dbCol)
         # 建立连接并获取cursor
         conn = pymssql.connect(
             self.serverName, self.userName, self.passWord, self.dbName)
@@ -420,7 +421,6 @@ class VAS_GUI():
                 else:
                     insertSql += '%s, '
             insertSql += ')'
-        print(insertSql)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

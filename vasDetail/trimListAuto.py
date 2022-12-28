@@ -31,18 +31,17 @@ class VAS_GUI():
         for root, dirs, files in os.walk(networked_directory):
             for file in files:
                 if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')):
-                    shutil.copy(os.path.join(root, file),
-                                self.local_vas_detail_file)
+                    shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
         # 保留相同文件中最大的记录
         self.compare_xls_file()
 
         # 循环本地临时文件，处理合并
         self.table_value = []
+        self.delPoList = []
+        self.allDataKeys = []
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
             for lfile in lfiles:
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(
-                    lfile).split('-')[2].split('.')[0])
-        # print(self.table_value)
+                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
         # 更新数据库
         self.update_db()
         print('已经完成计算操作！')
@@ -61,56 +60,12 @@ class VAS_GUI():
                     tempDelMap[nameKey] = name
                 else:
                     tempDelFile = tempDelMap[nameKey]
-                    tempDelFileNameList = os.path.splitext(tempDelFile)[
-                        0].split('-')
+                    tempDelFileNameList = os.path.splitext(tempDelFile)[0].split('-')
                     if int(nameList[2][1:]) > int(tempDelFileNameList[2][1:]):
                         os.remove(os.path.join(eroot, tempDelFile))
                         tempDelMap[nameKey] = name
                     else:
                         os.remove(os.path.join(eroot, name))
-
-    def update_db(self):
-        dbCol = self.add_data_title[:]
-        dbCol.append('CreateDate')
-        # sql服务器名
-        serverName = '192.168.0.11'
-        # 登陆用户名和密码
-        userName = 'sa'
-        passWord = 'jiangbin@007'
-        # 建立连接并获取cursor
-        conn = pymssql.connect(serverName, userName, passWord, "ESApp1")
-        cursor = conn.cursor()
-        cursor.execute('TRUNCATE TABLE D_TrimListInfo_test')
-        # 组装插入的值
-        insertValue = []
-        for tabVal in self.table_value:
-            insertValue += tabVal
-        insertSql = 'INSERT INTO D_TrimListInfo_test VALUES ('
-        for colVal in dbCol:
-            if colVal == 'CreateDate':
-                insertSql += '%s'
-            else:
-                insertSql += '%s, '
-        insertSql += ')'
-        cursor.executemany(insertSql, insertValue)
-        conn.commit()
-        conn.close()
-
-    def is_number(self, s):
-        try:
-            float(s)
-            return True
-        except ValueError:
-            pass
-
-        try:
-            import unicodedata
-            unicodedata.numeric(s)
-            return True
-        except (TypeError, ValueError):
-            pass
-
-        return False
 
     def file_to_dataframe(self, io, version):
         # 读取文件版本最大的
@@ -119,8 +74,6 @@ class VAS_GUI():
         formartExcelTitle = []
         # csv数据
         formatExcelvalue = excelData.values
-        # if 'PO号' in formatExcelvalue[0]:
-        #     print(io)
         for csvIdx in range(0, len(excelData.values[0])):
             formartExcelTitle.append(csvIdx)
         df = pd.DataFrame(formatExcelvalue, columns=formartExcelTitle)
@@ -144,6 +97,17 @@ class VAS_GUI():
         valueDf['version'] = version
         disDf = pd.DataFrame(disVal, columns=excelTitle)
         disDf['Purchasing Document'] = valueDf['Purchasing Document'][0]
+        allDataKey = valueDf['Purchasing Document'][0] + '^_^' + version
+        # 所有最大版本的key数据（PO+版本）
+        if allDataKey not in self.allDataKeys:
+            self.allDataKeys.append(allDataKey)
+        # 删除前一版本的记录(正常是前一版本的，但是有不连续的断更，按时先删除所有该PO的信息后，再插入新的)
+        # 在数据库操作时实现，这里先注释掉。
+        # if version != 'V1':
+        #     delVersion = 'V' + str((int(version.replace('V', '')) - 1))
+        #     delStr = valueDf['Purchasing Document'][0] + '^_^' + delVersion
+        #     if delStr not in self.delPoList:
+        #         self.delPoList.append(delStr)
         disDf['version'] = version
 
         # 对excel读取的数据进行整理，整理成符合要求的格式
@@ -271,7 +235,7 @@ class VAS_GUI():
         trim_list_title_list.append({'UNDER COLLAR': 3})
         trim_list_title_list.append({'UNDER COLLAR STAND': 3})
         trim_list_title_list.append(
-            {'COAT POCKETING': 4, 'COAT POCKETING OUTSIDE': 2})
+            {'VEST POCKETING': 4, 'VEST POCKETING OUTSIDE': 2, 'COAT POCKETING': 4, 'COAT POCKETING OUTSIDE': 2})
         trim_list_title_list.append({'SHOULDER PAD': 1})
         trim_list_title_list.append({'SLEEVE HEAD': 2})
         trim_list_title_list.append({'SEAM SLIPPAGE': 1})
@@ -300,8 +264,55 @@ class VAS_GUI():
         # 根据勤哲数据库中的字段，进行对照整理。整理形式例：{'钎子':[{'VEST BUCKLE':2},{'ZIP INS BREAST BESOM PKT':2}]}
         self.arrange_qinzhe_key = {}
         for qinIdx in range(len(self.add_data_title)):
-            self.arrange_qinzhe_key[
-                self.add_data_title[qinIdx]] = trim_list_title_list[qinIdx]
+            self.arrange_qinzhe_key[self.add_data_title[qinIdx]] = trim_list_title_list[qinIdx]
+
+    def update_db(self):
+        dbCol = self.add_data_title[:]
+        dbCol.append('CreateDate')
+        # sql服务器名
+        serverName = '192.168.0.11'
+        # 登陆用户名和密码
+        userName = 'sa'
+        passWord = 'jiangbin@007'
+        # 建立连接并获取cursor
+        conn = pymssql.connect(serverName, userName, passWord, "ESApp1")
+        cursor = conn.cursor()
+        # 查询存在的KEY
+        noInsertPoList = []
+        for dataKey in self.allDataKeys:
+            selectSql = '''select TLID from D_TrimListInfo where concat(订单PO号, '^_^', version) = \'''' + dataKey + '\''
+            cursor.execute(selectSql)
+            fatchResults = cursor.fetchone()
+            if fatchResults:
+                noInsertPoList.append(dataKey.split('^_^')[0])
+            else:
+                # 需要删除的PO列表
+                self.delPoList.append(dataKey.split('^_^')[0])
+        # 组装插入的值
+        allInsertVal = []
+        for tabVal in self.table_value:
+            allInsertVal += tabVal
+        insertValue = []
+        for insertTabVal in allInsertVal:
+            if insertTabVal[1] not in noInsertPoList:
+                insertValue.append(insertTabVal)
+        if len(self.delPoList) > 0:
+            # 组装删除的值
+            del_tuple = tuple(self.delPoList)
+            # 删除已经存在的文件
+            delSql = '''delete from D_TrimListInfo where 订单PO号 = (%s)'''
+            cursor.executemany(delSql, del_tuple)
+        if len(insertValue) > 0:
+            insertSql = 'INSERT INTO D_TrimListInfo VALUES ('
+            for colVal in dbCol:
+                if colVal == 'CreateDate':
+                    insertSql += '%s'
+                else:
+                    insertSql += '%s, '
+            insertSql += ')'
+            cursor.executemany(insertSql, insertValue)
+        conn.commit()
+        conn.close()
 
 
 def gui_start():

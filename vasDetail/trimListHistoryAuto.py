@@ -33,12 +33,10 @@ class VAS_GUI():
         for root, dirs, files in os.walk(networked_directory):
             for file in files:
                 if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')):
-                    shutil.copy2(os.path.join(root, file),
-                                 self.local_vas_detail_file)
+                    shutil.copy2(os.path.join(root, file), self.local_vas_detail_file)
 
         # 修改时间有误的list
-        errorTimeFileList = [
-            'TRIMLIST-4900118168-V1', 'TRIMLIST-4900117745-V3']
+        errorTimeFileList = ['TRIMLIST-4900118168-V1', 'TRIMLIST-4900117745-V3']
         # 循环本地临时文件，处理合并
         self.table_value = []
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
@@ -56,8 +54,7 @@ class VAS_GUI():
                     create_time = '2021-09-23 10:32:54'
                 if lfile.split('.')[0] == 'TRIMLIST-4900118169-V1':
                     create_time = '2021-08-23 10:32:54'
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(
-                    lfile).split('-')[2].split('.')[0], create_time)
+                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0], create_time)
         # print(self.table_value)
         # 更新数据库
         self.update_db()
@@ -288,7 +285,7 @@ class VAS_GUI():
         trim_list_title_list.append({'UNDER COLLAR': 3})
         trim_list_title_list.append({'UNDER COLLAR STAND': 3})
         trim_list_title_list.append(
-            {'COAT POCKETING': 4, 'COAT POCKETING OUTSIDE': 2})
+            {'VEST POCKETING': 4, 'VEST POCKETING OUTSIDE': 2, 'COAT POCKETING': 4, 'COAT POCKETING OUTSIDE': 2})
         trim_list_title_list.append({'SHOULDER PAD': 1})
         trim_list_title_list.append({'SLEEVE HEAD': 2})
         trim_list_title_list.append({'SEAM SLIPPAGE': 1})

@@ -39,6 +39,7 @@ class VAS_GUI():
         self.table_value = []
         for lroot, ldirs, lfiles in os.walk(self.local_trim_list_file):
             for lfile in lfiles:
+                print(lfile)
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(
                     lfile).split('.')[0])
 
@@ -105,7 +106,7 @@ class VAS_GUI():
             RowDimension(ws, index=base_step, height=True)
             for cell in row:
                 cell.alignment = align_center
-                cell.font = Font(size=11)
+                cell.font = Font(size=12)
                 if str(cell.value).__contains__('接缝滑移'):
                     # 设置单元格填充颜色
                     cell.fill = header_fill_lan
@@ -313,7 +314,8 @@ class VAS_GUI():
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
-            arrangeVal.append(['无纺衬-小部位，腰里下部', 'PE125 ', '碳灰', '150cm', ''])
+            arrangeVal.append(['无纺衬-小部位', 'PE125 ', '炭灰', '150cm', ''])
+            arrangeVal.append(['无纺衬-腰里下部', 'PE125 ', '炭灰', '150cm', ''])
             arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
@@ -372,8 +374,8 @@ class VAS_GUI():
             file_content_name = '三'
         elif (style.__contains__('coats') and style.__contains__('Pants')) or (style.__contains__('coats') and style.__contains__('Vests')):
             file_content_name = '套'
-        # elif style.__contains__('coats') and style.__contains__('Vests'):
-        #     file_content_name = '套'
+        elif style.__contains__('Pants') and style.__contains__('Vests'):
+            file_content_name = '套'
         elif style.__contains__('coats'):
             file_content_name = '上衣'
         elif style.__contains__('Pants'):
@@ -422,7 +424,7 @@ class VAS_GUI():
         # 转为字典
         cn_column_dic = dict(zip(key_result, value_result))
         return cn_column_dic
-    
+
     def remove_zero(self, str):
         while str[0] == "0":
             str = str[1:]

@@ -16,11 +16,6 @@ class VAS_GUI():
         API_KEY = 'Z5qy26GRDUdDKlBRHGT21XZt'
         SECRET_KEY = 'p6BCz0xxGXSTbDR3MfWAfViBRbFilaAu'
         client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
-        # sql服务器名
-        self.serverName = '192.168.0.11'
-        # 登陆用户名和密码
-        self.userName = 'sa'
-        self.passWord = 'jiangbin@007'
         # 数据库名
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title

@@ -14,7 +14,7 @@ from tkinter import *
 class VAS_GUI():
     # 批量获取服务器数据，进行累加操作
     def get_files(self):
-        print('文件操作进行中......')
+        print('文件操作进行中......' + str(datetime.datetime.now()).split('.')[0])
         # sql服务器名
         self.serverName = '192.168.0.11'
         # 登陆用户名和密码
@@ -40,8 +40,8 @@ class VAS_GUI():
                         'end_word': 'It requires the following components:'}
         # 运输方式
         self.Via = ['SEA', 'AIRV', 'AIRP']
-        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
-        self.local_pdf_detail_file = 'd:\peerlessPdf'
+        # networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
+        self.local_pdf_detail_file = 'd:\peerlessPdf_zhang'
 
         # 循环文件，处理合并
         self.division_word_one = '''___________________________________________________________________________________________________________________
@@ -52,15 +52,15 @@ ________________________________________________________________________________
         self.division_word_three = '  division_word_three  '
 
         # 删除目录内文件
-        if os.path.exists(self.local_pdf_detail_file):
-            shutil.rmtree(self.local_pdf_detail_file)
-        os.mkdir(self.local_pdf_detail_file)
+        # if os.path.exists(self.local_pdf_detail_file):
+        #     shutil.rmtree(self.local_pdf_detail_file)
+        # os.mkdir(self.local_pdf_detail_file)
         # copy服务器的TRIMLIST文件到本地
-        for root, dirs, files in os.walk(networked_directory):
-            if root.__contains__('2022') or root.__contains__('2023'):
-                for file in files:
-                    if str(file).__contains__('PO-') and (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
-                        shutil.copy2(os.path.join(root, file), self.local_pdf_detail_file)
+        # for root, dirs, files in os.walk(networked_directory):
+        #     if root.__contains__('2022') or root.__contains__('2023'):
+        #         for file in files:
+        #             if str(file).__contains__('PO-') and (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
+        #                 shutil.copy2(os.path.join(root, file), self.local_pdf_detail_file)
         # 保留相同文件中最大的记录
 
         # 查询已存在的记录
@@ -80,6 +80,7 @@ ________________________________________________________________________________
                     mtime = parser.parse(time.ctime(os.path.getmtime(os.path.join(lroot, file))))
                     # ctime = time.ctime(os.path.getctime(
                     #     os.path.join(lroot, lfile)))
+                    print('操作文件名：' + file_name)
                     create_time = mtime.strftime('%Y-%m-%d %H:%M:%S')
                     self.file_to_dataframe_pdfplumber(file, create_time)
                     # try:
@@ -93,43 +94,10 @@ ________________________________________________________________________________
         self.table_value.append([tuple(row) for row in table_data.values])
 
         # 更新数据库
+        print('开始更新数据！' + str(datetime.datetime.now()).split('.')[0])
         self.update_db()
         print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
-
-    def compare_pdf_file(self):
-        # 遍历目录，留下最新的文件
-        fileNameList = []
-        tempDelMap = {}
-        for eroot, edirs, efiles in os.walk(self.local_pdf_detail_file):
-            for name in efiles:
-                fileName = os.path.splitext(name)[0]
-                nameList = fileName.split('-')
-                nameKey = "-".join(str(i) for i in nameList[:-1])
-                if nameKey not in fileNameList:
-                    fileNameList.append(nameKey)
-                    tempDelMap[nameKey] = name
-                else:
-                    tempDelFile = tempDelMap[nameKey]
-                    tempDelFileNameList = os.path.splitext(tempDelFile)[
-                        0].split('-')
-                    # 判断是否有括号
-                    if str(self.get_value_two_word(nameList[-1], 'V', None)).__contains__('(') and not str(self.get_value_two_word(tempDelFileNameList[-1], 'V', None)).__contains__('('):
-                        os.remove(os.path.join(eroot, tempDelFile))
-                        tempDelMap[nameKey] = name
-                    elif str(self.get_value_two_word(nameList[-1], 'V', None)).__contains__('(') and str(self.get_value_two_word(tempDelFileNameList[-1], 'V', None)).__contains__('('):
-                        if int(self.get_value_two_word(nameList[-1], '(', ')')) > int(self.get_value_two_word(tempDelFileNameList[-1], '(', ')')):
-                            os.remove(os.path.join(eroot, tempDelFile))
-                            tempDelMap[nameKey] = name
-                        else:
-                            os.remove(os.path.join(eroot, name))
-                    elif not str(self.get_value_two_word(nameList[-1], 'V', None)).__contains__('(') and str(self.get_value_two_word(tempDelFileNameList[-1], 'V', None)).__contains__('('):
-                        os.remove(os.path.join(eroot, name))
-                    # 版本号判断
-                    elif int(self.get_value_two_word(nameList[-1], 'V', None)) > int(self.get_value_two_word(tempDelFileNameList[-1], 'V', None)):
-                        os.remove(os.path.join(eroot, tempDelFile))
-                        tempDelMap[nameKey] = name
-                    else:
-                        os.remove(os.path.join(eroot, name))
+        input('按回车退出~~~~~')
 
     def file_to_dataframe_pdfplumber(self, fileName, create_time):
         # 文件名
@@ -365,8 +333,8 @@ ________________________________________________________________________________
         # 删除已经存在的文件
         # delSql = 'delete from D_Peerless_Order where 文件名 = (%s)'
         # cursor.executemany(delSql, del_tuple)
-        delSql = 'TRUNCATE TABLE D_Peerless_Order'
-        cursor.execute(delSql)
+        # delSql = 'TRUNCATE TABLE D_Peerless_Order'
+        # cursor.execute(delSql)
         # 组装插入的值
         insertValue = []
         for tabVal in self.table_value:
@@ -398,22 +366,6 @@ ________________________________________________________________________________
             data=list(row), columns=self.add_data_title)
         cursor.close()
         conn.close()
-
-    def is_number(self, s):
-        try:
-            float(s)
-            return True
-        except ValueError:
-            pass
-
-        try:
-            import unicodedata
-            unicodedata.numeric(s)
-            return True
-        except (TypeError, ValueError):
-            pass
-
-        return False
 
 
 def gui_start():
