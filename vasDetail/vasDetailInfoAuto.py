@@ -9,7 +9,7 @@ from tkinter import *
 class VAS_GUI():
     # 批量获取服务器数据，进行累加操作
     def commit_batch(self):
-        print('数据操作进行中......')
+        print('数据操作进行中......' + str(datetime.datetime.now()).split('.')[0])
         self.local_vas_detail_file = 'd:\excelVasDetailFile'
         # 循环本地临时文件，处理合并，并存入数据库
         self.table_value = []
@@ -19,7 +19,7 @@ class VAS_GUI():
 
         # 更新数据库
         self.update_db()
-        print('已经完成数据操作！')
+        print('已经完成数据操作！' + str(datetime.datetime.now()).split('.')[0])
 
     def compare_xls_file(self):
         # 遍历目录，留下最新的文件

@@ -11,7 +11,7 @@ from tkinter import *
 class VAS_GUI():
     # 批量获取服务器数据，进行累加操作
     def commit_batch(self):
-        print('数据操作进行中......')
+        print('数据操作进行中......' + str(datetime.datetime.now()).split('.')[0])
         self.select_db_po_info()
         self.get_files()
 
@@ -45,7 +45,7 @@ class VAS_GUI():
         # 更新数据库
         self.update_db()
 
-        print('已经完成计算操作！')
+        print('已经完成计算操作！' + str(datetime.datetime.now()).split('.')[0])
 
     def compare_xls_file(self):
         # 遍历目录，留下最新的文件

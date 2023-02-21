@@ -4,6 +4,7 @@ import datetime
 import shutil
 import fitz
 from aip import AipOcr
+import time
 
 
 class VAS_GUI():
@@ -41,12 +42,15 @@ class VAS_GUI():
                     res_pdf = client.basicAccuratePdf(pdf_file, options)
                     # 百度ocr
                     back_file_name = self.ocr_to_dataframe(res_pdf)
+                    if back_file_name.__contains__('\n'):
+                        back_file_name = back_file_name.replace('\n', '')
                     if back_file_name:
                         count = self.check_file_name(back_file_name)
                         if count == 0:
                             os.rename(os.path.join(lroot, lfile), self.trim_list_file_finish + '\\' + back_file_name + '.pdf')
                         else:
                             os.rename(os.path.join(lroot, lfile), self.trim_list_file_finish + '\\' + back_file_name + '-' + str(count) + '.pdf')
+                    time.sleep(2)
 
             shutil.rmtree(self.trim_list_file_temp)
             shutil.rmtree(self.local_trim_list_file)
@@ -63,6 +67,7 @@ class VAS_GUI():
         return len(file_name_list)
 
     def pyMuPDF_fitz(self, pdfPath, lfile):
+        # print(pdfPath)
         pdfDoc = fitz.open(pdfPath)
         for pg in range(pdfDoc.page_count):
             old_rect = pdfDoc[pg].rect
@@ -70,13 +75,31 @@ class VAS_GUI():
             base_height = old_rect.height
             # 一个pdf截取成三段
             for splite_pg in range(3):
+                temp_y = 65
+                temp_height = 305
+                if splite_pg == 1:
+                    temp_y = 306
+                    temp_height = 535
+                elif splite_pg == 2:
+                    temp_y = 540
+                    temp_height = 930
                 file_pg = lfile.split('.')[0].strip() + '_' + str(pg) + '_' + str(splite_pg)
-                old_clip = fitz.Rect(0, base_height * splite_pg / 3, base_width, base_height * (splite_pg + 1)/3)
+                old_clip = fitz.Rect(0, temp_y, base_width, temp_height)
                 DOC3 = fitz.open()
-                placerect = fitz.Rect(0, 0, base_width, base_height/3)
-                page = DOC3.new_page(width=base_width, height=base_height/3)
+                placerect = fitz.Rect(0, 0, base_width, 500)
+                page = DOC3.new_page(width=base_width, height=500)
                 page.show_pdf_page(placerect, pdfDoc, pg, clip=old_clip)
                 DOC3.save(self.trim_list_file_temp + '/' + '我的新文档_%s.pdf' % file_pg, garbage=4, deflate=True)
+
+            # 一个pdf截取成三段(旧版)
+            # for splite_pg in range(3):
+            #     file_pg = lfile.split('.')[0].strip() + '_' + str(pg) + '_' + str(splite_pg)
+            #     old_clip = fitz.Rect(0, base_height * splite_pg / 3, base_width, base_height * (splite_pg + 1) / 3)
+            #     DOC3 = fitz.open()
+            #     placerect = fitz.Rect(0, 0, base_width, base_height/3)
+            #     page = DOC3.new_page(width=base_width, height=base_height/3)
+            #     page.show_pdf_page(placerect, pdfDoc, pg, clip=old_clip)
+            #     DOC3.save(self.trim_list_file_temp + '/' + '我的新文档_%s.pdf' % file_pg, garbage=4, deflate=True)
 
     def ocr_to_dataframe(self, msg):
         ocr_msg = ''

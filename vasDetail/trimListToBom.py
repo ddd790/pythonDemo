@@ -320,6 +320,7 @@ class VAS_GUI():
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
+            arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
         elif type.__contains__('Vests'):
             arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])
             arrangeVal.append(['兜布', 'ECO-8301', '黑', '146cm', ''])
@@ -346,6 +347,7 @@ class VAS_GUI():
             arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
+            arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
         else:
             arrangeVal.append(['口袋布 上衣+马甲', 'ECO-8301', '黑', '146cm', ''])
             arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
@@ -365,6 +367,7 @@ class VAS_GUI():
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])
+            arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
         return arrangeVal
 
     def get_file_name_by_num_style(self, num, style):

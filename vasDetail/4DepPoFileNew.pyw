@@ -10,6 +10,7 @@ from dateutil import parser
 import time
 import pdfplumber
 from aip import AipOcr
+import numpy as np
 
 
 class VAS_GUI:
@@ -36,7 +37,7 @@ class VAS_GUI:
         tab.pack()
 
     def po_form_frame(self, poFrame):
-        self.costmer_option = ["NEXT", "SLATERS", "DEVRED", "BS", "ITX"]
+        self.costmer_option = ["NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO"]
         self.type_label = Label(poFrame, text="客户：")
         self.type_label.grid(sticky=W, row=1, column=1)
         self.radio_val = IntVar()
@@ -45,6 +46,7 @@ class VAS_GUI:
         self.radio_val_3 = Radiobutton(poFrame, text=self.costmer_option[2], variable=self.radio_val, value=2).grid(sticky=W, row=3, column=1)
         self.radio_val_4 = Radiobutton(poFrame, text=self.costmer_option[3], variable=self.radio_val, value=3).grid(sticky=W, row=3, column=2)
         self.radio_val_5 = Radiobutton(poFrame, text=self.costmer_option[4], variable=self.radio_val, value=4).grid(sticky=W, row=4, column=1)
+        self.radio_val_6 = Radiobutton(poFrame, text=self.costmer_option[5], variable=self.radio_val, value=5).grid(sticky=W, row=4, column=2)
         self.type_label = Label(poFrame, text="操作类型：")
         self.type_label.grid(sticky=W, row=5, column=1)
         self.option_type = ["新PO", "修改PO"]
@@ -76,23 +78,28 @@ class VAS_GUI:
                                ')', 'Type', 'Fabric', 'Trans', 'Contract', 'Del', 'Ex-Fact', 'Total', 'Supplier', 'Booking']
         self.nextPoList = []
 
-        for lroot, ldirs, lfiles in os.walk(self.local_po_file):
-            if len(lfiles) == 0:
-                tmessage.showerror('错误', '没有找到任何文件！')
-                return None
-            for lfile in lfiles:
-                temp_file_root = os.path.join(lroot, lfile)
-                ctime = parser.parse(time.ctime(
-                    os.path.getctime(temp_file_root)))
-                create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
-                self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
-        # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX")
-        self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
-        self.table_value = self.set_table_dataframe(self.table_data)
-        # print(self.table_value)
-        self.update_db()
-        self.update_po_size_db()
+        # 选择【BS】客户报错
+        if self.radio_val.get() == 3:
+            tmessage.showerror('错误', '人生苦短,目前还没有该客户的读取功能,施主请慢走！')
+            return None
+
         try:
+            for lroot, ldirs, lfiles in os.walk(self.local_po_file):
+                if len(lfiles) == 0:
+                    tmessage.showerror('错误', '没有找到任何文件！')
+                    return None
+                for lfile in lfiles:
+                    temp_file_root = os.path.join(lroot, lfile)
+                    ctime = parser.parse(time.ctime(
+                        os.path.getctime(temp_file_root)))
+                    create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
+                    self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
+            # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO")
+            self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
+            self.table_value = self.set_table_dataframe(self.table_data)
+            self.update_db()
+            self.update_po_size_db()
+            # print(self.table_value)
             tmessage.showinfo('成功', '恭喜操作成功，请到勤哲系统中查看结果吧！')
         except:
             tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部孙适老师！')
@@ -100,14 +107,18 @@ class VAS_GUI:
     def update_po_size_db(self):
         if self.radio_val.get() == 0:
             self.table_value_next_size = self.set_table_dataframe(self.table_data_next_size)
-            # print(self.table_value_next_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_next,
-                                self.nextPoList, self.table_value_next_size, 'D_4DepNEXTSize')
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_next, self.nextPoList, self.table_value_next_size, 'D_4DepNEXTSize')
         elif self.radio_val.get() == 4:
             self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
-            # print(self.table_value_zara_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara,
-                                self.nextPoList, self.table_value_zara_size, 'D_4DepZARASize')
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepZARASize')
+        elif self.radio_val.get() == 2:
+            # DEVRED 跟zara一样
+            self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepDevredSize')
+        elif self.radio_val.get() == 5:
+            # CELIO 跟zara一样
+            self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepCelioSize')
         # elif self.radio_val.get() == 1:
         #     self.table_value_slaters_size = self.set_table_dataframe(self.table_data_zara_size)
         #     # print(self.table_value_slaters_size)
@@ -127,9 +138,138 @@ class VAS_GUI:
             else:
                 self.excel_to_dataframe_next_update(io, fileDate)
         elif radioType == 4:
-            self.excel_to_dataframe_itx_add(io, fileDate)
+            self.pdf_to_dataframe_itx_add(io, fileDate)
         elif radioType == 1:
             self.excel_to_dataframe_slaters_add(io, fileDate)
+        elif radioType == 2:
+            self.pdf_to_dataframe_devred_add(io, fileDate)
+        elif radioType == 5:
+            self.pdf_to_dataframe_celio_add(io, fileDate)
+
+    def pdf_to_dataframe_celio_add(self, io, fileDate):
+        pdf = pdfplumber.open(io)
+        packaging_type = ''
+        po_no = ''
+        style_no = ''
+        en_style_name = ''
+        destination = ''  # 目的港
+        trade_mode = ''  # 贸易方式
+        shipping_mode = ''  # 走货方式
+        fabric = ''
+        currency = ''
+        season = ''
+        come_date = ''
+        sum_qty = 0
+        size_list = []
+        size_detail_list = []
+        unit_price = ''
+        for page in pdf.pages:
+            if page.page_number == 1:
+                file_txt = str(page.extract_text())
+                po_no = self.get_value_two_word(file_txt, 'Purchase Order Nr:', 'Order type:').strip()
+                destination = self.get_value_two_word(file_txt, 'Country: ', 'Tel:').strip()
+                trade_destination = self.get_value_two_word(file_txt, 'Incoterm:', 'Origin of Fabric:').strip()
+                trade_mode = trade_destination.split(' ')[0]
+                shipping_mode = self.get_value_two_word(file_txt, 'Shipping mode:', 'Agent:').strip()
+                season_tmp = self.get_value_two_word(file_txt, 'Season:', 'Trading address:').strip()
+                season = season_tmp.split(' ')[0][0] + season_tmp.split(' ')[1]
+                come_date = self.format_shipping_date(self.get_value_two_word(file_txt, 'initial order date:', 'Purchase Order Nr:').strip())
+                delivery_date = self.format_shipping_date(self.get_value_two_word(
+                    file_txt, 'Initial delivery date to forwarder:', 'Delayed delivery date to forwarder:').strip())
+                # 获取pdf表格中的内容
+                for table in page.extract_tables():
+                    for row in table:
+                        if row[0] is not None and row[0] != 'PACKAGING\nTYPE':
+                            packaging_type = row[0]
+                            style_no = row[1]
+                            fabric = row[5]
+                            unit_price = str(row[12]).split(' ')[0].replace(',', '.')
+                            currency = str(row[12]).split(' ')[1]
+                            size_list.append(str(row[6]))
+                            size_detail_list.append(row[10])
+                            sum_qty = sum_qty + int(row[10])
+        # 'TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期', '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', '来单日期'
+        # 由于其他的客户没有美金单价，【celio】这个客户的【商标】列存放美金单价。
+        temp_po_detail = [packaging_type, po_no, style_no, en_style_name, sum_qty, delivery_date,
+                          destination, trade_mode, shipping_mode, unit_price, 1, fabric, currency, season, come_date]
+        po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
+        self.table_data = self.table_data.append(po_detail, ignore_index=True)
+        for s_idx in range(len(size_list)):
+            if int(str(size_detail_list[s_idx])) > 0:
+                temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(size_detail_list[s_idx]))]
+                zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
+                self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+        self.nextPoList.append(po_no)
+
+    def pdf_to_dataframe_devred_add(self, io, fileDate):
+        pdf = pdfplumber.open(io)
+        style_no = ''
+        en_style_name = ''
+        destination = ''  # 目的港
+        trade_mode = ''  # 贸易方式
+        fabric = ''
+        currency = ''
+        season = ''
+        come_date = ''
+        qty_list = []
+        deliv_list = []
+        first_size = ''
+        for page in pdf.pages:
+            file_txt = str(page.extract_text())
+            style_no = self.get_value_two_word(file_txt, 'SAMPLE REFERENCE', 'COLOR').strip()
+            en_style_name = self.get_value_two_word(file_txt, 'NAME', 'MODEL').strip()
+            trade_destination = self.get_value_two_word(file_txt, 'INCOTERM', 'TOTAL QUANTITY').strip()
+            destination = trade_destination.split(' ')[1]
+            trade_mode = trade_destination.split(' ')[0]
+            fabric = self.get_value_two_word(file_txt, 'COLOR', '\nDESCRIPTION').strip()
+            currency = self.get_value_two_word(file_txt, 'CURRENCY', 'INCOTERM').strip()
+            season = self.get_value_two_word(file_txt, 'SEASON :', 'Date:').strip()
+            come_date = self.format_shipping_date(self.get_value_two_word(file_txt, 'Date:', 'SFAM:').strip())
+            if file_txt.__contains__('TXXS'):
+                first_size = 'TXXS'
+            elif file_txt.__contains__('TXS'):
+                first_size = 'TXS'
+            elif file_txt.__contains__('TS'):
+                first_size = 'TS'
+            else:
+                first_size = 'TM'
+            find_first_size = '\n' + first_size + ' '
+            delivery_date = self.get_value_two_word(file_txt, 'QTY', find_first_size).strip()
+            deliv_list = delivery_date.split(' ')
+            for i in range(len(deliv_list)):
+                deliv_list[i] = self.format_shipping_date(deliv_list[i])
+            # 先取数量明细字段
+            num_detail_txt = self.get_value_two_word(file_txt, 'SIZE TOTAL QTY', 'REMARKS').strip()
+            # 数量取得
+            num_txt = self.get_value_two_word(num_detail_txt, 'TOTAL', 'PACKING REQUIREMENTS').strip()
+            qty_list = np.split(num_txt.split(' '), [1, len(deliv_list) + 1])[1]
+        size_list = []
+        size_content_flag = False
+        size_detail_list = [[] for i in range(len(deliv_list))]
+        # 获取pdf表格中的内容
+        for table in page.extract_tables():
+            for row in table:
+                if row[0] == first_size:
+                    size_content_flag = True
+                if row[0] == 'TOTAL':
+                    size_content_flag = False
+                if size_content_flag:
+                    size_list.append(row[0].replace('T', ''))
+                    for n_idx in range(len(deliv_list)):
+                        size_detail_list[n_idx].append(row[n_idx + 2])
+
+        for n_idx in range(len(deliv_list)):
+            # 'TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期', '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', '来单日期'
+            temp_po_detail = ['', '', style_no, en_style_name, qty_list[n_idx], deliv_list[n_idx],
+                              destination, trade_mode, 'SHIP', 'DEVRED', 1, fabric, currency, season, come_date]
+            po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
+            self.table_data = self.table_data.append(po_detail, ignore_index=True)
+            for s_idx in range(len(size_list)):
+                if int(str(size_detail_list[n_idx][s_idx])) > 0:
+                    temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(size_detail_list[n_idx][s_idx]))]
+                    zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
+                    self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+        self.nextPoList.append(style_no)
 
     def excel_to_dataframe_slaters_add(self, io, fileDate):
         excelData = pd.read_excel(io, header=None, keep_default_na=False, sheet_name='ORDER')
@@ -201,7 +341,7 @@ class VAS_GUI:
         po_df[self.add_data_title[14]] = come_date
         self.table_data = self.table_data.append(po_df, ignore_index=True)
 
-    def excel_to_dataframe_itx_add(self, io, fileDate):
+    def pdf_to_dataframe_itx_add(self, io, fileDate):
         pdf_file = self.get_file_content(io)
         options = {}
         options['detect_direction'] = 'true'
@@ -446,13 +586,13 @@ class VAS_GUI:
         po_df[self.add_data_title[11]] = fabric_color_list
         po_df[self.add_data_title[12]] = 'USD'
         po_df[self.add_data_title[13]] = ''
-        po_df[self.add_data_title[14]] = ''
+        po_df[self.add_data_title[14]] = str(datetime.datetime.now()).split('.')[0]
         self.table_data = self.table_data.append(po_df, ignore_index=True)
         for n_idx in range(len(po_list)):
             po_df_size = pd.DataFrame(data=None, columns=self.add_data_title_size_next)
-            po_df_size[self.add_data_title_size_next[14]] = next_size_num_list[n_idx]['sizeNo']
-            po_df_size[self.add_data_title_size_next[15]] = next_size_num_list[n_idx]['size']
-            po_df_size[self.add_data_title_size_next[16]] = next_size_num_list[n_idx]['num']
+            po_df_size[self.add_data_title_size_next[15]] = next_size_num_list[n_idx]['sizeNo']
+            po_df_size[self.add_data_title_size_next[16]] = next_size_num_list[n_idx]['size']
+            po_df_size[self.add_data_title_size_next[17]] = next_size_num_list[n_idx]['num']
             po_df_size[self.add_data_title_size_next[0]] = type_list[n_idx]
             po_df_size[self.add_data_title_size_next[1]] = po_list[n_idx]
             po_df_size[self.add_data_title_size_next[2]] = style_no_list[n_idx]
@@ -467,7 +607,7 @@ class VAS_GUI:
             po_df_size[self.add_data_title_size_next[11]] = fabric_color_list[n_idx]
             po_df_size[self.add_data_title_size_next[12]] = 'USD'
             po_df_size[self.add_data_title_size_next[13]] = ''
-            po_df_size[self.add_data_title_size_next[14]] = ''
+            po_df_size[self.add_data_title_size_next[14]] = str(datetime.datetime.now()).split('.')[0]
             self.table_data_next_size = self.table_data_next_size.append(po_df_size, ignore_index=True)
         self.nextPoList.extend(po_list)
 
@@ -519,7 +659,8 @@ class VAS_GUI:
         num_list = []
         step_idx = 1
         for res_idx in range(len(res_df)):
-            if 'Click here' in str(res_df['列12'][res_idx]):
+            # print(res_df['列14'][res_idx])
+            if 'Assign site / factory.' in str(res_df['列14'][res_idx]):
                 step_idx = 1
                 if len(color_list) > 0:
                     color_size_num_list.append(
@@ -559,8 +700,11 @@ class VAS_GUI:
         conn = pymssql.connect(self.serverName, self.userName, self.passWord, self.dbName)
         cursor = conn.cursor()
         if len(self.nextPoList) > 0:
-            del_tuple = tuple(self.nextPoList)
-            delSql = 'delete from D_4DepPoInfo where version = 1 and PO号 = (%s)'
+            # del_tuple = tuple(self.nextPoList)
+            del_tuple = []
+            for tuple_po in self.nextPoList:
+                del_tuple.append((tuple_po, tuple_po))
+            delSql = 'delete from D_4DepPoInfo where version = 1 and (PO号 = (%s) OR 款号 = (%s))'
             cursor.executemany(delSql, del_tuple)
         insertValue = []
         for tabVal in self.table_value:
@@ -585,8 +729,11 @@ class VAS_GUI:
         conn = pymssql.connect(self.serverName, self.userName, self.passWord, self.dbName)
         cursor = conn.cursor()
         if len(poList) > 0 and insertType == 0:
-            del_tuple = tuple(poList)
-            delSql = 'delete from ' + tableName + ' where version = 1 and PO号 = (%s)'
+            # del_tuple = tuple(poList)
+            del_tuple = []
+            for tuple_po in poList:
+                del_tuple.append((tuple_po, tuple_po))
+            delSql = 'delete from ' + tableName + ' where version = 1 and (PO号 = (%s) OR 款号 = (%s))'
             cursor.executemany(delSql, del_tuple)
         insertValue = []
         for tabVal in insertItem:
@@ -633,6 +780,8 @@ class VAS_GUI:
             return ''
         if temp_str.__contains__('DEADLINE'):
             temp_str = str(temp_str).replace('DEADLINE', '')
+        if temp_str.__contains__('.'):
+            temp_str = str(temp_str).replace('.', '/')
         temp_str = str(temp_str).strip()
         t_handover_date = temp_str.split('/')
         return t_handover_date[2] + '-' + t_handover_date[1] + '-' + t_handover_date[0]

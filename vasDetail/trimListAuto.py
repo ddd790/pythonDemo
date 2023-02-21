@@ -31,6 +31,7 @@ class VAS_GUI():
         for root, dirs, files in os.walk(networked_directory):
             for file in files:
                 if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')):
+                    # print(file)
                     shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
         # 保留相同文件中最大的记录
         self.compare_xls_file()
@@ -41,6 +42,7 @@ class VAS_GUI():
         self.allDataKeys = []
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
             for lfile in lfiles:
+                # print(lfile)
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
         # 更新数据库
         self.update_db()
