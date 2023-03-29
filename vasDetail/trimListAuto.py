@@ -5,12 +5,21 @@ import datetime
 import pymssql
 import numpy as np
 from tkinter import *
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
 
 
 class VAS_GUI():
     # 批量获取服务器数据，进行累加操作
     def get_files(self):
-        print('数据操作进行中......')
+        # 设置登录及服务器信息
+        self.mail_host = 'smtp.263.net'
+        self.mail_user = 'derek@motiveschina.com'
+        self.mail_pass = '9573CCf0fd37BA42'
+        self.sender = 'derek@motiveschina.com'
+        self.receivers = ['sibyl@motiveschina.com']
+        # print('数据操作进行中......')
         # 追加的dataFrame的title
         self.add_data_title = ['version', '订单PO号', '款式缩写', '面料', '英文品名', '辅料表面料描述', '是否半里子', '前身里代号', '前身里料品色号', '袖里代号', '袖里料品色号',
                                '后袖笼拼接料代码', '后袖笼拼接料品色号', '第三种里料代码', '第三种里料品色号', '扣代号', '国外扣供应商品号色号', '内扣或两种以上扣代号', '内扣或两种以上扣型号',
@@ -27,26 +36,34 @@ class VAS_GUI():
         if os.path.exists(self.local_vas_detail_file):
             shutil.rmtree(self.local_vas_detail_file)
         os.mkdir(self.local_vas_detail_file)
-        # copy服务器的TRIMLIST文件到本地
-        for root, dirs, files in os.walk(networked_directory):
-            for file in files:
-                if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')):
-                    # print(file)
-                    shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
-        # 保留相同文件中最大的记录
-        self.compare_xls_file()
+        # 错误文件,用于发送邮件
+        error_file = ''
+        try:
+            # copy服务器的TRIMLIST文件到本地
+            for root, dirs, files in os.walk(networked_directory):
+                for file in files:
+                    if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')):
+                        # print(file)
+                        error_file = file
+                        shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
 
-        # 循环本地临时文件，处理合并
-        self.table_value = []
-        self.delPoList = []
-        self.allDataKeys = []
-        for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
-            for lfile in lfiles:
-                # print(lfile)
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
-        # 更新数据库
-        self.update_db()
-        print('已经完成计算操作！')
+            # 保留相同文件中最大的记录
+            self.compare_xls_file()
+
+            # 循环本地临时文件，处理合并
+            self.table_value = []
+            self.delPoList = []
+            self.allDataKeys = []
+            for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
+                for lfile in lfiles:
+                    # print(lfile)
+                    error_file = lfile
+                    self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
+            # 更新数据库
+            self.update_db()
+            # print('已经完成计算操作！')
+        except:
+            self.send_mail(error_file)
 
     def compare_xls_file(self):
         # 遍历目录，留下最新的文件
@@ -315,6 +332,26 @@ class VAS_GUI():
             cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
+
+    def send_mail(self, file_name):
+        # 设置eamil信息
+        # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
+        message = MIMEText('不好意思，出错的文件为【' + file_name + '】,请联系信息中心处理，非常感谢！', 'plain', 'utf-8')
+        message['From'] = self.sender
+        message['To'] = self.receivers[0]
+        # 设置html格式参数
+        subject = '这是一个【Trimlist】读取错误的提醒邮件'
+        message['Subject'] = Header(subject, 'utf-8')
+
+        # 登录并发送
+        try:
+            smtpObj = smtplib.SMTP()
+            smtpObj.connect(self.mail_host, 465)
+            smtpObj.login(self.mail_user, self.mail_pass)
+            smtpObj.sendmail(self.sender, self.receivers, message.as_string())
+            smtpObj.quit()
+        except smtplib.SMTPException as e:
+            print('error', e)
 
 
 def gui_start():

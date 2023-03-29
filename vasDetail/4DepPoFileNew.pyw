@@ -37,7 +37,7 @@ class VAS_GUI:
         tab.pack()
 
     def po_form_frame(self, poFrame):
-        self.costmer_option = ["NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO"]
+        self.costmer_option = ["NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO", "IZAC"]
         self.type_label = Label(poFrame, text="客户：")
         self.type_label.grid(sticky=W, row=1, column=1)
         self.radio_val = IntVar()
@@ -47,20 +47,21 @@ class VAS_GUI:
         self.radio_val_4 = Radiobutton(poFrame, text=self.costmer_option[3], variable=self.radio_val, value=3).grid(sticky=W, row=3, column=2)
         self.radio_val_5 = Radiobutton(poFrame, text=self.costmer_option[4], variable=self.radio_val, value=4).grid(sticky=W, row=4, column=1)
         self.radio_val_6 = Radiobutton(poFrame, text=self.costmer_option[5], variable=self.radio_val, value=5).grid(sticky=W, row=4, column=2)
+        self.radio_val_7 = Radiobutton(poFrame, text=self.costmer_option[6], variable=self.radio_val, value=6).grid(sticky=W, row=5, column=1)
         self.type_label = Label(poFrame, text="操作类型：")
-        self.type_label.grid(sticky=W, row=5, column=1)
+        self.type_label.grid(sticky=W, row=6, column=1)
         self.option_type = ["新PO", "修改PO"]
         self.radio_type = IntVar()
-        self.radio_type_1 = Radiobutton(poFrame, text=self.option_type[0], variable=self.radio_type, value=0).grid(sticky=W, row=6, column=1)
+        self.radio_type_1 = Radiobutton(poFrame, text=self.option_type[0], variable=self.radio_type, value=0).grid(sticky=W, row=7, column=1)
         # 按钮
         self.commit_button = Button(poFrame, text="点击读取PO", bg="lightblue", width=18, command=self.commit_form)
-        self.commit_button.grid(sticky=W, row=7, column=1)
+        self.commit_button.grid(sticky=W, row=8, column=1)
         # 显示文字框
         self.file_show_label = Label(poFrame, text="请在D盘建立【4DepPo】文件夹，放入文件后点击按钮。", wraplength=400)
-        self.file_show_label.grid(sticky=W, row=8, column=1, columnspan=10)
+        self.file_show_label.grid(sticky=W, row=9, column=1, columnspan=10)
         self.file_show_label = Label(poFrame, text="※ 注意选择好【客户】和【操作类型】。", wraplength=400)
         self.file_show_label.config(fg="red")
-        self.file_show_label.grid(sticky=W, row=9, column=1, columnspan=10)
+        self.file_show_label.grid(sticky=W, row=10, column=1, columnspan=10)
 
     def commit_form(self):
         self.add_data_title = ['TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期',
@@ -82,7 +83,6 @@ class VAS_GUI:
         if self.radio_val.get() == 3:
             tmessage.showerror('错误', '人生苦短,目前还没有该客户的读取功能,施主请慢走！')
             return None
-
         try:
             for lroot, ldirs, lfiles in os.walk(self.local_po_file):
                 if len(lfiles) == 0:
@@ -90,16 +90,19 @@ class VAS_GUI:
                     return None
                 for lfile in lfiles:
                     temp_file_root = os.path.join(lroot, lfile)
+                    # print(temp_file_root)
                     ctime = parser.parse(time.ctime(
                         os.path.getctime(temp_file_root)))
                     create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
                     self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
-            # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO")
+            # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO", "IZAC")
             self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
             self.table_value = self.set_table_dataframe(self.table_data)
+            # print('----------------------------------')
+            # print(self.table_data)
+            # print(self.table_data_next_size)
             self.update_db()
             self.update_po_size_db()
-            # print(self.table_value)
             tmessage.showinfo('成功', '恭喜操作成功，请到勤哲系统中查看结果吧！')
         except:
             tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部孙适老师！')
@@ -119,6 +122,10 @@ class VAS_GUI:
             # CELIO 跟zara一样
             self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
             self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepCelioSize')
+        elif self.radio_val.get() == 6:
+            # IZAC 跟zara一样
+            self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepIZACSize')
         # elif self.radio_val.get() == 1:
         #     self.table_value_slaters_size = self.set_table_dataframe(self.table_data_zara_size)
         #     # print(self.table_value_slaters_size)
@@ -145,6 +152,105 @@ class VAS_GUI:
             self.pdf_to_dataframe_devred_add(io, fileDate)
         elif radioType == 5:
             self.pdf_to_dataframe_celio_add(io, fileDate)
+        elif radioType == 6:
+            self.pdf_to_dataframe_izac_add(io, fileDate)
+
+    def pdf_to_dataframe_izac_add(self, io, fileDate):
+        pdf = pdfplumber.open(io)
+        po_no = ''
+        style_no = ''
+        en_style_name = ''
+        destination = ''  # 目的港
+        trade_mode = ''  # 贸易方式
+        shipping_mode = ''  # 走货方式
+        fabric_list = []
+        currency = ''
+        season = ''
+        come_date = ''
+        sum_qty = 0
+        hs_code = ''
+        unit_price = ''
+        table1 = []
+        for page in pdf.pages:
+            file_txt = str(page.extract_text())
+            delivery_date = ''
+            if file_txt.__contains__('SHIPMENT DATE:'):
+                delivery_date = self.format_shipping_date(self.get_value_two_word(file_txt, 'SHIPMENT DATE:', None).strip()[:10])
+            if file_txt.__contains__('Incoterm :'):
+                trade_mode = self.get_value_two_word(file_txt, 'Incoterm :', 'Transport :').strip()
+                shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Transporteur :').strip()
+            if page.page_number == 1:
+                po_no_tmp = self.get_value_two_word(file_txt, 'Order Number :', 'Invoicing :').strip()
+                po_no = "".join(list(filter(str.isdigit, po_no_tmp[:6])))
+                destination = self.get_value_two_word(file_txt, 'Consigne', 'DALIAN CHINA').strip().split(' ')[-1]
+                en_style_name = self.get_value_two_word(file_txt, 'Classification : ', 'Désignation :').strip()
+                style_no = self.get_value_two_word(file_txt, 'Article Code :', 'Nomenclature douanière :').strip().split(' ')[0]
+                hs_code = self.get_value_two_word(file_txt, 'Nomenclature douanière :', 'Collection :').strip()
+                season = self.get_value_two_word(file_txt, 'Collection :', 'Thème :').strip()
+                trade_mode = self.get_value_two_word(file_txt, 'Incoterm :', 'Transport :').strip()
+                shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Transporteur :').strip()
+                come_date = self.format_shipping_date(self.get_value_two_word(po_no_tmp, 'Date :', 'Invoicing :').strip()[:10])
+                unit_price = self.get_value_two_word(file_txt, 'Net Buying Price ex VAT :', 'Discount :').strip()
+                # 获取pdf第一个表格
+                table = page.extract_tables()[0]
+                table1 = page.extract_tables()[1]
+                tmp_qty_info = 'Total Quantity :' + self.get_value_two_word(file_txt, 'Total Quantity :', None)
+                tmp_qty = self.get_value_two_word(tmp_qty_info, 'Total Quantity :', style_no).strip().replace(' ', '')
+                sum_qty = int(str(tmp_qty))
+                currency = self.get_value_two_word(tmp_qty_info, 'CURRENCY :', '\n').strip()
+                for row in table:
+                    row.pop()
+                    tmp_size_type = row[0]
+                    if tmp_size_type is not None and tmp_size_type != '' and tmp_size_type != 'Color' and tmp_size_type != 'Total':
+                        del (row[0])
+                        fabric_list = tmp_size_type.split('\n')
+        # 获取size和颜色的列表
+        tmp_size_table = table1[1]
+        tmp_color_list = tmp_size_table[0].split('\n')
+        tmp_size_color = tmp_color_list[0]
+        tmp_size_list = tmp_size_table[1].split('\n')
+        tmp_qty_list = tmp_size_table[3].split('\n')
+        size_idx = 0
+        # 尺码和数量的list
+        size_list = {}
+        size_detail_list = {}
+        size_list_val = []
+        size_detail_list_val = []
+        for color_idx in range(len(tmp_color_list)):
+            if tmp_color_list[color_idx] != tmp_size_color:
+                tmp_size_color = tmp_color_list[color_idx]
+                size_idx = size_idx + 1
+                size_list_val = []
+                size_detail_list_val = []
+            size_list_val.append(tmp_size_list[color_idx])
+            size_detail_list_val.append(tmp_qty_list[color_idx])
+            size_list[tmp_color_list[color_idx]] = size_list_val
+            size_detail_list[tmp_color_list[color_idx]] = size_detail_list_val
+
+        for n_idx in range(len(fabric_list)):
+            # 'TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期', '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', '来单日期'
+            # 由于其他的客户没有HS编码，【izac】这个客户的【TYPE】列存放HS编码。
+            # 由于其他的客户没有结汇单价，【izac】这个客户的【商标】列存放结汇单价。
+            input_color = fabric_list[n_idx]
+            temp_po_detail = [hs_code, po_no, style_no, en_style_name, sum_qty, delivery_date,
+                              destination, trade_mode, shipping_mode, unit_price, 1, input_color, currency, season, come_date]
+            po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
+            self.table_data = self.table_data.append(po_detail, ignore_index=True)
+            for s_idx in range(len(size_list[input_color])):
+                if int(str(size_detail_list[input_color][s_idx])) > 0:
+                    temp_size_detail = temp_po_detail + \
+                        [self.change_izac_size(size_list[input_color][s_idx]), int(str(size_detail_list[input_color][s_idx]))]
+                    zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
+                    self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+        # print(self.table_data)
+        # print(self.table_data_zara_size)
+        self.nextPoList.append(po_no)
+
+    def change_izac_size(self, size):
+        if str(size).__contains__(' ('):
+            size_change_list = {'42-44 (': 'XS', '46-48 (': 'S', '50-52 (': 'M', '54-56 (': 'L', '58-60 (': 'XL', '62-64 (': 'XXL', '66-68 (': 'XXXL'}
+            return size_change_list[size]
+        return size
 
     def pdf_to_dataframe_celio_add(self, io, fileDate):
         pdf = pdfplumber.open(io)
@@ -391,11 +497,17 @@ class VAS_GUI:
                     file_txt, 'ORDER NR', 'TOTAL ORDER').strip()
                 file_txt_list = info_txt.split('\n')
                 if send_to == '西班牙' or send_to == '巴黎':
+                    # market_of_origin_list = ['MAINLAND'] 原产地市场
                     for temp_des in file_txt_list:
                         if str(temp_des).__contains__('MAINLAND'):
                             style_no = temp_des.split(' ')[0]
                             en_style_name = self.get_value_two_word(
                                 temp_des, style_no, 'MAINLAND').strip().replace('[', '').replace(']', '')
+                            break
+                        elif str(temp_des).__contains__('CAMBODIA'):
+                            style_no = temp_des.split(' ')[0]
+                            en_style_name = self.get_value_two_word(
+                                temp_des, style_no, 'CAMBODIA').strip().replace('[', '').replace(']', '')
                             break
                 else:
                     for temp_des in file_txt_list:
@@ -525,6 +637,8 @@ class VAS_GUI:
                     temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))]
                     zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
                     self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+            # print(self.table_data)
+            # print(self.table_data_zara_size)
             self.nextPoList.extend(po_list)
 
     def excel_to_dataframe_next_add(self, io, fileDate):
@@ -548,8 +662,8 @@ class VAS_GUI:
                 style_idx = style_idx + 1
                 temp_en_name = en_name_type_val
                 continue
-            en_name_list.append(temp_en_name)
-            fabric_color_list.append(temp_en_name.split(' ')[2])
+            en_name_list.append(temp_en_name.split('Style')[0] + 'Style')
+            fabric_color_list.append(temp_en_name.split('Style')[1])
             style_no_list.append(temp_style_no_list[style_idx])
             type_list.append(en_name_type_val)
         # 走货方式
