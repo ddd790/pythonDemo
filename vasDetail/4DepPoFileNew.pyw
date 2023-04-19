@@ -91,18 +91,17 @@ class VAS_GUI:
                 for lfile in lfiles:
                     temp_file_root = os.path.join(lroot, lfile)
                     # print(temp_file_root)
-                    ctime = parser.parse(time.ctime(
-                        os.path.getctime(temp_file_root)))
+                    ctime = parser.parse(time.ctime(os.path.getctime(temp_file_root)))
                     create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
                     self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
             # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO", "IZAC")
             self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
             self.table_value = self.set_table_dataframe(self.table_data)
-            # print('----------------------------------')
-            # print(self.table_data)
-            # print(self.table_data_next_size)
             self.update_db()
             self.update_po_size_db()
+            # print('----------------------------------')
+            # print(self.table_data)
+            # print(self.table_value_zara_size)
             tmessage.showinfo('成功', '恭喜操作成功，请到勤哲系统中查看结果吧！')
         except:
             tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部孙适老师！')
@@ -482,9 +481,9 @@ class VAS_GUI:
         one_page_flag = False
         style_no_flag = False
         for page in pdf.pages:
-            count += 1
-            if count == 1:
-                file_txt = str(page.extract_text()).split('TOTAL ORDER')[0]
+            file_txt_read = str(page.extract_text())
+            if file_txt_read.__contains__('SEND TO'):
+                file_txt = file_txt_read.split('TOTAL ORDER')[0]
                 send_to_txt = self.get_value_two_word(
                     file_txt, 'SEND TO', 'ORDER NR').strip()
                 if send_to_txt.__contains__('ESPAÑA'):
@@ -523,6 +522,7 @@ class VAS_GUI:
                 other_info_flag = False
                 po_detail_info_flag = False
                 for table in page.extract_tables():
+                    # print(table)
                     for row1 in table:
                         row = [self.replace_exist_word(i) for i in row1]
                         if str(row[0]).__contains__('ORDER NR'):
@@ -581,8 +581,27 @@ class VAS_GUI:
                             first_page_po_num_list = []
             else:
                 for table in page.extract_tables():
+                    # print(table)
+                    po_list = []
+                    come_date_list = []
+                    handover_date_list = []
+                    incoterm_list = []
+                    transport_mode_list = []
+                    first_page_color_list = []
+                    first_page_size_num_list = []
+                    first_page_po_num_list = []
                     for row in table:
-                        row = [self.replace_exist_word(i) for i in row1]
+                        row = [self.replace_exist_word(i) for i in row]
+                        if 'D' in row:
+                            row.remove('D')
+                        if 'R' in row:
+                            row.remove('R')
+                        if 'A' in row:
+                            row.remove('A')
+                        if 'F' in row:
+                            row.remove('F')
+                        if 'T' in row:
+                            row.remove('T')
                         if row[0] is None or str(row[0]) == '':
                             continue
                         row = list(filter(None, row))
@@ -614,29 +633,31 @@ class VAS_GUI:
                             first_page_size_num_list.append(row[1:][:-1])
                             first_page_po_num_list.append(int(str(row[-1]).replace(',', '')))
                             continue
-            for n_idx in range(len(first_page_color_list)):
-                temp_po_detail = [
-                    is_green,
-                    po_list[n_idx],
-                    style_no,
-                    en_style_name,
-                    first_page_po_num_list[n_idx],
-                    handover_date_list[n_idx],
-                    send_to,
-                    incoterm_list[n_idx],
-                    transport_mode_list[n_idx],
-                    '',
-                    1,
-                    first_page_color_list[n_idx],
-                    currency,
-                    season,
-                    come_date_list[n_idx]]
-                po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
-                self.table_data = self.table_data.append(po_detail, ignore_index=True)
-                for s_idx in range(len(size_list)):
-                    temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))]
-                    zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
-                    self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+                    # print(po_list)
+                    # print(first_page_color_list)
+                    for n_idx in range(len(first_page_color_list)):
+                        temp_po_detail = [
+                            is_green,
+                            po_list[n_idx],
+                            style_no,
+                            en_style_name,
+                            first_page_po_num_list[n_idx],
+                            handover_date_list[n_idx],
+                            send_to,
+                            incoterm_list[n_idx],
+                            transport_mode_list[n_idx],
+                            '',
+                            1,
+                            first_page_color_list[n_idx],
+                            currency,
+                            season,
+                            come_date_list[n_idx]]
+                        po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
+                        self.table_data = self.table_data.append(po_detail, ignore_index=True)
+                        for s_idx in range(len(size_list)):
+                            temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))]
+                            zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
+                            self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
             # print(self.table_data)
             # print(self.table_data_zara_size)
             self.nextPoList.extend(po_list)
