@@ -36,14 +36,19 @@ class VAS_GUI():
             for lroot, ldirs, lfiles in os.walk(self.trim_list_file_temp):
                 for lfile in lfiles:
                     pdf_file = self.get_file_content(os.path.join(lroot, lfile))
-                    # 调用通用文字识别（高精度版）
+                    # 调用通用文字识别
                     options = {}
                     options["detect_direction"] = "true"
+                    # （高精度版）
                     res_pdf = client.basicAccuratePdf(pdf_file, options)
+                    # 普通版
+                    # res_pdf = client.basicGeneralPdf(pdf_file, options)
                     # 百度ocr
                     back_file_name = self.ocr_to_dataframe(res_pdf)
                     if back_file_name.__contains__('\n'):
                         back_file_name = back_file_name.replace('\n', '')
+                    if back_file_name.__contains__('户名'):
+                        back_file_name = back_file_name.split('户名')[1]
                     if back_file_name:
                         count = self.check_file_name(back_file_name)
                         if count == 0:
@@ -107,7 +112,7 @@ class VAS_GUI():
             ocr_msg = ocr_msg + ('{}\n'.format(i.get('words')))
         # print(ocr_msg)
         # 收款方户名作为文件名
-        accept_name = self.get_value_two_word(ocr_msg, '收款方\n户名', '\n开户行')
+        accept_name = self.get_value_two_word(ocr_msg, '收款方\n户名', '\n开户行').replace('/', '')
         return accept_name.strip()
 
     def get_value_two_word(self, txt_str, one, two):

@@ -451,6 +451,7 @@ class VAS_GUI:
         options = {}
         options['detect_direction'] = 'true'
         res_pdf = self.client.basicAccuratePdf(pdf_file, options)
+        # res_pdf = self.client.basicAccuratePdf(pdf_file, options)
         ocr_msg = ''
         for i in res_pdf.get('words_result'):
             ocr_msg = ocr_msg + '{}\n'.format(i.get('words'))
@@ -480,6 +481,8 @@ class VAS_GUI:
         size_list = []
         one_page_flag = False
         style_no_flag = False
+        cost_price = ''
+        only_one_page = True
         for page in pdf.pages:
             file_txt_read = str(page.extract_text())
             if file_txt_read.__contains__('SEND TO'):
@@ -500,14 +503,22 @@ class VAS_GUI:
                     for temp_des in file_txt_list:
                         if str(temp_des).__contains__('MAINLAND'):
                             style_no = temp_des.split(' ')[0]
+                            if not style_no.__contains__('/'):
+                                style_no = temp_des.split(' ')[1]
                             en_style_name = self.get_value_two_word(
                                 temp_des, style_no, 'MAINLAND').strip().replace('[', '').replace(']', '')
                             break
                         elif str(temp_des).__contains__('CAMBODIA'):
                             style_no = temp_des.split(' ')[0]
+                            if not style_no.__contains__('/'):
+                                style_no = temp_des.split(' ')[1]
                             en_style_name = self.get_value_two_word(
                                 temp_des, style_no, 'CAMBODIA').strip().replace('[', '').replace(']', '')
                             break
+                        else:
+                            style_no = temp_des.split(' ')[0]
+                            if style_no.__contains__('/'):
+                                break
                 else:
                     for temp_des in file_txt_list:
                         if str(temp_des).__contains__('市场'):
@@ -515,6 +526,8 @@ class VAS_GUI:
                             continue
                         if style_no_flag:
                             style_no = temp_des.split(' ')[0]
+                            if not style_no.__contains__('/'):
+                                style_no = temp_des.split(' ')[1]
                             en_style_name = self.get_value_two_word(temp_des, style_no, None).strip()
                             style_no_flag = False
                 order_flag = False
@@ -525,6 +538,16 @@ class VAS_GUI:
                     # print(table)
                     for row1 in table:
                         row = [self.replace_exist_word(i) for i in row1]
+                        if str(row[0]).strip().__contains__('COST PRICE:') or str(row[0]).strip().__contains__('COST PRICE / 单价:'):
+                            # 追加单价列，放在商标列里
+                            cost_price = str(self.get_value_two_word(str(row[0]).strip(), 'COST PRICE:', currency).strip())
+                            if currency == 'CNY':
+                                cost_price = str(self.get_value_two_word(str(row[0]).strip(), 'COST PRICE / 单价:', currency).strip())
+                        if len(row) > 2 and row[1] is not None and (str(row[1]).strip().__contains__('COST PRICE:') or str(row[1]).strip().__contains__('COST PRICE / 单价:')):
+                            # 追加单价列，放在商标列里
+                            cost_price = str(self.get_value_two_word(str(row[1]).strip(), 'COST PRICE:', currency).strip())
+                            if currency == 'CNY':
+                                cost_price = str(self.get_value_two_word(str(row[1]).strip(), 'COST PRICE / 单价:', currency).strip())
                         if str(row[0]).__contains__('ORDER NR'):
                             order_flag = True
                             continue
@@ -571,6 +594,7 @@ class VAS_GUI:
                         elif file_txt.__contains__('INCOTERM') and len(first_page_color_list) == 0:
                             one_page_flag = True
                         else:
+                            only_one_page = False
                             po_list = []
                             come_date_list = []
                             handover_date_list = []
@@ -579,6 +603,8 @@ class VAS_GUI:
                             first_page_color_list = []
                             first_page_size_num_list = []
                             first_page_po_num_list = []
+                if only_one_page:
+                    break
             else:
                 for table in page.extract_tables():
                     # print(table)
@@ -605,6 +631,16 @@ class VAS_GUI:
                         if row[0] is None or str(row[0]) == '':
                             continue
                         row = list(filter(None, row))
+                        if str(row[0]).strip().__contains__('COST PRICE:') or str(row[0]).strip().__contains__('COST PRICE / 单价:'):
+                            # 追加单价列，放在商标列里
+                            cost_price = str(self.get_value_two_word(str(row[0]).strip(), 'COST PRICE:', currency).strip())
+                            if currency == 'CNY':
+                                cost_price = str(self.get_value_two_word(str(row[0]).strip(), 'COST PRICE / 单价:', currency).strip())
+                        if len(row) > 2 and row[1] is not None and (str(row[1]).strip().__contains__('COST PRICE:') or str(row[1]).strip().__contains__('COST PRICE / 单价:')):
+                            # 追加单价列，放在商标列里
+                            cost_price = str(self.get_value_two_word(str(row[1]).strip(), 'COST PRICE:', currency).strip())
+                            if currency == 'CNY':
+                                cost_price = str(self.get_value_two_word(str(row[1]).strip(), 'COST PRICE / 单价:', currency).strip())
                         if str(row[0]).__contains__('LOGISTIC ORDER'):
                             order_flag = True
                             continue
@@ -634,7 +670,6 @@ class VAS_GUI:
                             first_page_po_num_list.append(int(str(row[-1]).replace(',', '')))
                             continue
                     # print(po_list)
-                    # print(first_page_color_list)
                     for n_idx in range(len(first_page_color_list)):
                         temp_po_detail = [
                             is_green,
@@ -646,7 +681,7 @@ class VAS_GUI:
                             send_to,
                             incoterm_list[n_idx],
                             transport_mode_list[n_idx],
-                            '',
+                            cost_price,
                             1,
                             first_page_color_list[n_idx],
                             currency,
@@ -658,9 +693,33 @@ class VAS_GUI:
                             temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))]
                             zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
                             self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
-            # print(self.table_data)
-            # print(self.table_data_zara_size)
-            self.nextPoList.extend(po_list)
+        if one_page_flag:
+            for n_idx in range(len(first_page_color_list)):
+                temp_po_detail = [
+                    is_green,
+                    po_list[n_idx],
+                    style_no,
+                    en_style_name,
+                    first_page_po_num_list[n_idx],
+                    handover_date_list[n_idx],
+                    send_to,
+                    incoterm_list[n_idx],
+                    transport_mode_list[n_idx],
+                    cost_price,
+                    1,
+                    first_page_color_list[n_idx],
+                    currency,
+                    season,
+                    come_date_list[n_idx]]
+                po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
+                self.table_data = self.table_data.append(po_detail, ignore_index=True)
+                for s_idx in range(len(size_list)):
+                    temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))]
+                    zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
+                    self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+        # print(self.table_data)
+        # print(self.table_data_zara_size)
+        self.nextPoList.extend(po_list)
 
     def excel_to_dataframe_next_add(self, io, fileDate):
         excel_header = []
@@ -912,7 +971,8 @@ class VAS_GUI:
 
     def format_shipping_date(self, temp_str):
         if temp_str == '':
-            return ''
+            now = datetime.datetime.now()
+            return str(now.year) + '-' + str('{:02d}'.format(now.month)) + '-' + str('{:02d}'.format(now.day))
         if temp_str.__contains__('DEADLINE'):
             temp_str = str(temp_str).replace('DEADLINE', '')
         if temp_str.__contains__('.'):
@@ -956,6 +1016,7 @@ class VAS_GUI:
             'FEB': '02',
             'MAR': '03',
             'APR': '04',
+            'APRIL': '04',
             'MAY': '05',
             'JUNE': '06',
             'JULY': '07',

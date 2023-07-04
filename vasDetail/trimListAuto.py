@@ -18,8 +18,8 @@ class VAS_GUI():
         self.mail_user = 'derek@motiveschina.com'
         self.mail_pass = '9573CCf0fd37BA42'
         self.sender = 'derek@motiveschina.com'
-        self.receivers = ['sibyl@motiveschina.com']
-        # print('数据操作进行中......')
+        self.receivers = ['sibyl@motiveschina.com', 'derek@motiveschina.com']
+        print('数据操作进行中......')
         # 追加的dataFrame的title
         self.add_data_title = ['version', '订单PO号', '款式缩写', '面料', '英文品名', '辅料表面料描述', '是否半里子', '前身里代号', '前身里料品色号', '袖里代号', '袖里料品色号',
                                '后袖笼拼接料代码', '后袖笼拼接料品色号', '第三种里料代码', '第三种里料品色号', '扣代号', '国外扣供应商品号色号', '内扣或两种以上扣代号', '内扣或两种以上扣型号',
@@ -36,31 +36,31 @@ class VAS_GUI():
         if os.path.exists(self.local_vas_detail_file):
             shutil.rmtree(self.local_vas_detail_file)
         os.mkdir(self.local_vas_detail_file)
-        # 错误文件,用于发送邮件
-        error_file = ''
-        # copy服务器的TRIMLIST文件到本地
-        for root, dirs, files in os.walk(networked_directory):
-            for file in files:
-                if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')) and not str(file).__contains__('~'):
-                    # print(file)
-                    error_file = file
-                    shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
-
-        # 保留相同文件中最大的记录
-        self.compare_xls_file()
-
-        # 循环本地临时文件，处理合并
-        self.table_value = []
-        self.delPoList = []
-        self.allDataKeys = []
-        for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
-            for lfile in lfiles:
-                # print(lfile)
-                error_file = lfile
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
-        # 更新数据库
-        self.update_db()
         try:
+            # 错误文件,用于发送邮件
+            error_file = ''
+            # copy服务器的TRIMLIST文件到本地
+            for root, dirs, files in os.walk(networked_directory):
+                for file in files:
+                    if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')) and not str(file).__contains__('~'):
+                        # print(file)
+                        error_file = file
+                        shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
+
+            # 保留相同文件中最大的记录
+            self.compare_xls_file()
+
+            # 循环本地临时文件，处理合并
+            self.table_value = []
+            self.delPoList = []
+            self.allDataKeys = []
+            for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
+                for lfile in lfiles:
+                    # print(lfile)
+                    error_file = lfile
+                    self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
+            # 更新数据库
+            self.update_db()
             print('已经完成计算操作！')
         except:
             print('出错了！')
@@ -317,6 +317,8 @@ class VAS_GUI():
             if insertTabVal[1] not in noInsertPoList:
                 insertValue.append(insertTabVal)
         if len(self.delPoList) > 0:
+            # 删除数据中的空值
+            # delpo = [var for var in self.delPoList if var]
             # 组装删除的值
             del_tuple = tuple(self.delPoList)
             # 删除已经存在的文件
@@ -331,6 +333,18 @@ class VAS_GUI():
                     insertSql += '%s, '
             insertSql += ')'
             cursor.executemany(insertSql, insertValue)
+        # 替换对应字典中的值
+        updateSql = ''
+        selectInsertSql = '''select 项目名, 客户值, 对应值 from Trimlist替换字典_明细 '''
+        cursor.execute(selectInsertSql)
+        while True:
+            fatchInsertResults = cursor.fetchone()
+            if fatchInsertResults is None:
+                break
+            updateSql = updateSql + "update D_TrimListInfo set " + \
+                fatchInsertResults[0] + " = '" + fatchInsertResults[2] + "' where " + \
+                fatchInsertResults[0] + " = '" + fatchInsertResults[1] + "';"
+        cursor.execute(updateSql)
         conn.commit()
         conn.close()
 

@@ -18,7 +18,8 @@ class VAS_GUI():
         # 排除列
         self.out_column = ['FUSIBLE', 'CHEST PIECE', 'SLEEVE HEAD', 'Vendor', 'Date', 'THREAD', 'THREAD BTN HOLE LAPEL', 'WAISTBAND FUSIBLE',
                            'BARTACKS OUT', 'BARTACKS IN', 'SADDLE STITCH', 'OUTSIDE STITCH', 'INSIDE STITCH', 'COAT POCKETING',
-                           'COAT POCKETING OUTSIDE', 'PANT POCKETING', 'INSIDE PANT BUTTON', 'ZIPPER', 'ZROH PANT M', 'PANT THREAD', 'VEST POCKETING', 'VEST POCKETING OUTSIDE']
+                           'COAT POCKETING OUTSIDE', 'PANT POCKETING', 'INSIDE PANT BUTTON', 'ZIPPER', 'ZROH PANT M', 'PANT THREAD', 'VEST POCKETING',
+                           'VEST POCKETING OUTSIDE', 'VENT TACK']
         # 根据勤哲的key匹配对应trimList中的key和value
         self.local_trim_list_file = 'd:\\trimlistToBom'
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
@@ -307,6 +308,7 @@ class VAS_GUI():
             arrangeVal.append(['拉丝无纺衬条', '9332-1', '白', '1.0cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
             arrangeVal.append(['小棉带', '小棉带', '白', '0.3cm', ''])
+            arrangeVal.append(['防抻条*贴边扦条', 'IS-8330', '白', '1.5cm', ''])
         elif type.__contains__('Pants'):
             arrangeVal.append(['腰里上部', '', '', '', ''])
             arrangeVal.append(['腰里夹牙', '', '', '', ''])
@@ -339,6 +341,7 @@ class VAS_GUI():
             arrangeVal.append(['拉丝无纺衬条', '9332-1 ', '黑', '1.0cm', ''])
             arrangeVal.append(['双面胶 上衣+裤子', '双面胶 ', '白', '0.8cm', ''])
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
+            arrangeVal.append(['防抻条*贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
             arrangeVal.append(['裤口袋布', '涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
@@ -358,6 +361,7 @@ class VAS_GUI():
             arrangeVal.append(['拉丝无纺衬条 上衣+马甲', '9332-1 ', '黑', '1.0cm', ''])
             arrangeVal.append(['双面胶 上衣+裤子+马甲', '双面胶 ', '白', '0.8cm', ''])
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
+            arrangeVal.append(['防抻条*贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
             arrangeVal.append(['裤口袋布', '涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])

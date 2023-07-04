@@ -19,7 +19,7 @@ class VAS_GUI():
         # 追加的dataFrame的title
         self.add_data_title = ['PO', 'Item', 'Material', 'ItemSum',
                                'Sumxxl', 'Sum48', 'Sum44', 'HG', 'PU', 'SZ']
-        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
+        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息\临时'
         self.local_vas_detail_file = 'd:\excelVasDetailFile'
         # 删除目录内文件
         if os.path.exists(self.local_vas_detail_file):
