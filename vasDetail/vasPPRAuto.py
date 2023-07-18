@@ -21,7 +21,9 @@ class VAS_GUI():
 
         # 循环文件，处理合并，并存入数据库
         self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\Ada\VAS-PPR'
+        # self.local_vas_detail_file = r'D:\vasppr'
         self.df_data = pd.DataFrame(columns=self.dbCol)
+        self.folder_name = 'other'
 
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
             for lfile in lfiles:
@@ -46,8 +48,7 @@ class VAS_GUI():
             if temp_db_col != 'CreateDate':
                 tempCol.append(temp_db_col)
         # 去掉重复的新数据
-        self.old_all_data.drop_duplicates(
-            subset=tempCol, keep='first', inplace=True)
+        self.old_all_data.drop_duplicates(subset=tempCol, keep='first', inplace=True)
         # 将去重的数据重新放入数据库中
         self.batch_update_db(self.old_all_data, 1)
         print('已经完成数据操作！')
@@ -55,14 +56,13 @@ class VAS_GUI():
     def batch_update_db(self, temp_data, deleteFlag):
         self.table_value = []
         # 将新的数据追加到旧数据中
-        self.table_value.append([tuple(row)
-                                for row in temp_data.values])
+        self.table_value.append([tuple(row) for row in temp_data.values])
         # 更新数据库
         self.update_db(deleteFlag)
 
     def arrange_excel_data(self, io):
         self.dataItem = ['Purchasing Seas', 'Purchasing Doc.', 'Vendor', 'Vendor Name', 'Suppl. Vendor', 'Supplier Name', 'Label Type', 'T/L Mat.', 'Vendor Mat. No.', 'Description',
-                         'VAS$', 'Purchasing Method', 'Vas by', 'VAS Vendor', 'VAS Vendor Name', 'Tracking Nbr', 'Required Qty', 'Remaining Qty', 'Ex factory date', 'Changed on', 'Cr', 'shippingDate']
+                         'VAS$', 'Purchasing Method', 'Vas by', 'VAS Vendor', 'VAS Vendor Name', 'Tracking Nbr', 'Required Qty', 'Remaining Qty', 'Ex factory date', 'Changed on', 'Cr', 'sp']
         # 不满足格式条件的excel，需要转成csv，然后转成DataFrame
         new_data = self.file_to_dataframe(io)
         formartTitle = list(new_data)
@@ -113,10 +113,10 @@ class VAS_GUI():
         return new_file_name
 
     def csv_to_dataframe(self, io):
+        csv = ''
         for decode in ('gbk', 'utf-8', 'gb18030'):
             try:
-                csv = pd.read_csv(
-                    io, encoding=decode, skip_blank_lines=True, delimiter="@", header=None)
+                csv = pd.read_csv(io, encoding=decode, skip_blank_lines=True, delimiter="@", header=None)
                 break
             except:
                 pass
