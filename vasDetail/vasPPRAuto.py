@@ -3,6 +3,9 @@ import pandas as pd
 import datetime
 import pymssql
 from tkinter import *
+import re
+import time
+from dateutil import parser
 
 
 class VAS_GUI():
@@ -24,6 +27,7 @@ class VAS_GUI():
         # self.local_vas_detail_file = r'D:\vasppr'
         self.df_data = pd.DataFrame(columns=self.dbCol)
         self.folder_name = 'other'
+        self.fileDate = '20230720'
 
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
             for lfile in lfiles:
@@ -36,21 +40,22 @@ class VAS_GUI():
                 elif str(lroot).__contains__('Sunshine'):
                     self.folder_name = 'Sunshine'
                 if str(lfile).__contains__('VAS_PPR'):
-                    self.arrange_excel_data(os.path.join(lroot, lfile))
-
+                    ctime = parser.parse(time.ctime(os.path.getctime(os.path.join(lroot, lfile))))
+                    if ctime.date() == datetime.datetime.now().date():
+                        self.arrange_excel_data(os.path.join(lroot, lfile))
         # 追加数据
-        self.batch_update_db(self.df_data, 0)
-        # 查询目前数据库所有数据
-        self.select_all_data()
+        self.batch_update_db(self.df_data, 2)
+        # # 查询目前数据库所有数据
+        # self.select_all_data()
         # 去掉创建时间
-        tempCol = []
-        for temp_db_col in self.dbCol:
-            if temp_db_col != 'CreateDate':
-                tempCol.append(temp_db_col)
-        # 去掉重复的新数据
-        self.old_all_data.drop_duplicates(subset=tempCol, keep='first', inplace=True)
-        # 将去重的数据重新放入数据库中
-        self.batch_update_db(self.old_all_data, 1)
+        # tempCol = []
+        # for temp_db_col in self.dbCol:
+        #     if temp_db_col != 'CreateDate':
+        #         tempCol.append(temp_db_col)
+        # # 去掉重复的新数据
+        # self.old_all_data.drop_duplicates(subset=tempCol, keep='first', inplace=True)
+        # # 将去重的数据重新放入数据库中
+        # self.batch_update_db(self.old_all_data, 1)
         print('已经完成数据操作！')
 
     def batch_update_db(self, temp_data, deleteFlag):
@@ -61,6 +66,9 @@ class VAS_GUI():
         self.update_db(deleteFlag)
 
     def arrange_excel_data(self, io):
+        # 文件名中的时间
+        self.fileDate = str(re.findall(r'VAS_PPR(.+?)xls',str(io))[0]).lstrip().split(' ')[0]
+        self.fileDate = self.fileDate[0:4] + '-' + self.fileDate[4:6] + '-' + self.fileDate[6:8] + ' 00:00:00'
         self.dataItem = ['Purchasing Seas', 'Purchasing Doc.', 'Vendor', 'Vendor Name', 'Suppl. Vendor', 'Supplier Name', 'Label Type', 'T/L Mat.', 'Vendor Mat. No.', 'Description',
                          'VAS$', 'Purchasing Method', 'Vas by', 'VAS Vendor', 'VAS Vendor Name', 'Tracking Nbr', 'Required Qty', 'Remaining Qty', 'Ex factory date', 'Changed on', 'Cr', 'sp']
         # 不满足格式条件的excel，需要转成csv，然后转成DataFrame
@@ -88,10 +96,10 @@ class VAS_GUI():
                     detail_val.append('')
             new_df_value.append(detail_val)
         new_df = pd.DataFrame(new_df_value, columns=self.dataItem)
-        new_df.drop_duplicates(keep='last', inplace=True)
+        # new_df.drop_duplicates(keep='last', inplace=True)
         new_df['PPRType'] = self.folder_name
         new_df['deleteFlag'] = 0
-        new_df['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
+        new_df['CreateDate'] = self.fileDate
         new_df.columns = self.dbCol
         self.df_data = self.df_data.append(new_df, ignore_index=True)
 
@@ -126,19 +134,26 @@ class VAS_GUI():
         formatCsv = []
 
         for csvIdx in range(0, len(csv)):
-            tempCsvVal = str(csv.iloc[csvIdx].values[0]).replace(
-                '\t', '@').split('@')
-            for tempIdx in range(0, len(tempCsvVal)):
+            tempCsvVal = str(csv.iloc[csvIdx].values[0]).replace('\t', '@').split('@')
+            for tempIdx in range(0, 22):
                 tempCsvVal[tempIdx] = str(tempCsvVal[tempIdx]).strip()
                 if tempCsvVal[tempIdx] != '0':
                     tempCsvVal[tempIdx] = tempCsvVal[tempIdx].lstrip('0')
+                # 第一行【Creation Date】变成【Cr】
+                if csvIdx == 0 and tempCsvVal[tempIdx] == 'Creation Date':
+                    tempCsvVal[tempIdx] = 'Cr'
+                # 第一行空的变成【sp】
+                if csvIdx == 0 and tempCsvVal[tempIdx].strip() == '':
+                    tempCsvVal[tempIdx] = 'sp'
             if csvIdx == 0:
                 # csv的title数组
                 formartCsvTitle = tempCsvVal
             else:
                 # csv的数据的数组
+                if len(tempCsvVal) > 22:
+                    tempCsvVal = tempCsvVal[0:22]
                 formatCsv.append(tempCsvVal)
-
+        
         df = pd.DataFrame(formatCsv, columns=formartCsvTitle)
         return df
 
@@ -147,9 +162,12 @@ class VAS_GUI():
         conn = pymssql.connect(
             self.serverName, self.userName, self.passWord, "ESApp1")
         cursor = conn.cursor()
-        # 是否删除原数据
+        # deleteFlag == 1，删除原数据
         if deleteFlag == 1:
             cursor.execute('TRUNCATE TABLE D_VasPPRInfo')
+        # deleteFlag == 2，删除当天数据
+        if deleteFlag == 2:
+            cursor.execute('DELETE FROM D_VasPPRInfo WHERE CreateDate = ' + "'" + self.fileDate + "'")
         # 组装插入的值
         insertValue = []
         for tabVal in self.table_value:
