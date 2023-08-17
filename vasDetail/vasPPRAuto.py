@@ -45,6 +45,7 @@ class VAS_GUI():
                         self.arrange_excel_data(os.path.join(lroot, lfile))
         # 追加数据
         self.batch_update_db(self.df_data, 2)
+
         # # 查询目前数据库所有数据
         # self.select_all_data()
         # 去掉创建时间
@@ -72,7 +73,9 @@ class VAS_GUI():
         self.dataItem = ['Purchasing Seas', 'Purchasing Doc.', 'Vendor', 'Vendor Name', 'Suppl. Vendor', 'Supplier Name', 'Label Type', 'T/L Mat.', 'Vendor Mat. No.', 'Description',
                          'VAS$', 'Purchasing Method', 'Vas by', 'VAS Vendor', 'VAS Vendor Name', 'Tracking Nbr', 'Required Qty', 'Remaining Qty', 'Ex factory date', 'Changed on', 'Cr', 'sp']
         # 不满足格式条件的excel，需要转成csv，然后转成DataFrame
-        new_data = self.file_to_dataframe(io)
+        # new_data = self.file_to_dataframe(io)
+        excelData = pd.read_excel(io, header=1, keep_default_na=False)
+        new_data = pd.DataFrame(excelData.values, columns=self.dataItem)
         formartTitle = list(new_data)
 
         # 有的excel没有对应的列，需要将没有的赋值为空，找到对应的index
@@ -102,6 +105,7 @@ class VAS_GUI():
         new_df['CreateDate'] = self.fileDate
         new_df.columns = self.dbCol
         self.df_data = self.df_data.append(new_df, ignore_index=True)
+        # print(self.df_data)
 
     def file_to_dataframe(self, io):
         file_name = self.excel_csv_change(io, 1)

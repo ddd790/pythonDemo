@@ -25,7 +25,7 @@ class VAS_GUI():
         # 追加的dataFrame的title
         self.add_data_title = ['FileName', 'FileNameJ', 'Version', 'Item', 'PO', 'Material', 'MaterialNo', 'Description', 'Component', 'FabricNo', 'Qty', 'ZROH',
                                'FabricDis', 'ExfactDate', 'ShipDate', 'Season', 'Price', 'Brand', 'District', 'Via', 'Style', 'ContanctPerson', 'Note',
-                               'Rmk', 'HSCode', 'CreateDate']
+                               'Rmk', 'HSCode', 'CreateDate', 'DeliverDate']
         # 数字类型的字段
         self.number_item = ['Qty', 'Price']
         # 备注的公司名
@@ -40,7 +40,7 @@ class VAS_GUI():
                         'end_word': 'It requires the following components:'}
         # 运输方式
         self.Via = ['SEA', 'AIRV', 'AIRP']
-        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
+        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息\临时'
         self.local_pdf_detail_file = 'd:\peerlessPdf'
 
         # 循环文件，处理合并
@@ -57,7 +57,7 @@ ________________________________________________________________________________
         os.mkdir(self.local_pdf_detail_file)
         # copy服务器的TRIMLIST文件到本地
         for root, dirs, files in os.walk(networked_directory):
-            if root.__contains__('2022') or root.__contains__('2023'):
+            if root.__contains__('20'):
                 for file in files:
                     if str(file).__contains__('PO-') and (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                         shutil.copy2(os.path.join(root, file), self.local_pdf_detail_file)
@@ -224,6 +224,10 @@ ________________________________________________________________________________
                 detail_info.append(str(tx_fileName).split('-V')[0])
                 # 版本
                 detail_info.append(str(tx_fileName).split('-V')[1])
+                # 追加Delivr. date
+                deliver_date = str(temp_info_list[5]).strip()
+                if temp_info_list[5].count('.') != 2:
+                    deliver_date = temp_info_list[4].strip()
                 # 追加描述(描述占2个元素)
                 if temp_info_list[3].strip()[0] == '2':
                     temp_info_list.insert(3, '')
@@ -323,6 +327,8 @@ ________________________________________________________________________________
                     temp_info_list[12], self.keyword['hscode'], None))
                 # CreateDate
                 detail_info.append(create_time)
+                # deliver_date
+                detail_info.append(self.str2datatime(deliver_date))
                 self.pdf_data_val.append(detail_info)
 
     # 获取一个字符串中两个字母中间的值(one为None时从第一位取, two为None时取到最后)
@@ -374,7 +380,7 @@ ________________________________________________________________________________
         insertSql = 'INSERT INTO D_Peerless_Order (' + (
             ",".join(str(i) for i in dbCol)) + ') VALUES ('
         for colVal in dbCol:
-            if colVal == 'CreateDate':
+            if colVal == 'DeliverDate':
                 insertSql += '%s'
             elif colVal in self.number_item:
                 insertSql += '%d, '
