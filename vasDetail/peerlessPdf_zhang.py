@@ -192,16 +192,16 @@ ________________________________________________________________________________
                 detail_info.append(str(tx_fileName).split('-V')[0])
                 # 版本
                 detail_info.append(str(tx_fileName).split('-V')[1])
-                # 追加Delivr. date
-                deliver_date = str(temp_info_list[5]).strip()
-                if temp_info_list[5].count('.') != 2:
-                    deliver_date = temp_info_list[4].strip()
                 # 追加描述(描述占2个元素)
                 if temp_info_list[3].strip()[0] == '2':
                     temp_info_list.insert(3, '')
                 if temp_info_list[5].count('.') != 2:
                     temp_info_list.insert(5, temp_info_list[4].strip())
+                # 追加Delivr. date
+                deliver_date = str(temp_info_list[5]).strip()
                 if temp_info_list[6].count('.') == 2:
+                    # 追加Delivr. date
+                    deliver_date = str(temp_info_list[6]).strip()
                     del temp_info_list[6]
                 else:
                     temp_info_list[5] = temp_info_list[4]

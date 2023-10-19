@@ -5,11 +5,12 @@ import pymssql
 from tkinter import *
 import re
 import time
+import copy
 from dateutil import parser
 
 
 class VAS_GUI():
-    # 批量获取服务器数据，进行累加操作
+    # 批量获取服务器数据，进行PPR数据持久化
     def commit_batch(self):
         print('数据操作进行中......')
         # sql服务器名
@@ -31,32 +32,13 @@ class VAS_GUI():
 
         for lroot, ldirs, lfiles in os.walk(self.local_vas_detail_file):
             for lfile in lfiles:
-                if str(lroot).__contains__('CHINA'):
-                    self.folder_name = 'CHINA'
-                elif str(lroot).__contains__('Linde'):
-                    self.folder_name = 'Linde'
-                elif str(lroot).__contains__('MK'):
-                    self.folder_name = 'MK'
-                elif str(lroot).__contains__('Sunshine'):
-                    self.folder_name = 'Sunshine'
                 if str(lfile).__contains__('VAS_PPR'):
+                    # 循环当天数据
                     ctime = parser.parse(time.ctime(os.path.getctime(os.path.join(lroot, lfile))))
                     if ctime.date() == datetime.datetime.now().date():
                         self.arrange_excel_data(os.path.join(lroot, lfile))
-        # 追加数据
-        self.batch_update_db(self.df_data, 2)
-
-        # # 查询目前数据库所有数据
-        # self.select_all_data()
-        # 去掉创建时间
-        # tempCol = []
-        # for temp_db_col in self.dbCol:
-        #     if temp_db_col != 'CreateDate':
-        #         tempCol.append(temp_db_col)
-        # # 去掉重复的新数据
-        # self.old_all_data.drop_duplicates(subset=tempCol, keep='first', inplace=True)
-        # # 将去重的数据重新放入数据库中
-        # self.batch_update_db(self.old_all_data, 1)
+        # 追加数据(1是删除所有数据，2是删除当天数据，3是不删除直接追加)
+        self.batch_update_db(self.df_data, 1)
         print('已经完成数据操作！')
 
     def batch_update_db(self, temp_data, deleteFlag):
@@ -74,7 +56,8 @@ class VAS_GUI():
                          'VAS$', 'Purchasing Method', 'Vas by', 'VAS Vendor', 'VAS Vendor Name', 'Tracking Nbr', 'Required Qty', 'Remaining Qty', 'Ex factory date', 'Changed on', 'Cr', 'sp']
         # 不满足格式条件的excel，需要转成csv，然后转成DataFrame
         # new_data = self.file_to_dataframe(io)
-        excelData = pd.read_excel(io, header=1, keep_default_na=False)
+        excelData = pd.read_excel(io, header=0, keep_default_na=False)
+        new_data = ''
         new_data = pd.DataFrame(excelData.values, columns=self.dataItem)
         formartTitle = list(new_data)
 
@@ -105,6 +88,12 @@ class VAS_GUI():
         new_df['CreateDate'] = self.fileDate
         new_df.columns = self.dbCol
         self.df_data = self.df_data.append(new_df, ignore_index=True)
+        # 分组的列
+        group_item = copy.deepcopy(self.dbCol)
+        group_item.remove('Changedon')
+        # 按照分组后，取【Changedon】的最大值
+        self.df_data = self.df_data.groupby(group_item, as_index=False)['Changedon'].max()
+        self.df_data = self.df_data[self.dbCol]
         # print(self.df_data)
 
     def file_to_dataframe(self, io):

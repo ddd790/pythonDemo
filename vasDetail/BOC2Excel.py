@@ -9,22 +9,16 @@ from aip import AipOcr
 
 
 class VAS_GUI():
-    # 批量获取服务器数据，进行累加操作
+    # 小帅报关单数据提取
     def get_files(self):
         print('数据操作进行中......' + str(datetime.datetime.now()).split('.')[0])
         APP_ID = '25101742'
         API_KEY = 'Z5qy26GRDUdDKlBRHGT21XZt'
         SECRET_KEY = 'p6BCz0xxGXSTbDR3MfWAfViBRbFilaAu'
         client = AipOcr(APP_ID, API_KEY, SECRET_KEY)
-        # 数据库名
-        self.dbName = 'ESApp1'
         # 追加的dataFrame的title
         self.add_data_title = ['报关单申报日期', '发票号', '手册号',
                                '报关单号', '加工厂', '报关品名', '数量', '单位', '收汇USD']
-        # 数字类型的字段
-        self.number_item = ['数量', 'version']
-        # 根据勤哲的key匹配对应trimList中的key和value
-        # self.local_trim_list_file = r'\\192.168.0.6\03-业务三部共享\EXPRESS 工艺\大货 工艺书\勤哲BOM最新PDF文件'
         self.local_trim_list_file = 'd:\\BOC'
         self.trim_list_file_finish = 'd:\\BOC结果'
         # 删除目录内文件
@@ -204,6 +198,7 @@ class VAS_GUI():
                     df_values.append(
                         round(Decimal(val_num) * Decimal(val_detail_list[3]), 2))
                     self.arrangeVal.append(df_values)
+        pdf.close()
 
     # 获取一个字符串中两个字母中间的值(one为None时从第一位取, two为None时取到最后)
     def get_value_two_word(self, txt_str, one, two):

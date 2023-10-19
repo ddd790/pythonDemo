@@ -200,9 +200,7 @@ ________________________________________________________________________________
                     self.division_word_two):self.findSubStrIndex(self.keyword['end_word'], tx, i + 1)]
                 full_txt = full_txt.replace('| ', '|')
                 full_txt = self.deduplicate(full_txt, '|')
-                full_txt = full_txt + '|ZROH: ' + \
-                    temp_zroh.split(
-                        '|')[1] + ' Color Description: ' + temp_zroh.split('|')[2]
+                full_txt = full_txt + '|ZROH: ' + temp_zroh.split('|')[1] + ' Color Description: ' + temp_zroh.split('|')[2]
                 detail_info_list.append(full_txt.strip())
         else:
             detail_other_count = tx.count(self.division_word_two)
@@ -224,16 +222,16 @@ ________________________________________________________________________________
                 detail_info.append(str(tx_fileName).split('-V')[0])
                 # 版本
                 detail_info.append(str(tx_fileName).split('-V')[1])
-                # 追加Delivr. date
-                deliver_date = str(temp_info_list[5]).strip()
-                if temp_info_list[5].count('.') != 2:
-                    deliver_date = temp_info_list[4].strip()
                 # 追加描述(描述占2个元素)
                 if temp_info_list[3].strip()[0] == '2':
                     temp_info_list.insert(3, '')
                 if temp_info_list[5].count('.') != 2:
                     temp_info_list.insert(5, temp_info_list[4].strip())
+                # 追加Delivr. date
+                deliver_date = str(temp_info_list[5]).strip()
                 if temp_info_list[6].count('.') == 2:
+                    # 追加Delivr. date
+                    deliver_date = str(temp_info_list[6]).strip()
                     del temp_info_list[6]
                 else:
                     temp_info_list[5] = temp_info_list[4]
