@@ -78,7 +78,12 @@ class VAS_GUI():
         # print(ocr_msg)
         # '境内收货人', '进口日期', '备案号', '境外发货人', '消费使用单位', '监管方式', '商品名称', '单价', '总价', '规格型号', '数量', '单位', '币制'
         # 第二行内容
-        two_row_txt = self.get_value_two_word(ocr_msg, '备案号\n', '\n境外发货人').split('\n')
+        tmp_jw = '\n境外发货人'
+        if ocr_msg.__contains__('境外发费人(NO)'):
+            tmp_jw = '\n境外发费人(NO)'
+        elif ocr_msg.__contains__('境外发费人'):
+            tmp_jw = '\n境外发费人'
+        two_row_txt = self.get_value_two_word(ocr_msg, '备案号\n', tmp_jw).split('\n')
         consignee = two_row_txt[0]
         importation_data = two_row_txt[2]
         filing_number = two_row_txt[-1]
@@ -118,6 +123,8 @@ class VAS_GUI():
                     # 单价
                     df_values.append(val_detail_list[2])
                     # 总价
+                    if not self.is_number(val_detail_list[8]):
+                        val_detail_list.insert(5, '')
                     df_values.append(val_detail_list[8])
                     # 规格型号
                     all_type = val_detail_list[7]

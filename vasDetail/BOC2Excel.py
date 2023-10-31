@@ -37,7 +37,7 @@ class VAS_GUI():
                 try:
                     self.file_to_dataframe(os.path.join(lroot, lfile), str(
                         lfile).split('.')[0])
-                    self.delete_file.append(lfile)
+                    # self.delete_file.append(lfile)
                 except:
                     pdf_file = self.get_file_content(
                         os.path.join(lroot, lfile))
@@ -47,14 +47,14 @@ class VAS_GUI():
                     res_pdf = client.basicAccuratePdf(pdf_file, options)
                     res_pdf_general = client.basicGeneralPdf(pdf_file, options)
                     if res_pdf['direction'] != 0:
-                        print(lfile)
+                        print('文件不是正确方向，请旋转文件【' + lfile + '】,保存后再重新操作!')
                         continue
                     else:
                         # print(res_pdf)
                         self.ocr_to_dataframe(res_pdf, res_pdf_general)
 
         table_data = pd.DataFrame(self.arrangeVal, columns=self.add_data_title)
-        table_data['数量'] = table_data['数量'].astype('int')
+        table_data['数量'] = table_data['数量'].astype('float')
         table_data['收汇USD'] = table_data['收汇USD'].astype('float')
         # 导出excel,追加在old的后面
         excelUrl = self.trim_list_file_finish + '\\出口成衣结算结果.xlsx'
@@ -124,10 +124,10 @@ class VAS_GUI():
                     d_name = re.sub(r'[0-9]+', '', val_detail_list[0])
                     df_values.append(d_name.replace(':', ''))
                     # 数量
-                    val_num = re.sub('\D', '', val_detail_list[1])
+                    val_num = re.sub('[^0-9.]', '', val_detail_list[1])
                     df_values.append(val_num)
                     # 单位
-                    df_values.append(re.sub(r'[0-9]+', '', val_detail_list[1]))
+                    df_values.append(re.sub(r'[0-9.]+', '', val_detail_list[1]))
                     # 收汇USD
                     df_values.append(
                         round(Decimal(val_num) * Decimal(val_detail_list[2]), 2))
@@ -190,10 +190,10 @@ class VAS_GUI():
                     # 报关品名
                     df_values.append(re.sub(r'[0-9]+', '', val_detail_list[1]))
                     # 数量
-                    val_num = re.sub('\D', '', val_detail_list[2])
+                    val_num = re.sub('[^0-9.]', '', val_detail_list[2])
                     df_values.append(val_num)
                     # 单位
-                    df_values.append(re.sub(r'[0-9]+', '', val_detail_list[2]))
+                    df_values.append(re.sub(r'[0-9.]+', '', val_detail_list[2]))
                     # 收汇USD
                     df_values.append(
                         round(Decimal(val_num) * Decimal(val_detail_list[3]), 2))

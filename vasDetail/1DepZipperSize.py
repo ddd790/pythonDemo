@@ -31,6 +31,7 @@ class VAS_GUI():
             for file in lfiles:
                 if str(file).__contains__('SIZESCALES') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')) and not str(file).__contains__('~'):
                     self.arrange_excel_data(os.path.join(lroot, file))
+
         # 追加数据(1是删除所有数据，2是删除当天数据，3是不删除直接追加)
         self.batch_update_db(self.df_data, 1)
         print('已经完成数据操作！')
@@ -73,6 +74,12 @@ class VAS_GUI():
         # 去掉前面的0
         self.df_data['ITEM'] = self.df_data['ITEM'].astype('int')
         self.df_data['ITEM'] = self.df_data['ITEM'].astype('str')
+        # 不满足条件的size
+        not_in_size_list = ['XX','XS','S', 'M', 'L', 'XL', '2X','3X','4X', '5X', '6X', '7X', '8X']
+        # 删除 Size 列中不满足条件的size
+        for i in range(len(self.df_data)):
+            if self.df_data['Size'][i] in not_in_size_list:
+                self.df_data = self.df_data.drop(i)
 
     def file_to_dataframe(self, io):
         file_name = self.excel_csv_change(io, 1)
