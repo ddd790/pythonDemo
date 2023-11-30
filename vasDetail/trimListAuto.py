@@ -63,7 +63,7 @@ class VAS_GUI():
             self.update_db()
             print('已经完成计算操作！')
         except:
-            print('出错了！')
+            # print('出错了！')
             self.send_mail(error_file)
 
     def compare_xls_file(self):

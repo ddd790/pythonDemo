@@ -20,6 +20,8 @@ class VAS_GUI():
                            'BARTACKS OUT', 'BARTACKS IN', 'SADDLE STITCH', 'OUTSIDE STITCH', 'INSIDE STITCH', 'COAT POCKETING',
                            'COAT POCKETING OUTSIDE', 'PANT POCKETING', 'INSIDE PANT BUTTON', 'ZIPPER', 'ZROH PANT M', 'PANT THREAD', 'VEST POCKETING',
                            'VEST POCKETING OUTSIDE', 'VENT TACK']
+        # 包含包条的列名
+        self.piping_list = ['内夹牙/内包条', '外夹牙/外包条', '腰面夹牙/腰面包条']
         # 根据勤哲的key匹配对应trimList中的key和value
         self.local_trim_list_file = 'd:\\trimlistToBom'
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
@@ -81,8 +83,7 @@ class VAS_GUI():
         header_fill_lan = PatternFill('solid', fgColor='EE82EE')
 
         # 定义对齐样式横向居中、纵向居中
-        align = Alignment(horizontal='center',
-                          vertical='center', wrapText=True)
+        align = Alignment(horizontal='center', vertical='center', wrapText=True)
         # 定义对齐样式纵向居中, 自动换行
         align_center = Alignment(vertical='center', wrapText=True)
 
@@ -188,8 +189,7 @@ class VAS_GUI():
         for tempIndex in formartExcelTitle:
             str_arr = df[tempIndex].values
             for arr_i in range(len(str_arr)):
-                add_value = str(str_arr[arr_i]).replace(
-                    '=', '').replace('"', '')
+                add_value = str(str_arr[arr_i]).replace('=', '').replace('"', '')
                 if len(add_value) > 0:
                     add_value = self.remove_zero(add_value)
                 str_arr[arr_i] = add_value
@@ -228,17 +228,14 @@ class VAS_GUI():
             if len(material_list) > 1:
                 materialType = ','.join(material_list)
             # 标题的汉字列，填入到最后的对应列中（最终文件的B列）
-            column_dic = self.get_file_name_by_num_style(
-                len(list(valueDf)), materialType)
+            column_dic = self.get_file_name_by_num_style(len(list(valueDf)), materialType)
             for title in list(valueDf):
-                arrangeVal.append(
-                    [title, str(column_dic[title]), str(value[title]), str(disDf.loc[idx][title]), ''])
+                arrangeVal.append([title, str(column_dic[title]), str(value[title]), str(disDf.loc[idx][title]), ''])
                 # 从ZROH FRONT开始
                 if firstflag and title.__contains__('ZROH'):
                     firstflag = False
                 if firstflag == False and value[title] != '' and title not in self.out_column:
-                    sameKey.append(str(value[title]) +
-                                   '^_^' + str(disDf.loc[idx][title]))
+                    sameKey.append(str(value[title]) + '^_^' + str(disDf.loc[idx][title]))
                     sameVal.append(title)
             arrangeVal.append(['', '', '', '', ''])
             arrangeVal.append(['', '', '', '', ''])
@@ -259,8 +256,7 @@ class VAS_GUI():
 
             # 相同结果的值拼接title
             for i in range(len(sameKey)):
-                sameDic.setdefault(sameKey[i], []).append(
-                    self.en_cn[sameVal[i]])
+                sameDic.setdefault(sameKey[i], []).append(self.en_cn[sameVal[i]])
             # 遍历整理好的字典,进行dataframe值的整理
             for key, value in sameDic.items():
                 valTempArr = []
@@ -271,7 +267,12 @@ class VAS_GUI():
                     tempkey = key[0:key.rfind('^_^')]
                 else:
                     tempkey = key[key.rfind('^_^') + 3:]
-                valTempArr.append(tempValString)
+                # 含有包条的数据，需要进行截断。
+                tempValString_first = tempValString.replace(self.piping_list[0], '').replace(self.piping_list[1], '').replace(self.piping_list[2], '')
+                if tempValString.__contains__('包条') and len(tempValString_first.strip()) > 1:
+                    valTempArr.append(tempValString_first.strip('/'))
+                elif not tempValString.__contains__('包条'):
+                    valTempArr.append(tempValString.strip('/'))
                 valTempArr.append(tempkey)
                 valTempArr.append('')
                 # 规格如果是扣，需要追加^_^前面的
@@ -283,11 +284,13 @@ class VAS_GUI():
                 else:
                     valTempArr.append('')
                 valTempArr.append('')
-                arrangeVal.append(valTempArr)
-
+                if len(tempValString_first) > 1:
+                    arrangeVal.append(valTempArr)
+                # 包条额外再追加一行
+                if tempValString.__contains__('包条') and len(tempValString_first) > 0:
+                    arrangeVal.append([tempValString[len(tempValString_first) - 1:].strip('/'), key[key.rfind('^_^') + 3:], '', '', ''])
             basicType = str(disDf.loc[idx]['Material'])
-            table_data = pd.DataFrame(self.arrange_appand_by_type(
-                arrangeVal, basicType), columns=self.add_data_title)
+            table_data = pd.DataFrame(self.arrange_appand_by_type(arrangeVal, basicType), columns=self.add_data_title)
             # 导出excel,追加在old的后面
             excelUrl = self.trim_list_file_finish + '\\' + tempFileName + '.xlsx'
             writer = pd.ExcelWriter(excelUrl, engine='xlsxwriter')
