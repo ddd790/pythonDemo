@@ -57,7 +57,7 @@ ________________________________________________________________________________
         os.mkdir(self.local_pdf_detail_file)
         # copy服务器的TRIMLIST文件到本地
         for root, dirs, files in os.walk(networked_directory):
-            if root.__contains__('2022') or root.__contains__('2023'):
+            if root.__contains__('2023') or root.__contains__('2024'):
                 for file in files:
                     if str(file).__contains__('PO-') and (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                         shutil.copy2(os.path.join(root, file), self.local_pdf_detail_file)
@@ -76,7 +76,8 @@ ________________________________________________________________________________
                 file_name = str(file).split('.')[0]
                 # print('文件名：' + str(file).split('-V')[0])
                 self.fileNameList.append(str(file).split('.')[0])
-                if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and file_name not in file_name_old:
+                # if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and file_name not in file_name_old:
+                if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                     mtime = parser.parse(time.ctime(os.path.getmtime(os.path.join(lroot, file))))
                     # ctime = time.ctime(os.path.getctime(
                     #     os.path.join(lroot, lfile)))

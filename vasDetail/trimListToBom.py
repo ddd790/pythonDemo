@@ -269,7 +269,9 @@ class VAS_GUI():
                     tempkey = key[key.rfind('^_^') + 3:]
                 # 含有包条的数据，需要进行截断。
                 tempValString_first = tempValString.replace(self.piping_list[0], '').replace(self.piping_list[1], '').replace(self.piping_list[2], '')
-                if tempValString.__contains__('包条') and len(tempValString_first.strip()) > 1:
+                if tempValString in self.piping_list:
+                    valTempArr.append(tempValString)
+                elif tempValString.__contains__('包条') and len(tempValString_first.strip()) > 1:
                     valTempArr.append(tempValString_first.strip('/'))
                 elif not tempValString.__contains__('包条'):
                     valTempArr.append(tempValString.strip('/'))
@@ -284,7 +286,7 @@ class VAS_GUI():
                 else:
                     valTempArr.append('')
                 valTempArr.append('')
-                if len(tempValString_first) > 1:
+                if len(tempValString_first) > 1 or tempValString in self.piping_list:
                     arrangeVal.append(valTempArr)
                 # 包条额外再追加一行
                 if tempValString.__contains__('包条') and len(tempValString_first) > 0:
@@ -301,21 +303,21 @@ class VAS_GUI():
     def arrange_appand_by_type(self, arrangeVal, type):
         # 根据类型追加固定字段
         if type.__contains__('coats'):
-            arrangeVal.append(['兜布', 'ECO-8301 ', '本白', '146cm', ''])
-            arrangeVal.append(['兜位衬', '0118N ', '白', '99cm', ''])
-            arrangeVal.append(['拉丝衬', 'F0125N', '白', '99cm', ''])
-            arrangeVal.append(['无胶衬', 'SF-35 ', '白', '99cm', ''])
-            arrangeVal.append(['胸兜牌衬', '2346-2HE', '白', '2.1cm', ''])
-            arrangeVal.append(['有纺直条', '5850-1', '白', '2.0cm', ''])
-            arrangeVal.append(['端打条', '5850-3', '白', '1.2cm', ''])
-            arrangeVal.append(['拉丝无纺衬条', '9332-1', '白', '1.0cm', ''])
+            arrangeVal.append(['兜布', 'ECO-8301 ', '黑', '146cm', ''])
+            arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
+            arrangeVal.append(['拉丝衬', 'F0125N', '黑', '99cm', ''])
+            arrangeVal.append(['无胶衬', 'SF-35 ', '黑', '99cm', ''])
+            arrangeVal.append(['胸兜牌衬', '2346-2HE', '黑', '2.1cm', ''])
+            arrangeVal.append(['有纺直条', '5850-1', '黑', '2.0cm', ''])
+            arrangeVal.append(['端打条', '5850-3', '黑', '1.2cm', ''])
+            arrangeVal.append(['拉丝无纺衬条', '9332-1', '黑', '1.0cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
-            arrangeVal.append(['小棉带', '小棉带', '白', '0.3cm', ''])
-            arrangeVal.append(['贴边扦条', 'IS-8330', '白', '1.5cm', ''])
+            arrangeVal.append(['小棉带', '小棉带', '黑', '0.3cm', ''])
+            arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
         elif type.__contains__('Pants'):
-            arrangeVal.append(['腰里上部', '', '', '', ''])
+            arrangeVal.append(['腰里上部/腰里下部', '', '', '', ''])
             arrangeVal.append(['腰里夹牙', '', '', '', ''])
-            arrangeVal.append(['裤口袋布', '涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布/腰里上部/腰里下部', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
@@ -330,7 +332,7 @@ class VAS_GUI():
             arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])
             arrangeVal.append(['兜布', 'ECO-8301', '黑', '146cm', ''])
             arrangeVal.append(['前身衬', 'PE206 ', '黑', '148cm', ''])
-            arrangeVal.append(['腰兜牌衬', '2346-2HE', '白', '', ''])
+            arrangeVal.append(['腰兜牌衬', '2346-2HE', '黑', '', ''])
             arrangeVal.append(['无纺衬（小部位）', 'PE125', '炭灰', '150cm', ''])
             arrangeVal.append(['拉丝衬条', '9332-1', '黑', '1cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
@@ -339,14 +341,14 @@ class VAS_GUI():
             arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
             arrangeVal.append(['拉丝衬', 'F0125N ', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬', 'SF-35 ', '黑', '99cm', ''])
-            arrangeVal.append(['胸兜牌衬', '2346-2HE ', '白', '2.1cm', ''])
+            arrangeVal.append(['胸兜牌衬', '2346-2HE ', '黑', '2.1cm', ''])
             arrangeVal.append(['有纺直条', '5850-1 ', '黑', '2.0cm', ''])
             arrangeVal.append(['拉丝无纺衬条', '9332-1 ', '黑', '1.0cm', ''])
             arrangeVal.append(['双面胶 上衣+裤子', '双面胶 ', '白', '0.8cm', ''])
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
-            arrangeVal.append(['裤口袋布', '涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
@@ -359,14 +361,14 @@ class VAS_GUI():
             arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
             arrangeVal.append(['拉丝衬', 'F0125N ', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬', 'SF-35 ', '黑', '99cm', ''])
-            arrangeVal.append(['胸兜牌衬 上衣+马甲', '2346-2HE ', '白', '2.1cm', ''])
+            arrangeVal.append(['胸兜牌衬 上衣+马甲', '2346-2HE ', '黑', '2.1cm', ''])
             arrangeVal.append(['有纺直条', '5850-1 ', '黑', '2.0cm', ''])
             arrangeVal.append(['拉丝无纺衬条 上衣+马甲', '9332-1 ', '黑', '1.0cm', ''])
             arrangeVal.append(['双面胶 上衣+裤子+马甲', '双面胶 ', '白', '0.8cm', ''])
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
-            arrangeVal.append(['裤口袋布', '涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498', '亮银色', '', '1.00'])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])

@@ -152,17 +152,15 @@ class VAS_GUI():
                         title = str(df_first_col.name)
                         second_title = str(df_second_col.name)
                         col_first_title = title.split('.')[0].split(':')[0]
-                        col_second_title = second_title.split('.')[
-                            0].split(':')[0]
+                        col_second_title = second_title.split('.')[0].split(':')[0]
                         # 第一列为空，第二列不为空,报错
                         if col_first_title == 'Unnamed' and col_second_title != 'Unnamed':
-                            self.errorMsg.append(
-                                fileName + ':' + sheetName + '-' + self.errorList['space'])
+                            self.errorMsg.append(fileName + ':' + sheetName + '-' + self.errorList['space'])
                             break
                         for d in range(df_first_col.size):
                             # 第一列不为空，第二列不为空或者0
                             if self.is_number(df_second_col[d]) and not math.isnan(df_second_col[d]) and int(df_second_col[d]) != 0 and str(df_first_col[d]) not in self.other_str and not str(df_first_col[d]).__contains__('Total'):
-                                if col_first_title.upper() != 'SKU':
+                                if col_first_title.upper() != 'SKU' and col_first_title.upper() != 'UNI':
                                     self.errorFlag = False
                                     sheet_title_flag = False
                                     sheet_title_error_content.append(i + 1)
@@ -171,34 +169,24 @@ class VAS_GUI():
                                     sheet_title_flag = False
                                     sheet_title_error_content.append(i + 2)
                                 temp_dict = {}
-                                temp_dict[self.add_data_title[0]] = fileName.split('&')[
-                                    0]
+                                temp_dict[self.add_data_title[0]] = fileName.split('&')[0]
                                 temp_dict[self.add_data_title[1]] = sheetName
-                                temp_dict[self.add_data_title[2]] = title.split('.')[
-                                    0].split(':')[0] if 'Unnamed' not in title.split('.')[
-                                    0].split(':')[0] else 'SKU'
-                                temp_dict[self.add_data_title[3]
-                                          ] = str(df_first_col[d]).strip()
+                                temp_dict[self.add_data_title[2]] = col_first_title if 'Unnamed' not in col_first_title else 'SKU'
+                                temp_dict[self.add_data_title[3]] = str(df_first_col[d]).strip()
                                 temp_dict[self.add_data_title[4]] = ''
-                                temp_dict[self.add_data_title[5]
-                                          ] = df_second_col[d]
-                                temp_dict[self.add_data_title[6]] = 2 if sheetName.__contains__(
-                                    'Tuxedo') else 1
+                                temp_dict[self.add_data_title[5]] = df_second_col[d]
+                                temp_dict[self.add_data_title[6]] = 2 if sheetName.__contains__('Tuxedo') else 1
                                 temp_dict[self.add_data_title[7]] = fileName
-                                temp_dict[self.add_data_title[8]
-                                          ] = shippingDate
-                                table_data = table_data.append(
-                                    temp_dict, ignore_index=True)
+                                temp_dict[self.add_data_title[8]] = shippingDate
+                                table_data = table_data.append(temp_dict, ignore_index=True)
                     except:
                         break
             if not sheet_title_flag:
                 # 去重
-                error_column = list(
-                    set(sheet_title_error_content))
+                error_column = list(set(sheet_title_error_content))
                 # 排序
                 error_column.sort()
-                self.errorMsg.append(
-                    fileName + ':' + sheetName + '-' + self.errorList['sku'])
+                self.errorMsg.append(fileName + ':' + sheetName + '-' + self.errorList['sku'])
         table_data['CreateDate'] = str(
             datetime.datetime.now()).split('.')[0]
         self.table_value.append([tuple(row) for row in table_data.values])
