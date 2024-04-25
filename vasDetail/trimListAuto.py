@@ -8,6 +8,8 @@ from tkinter import *
 import smtplib
 from email.mime.text import MIMEText
 from email.header import Header
+import time
+from dateutil import parser
 
 
 class VAS_GUI():
@@ -19,7 +21,7 @@ class VAS_GUI():
         self.mail_pass = '9573CCf0fd37BA42'
         self.sender = 'derek@motiveschina.com'
         self.receivers = ['sibyl@motiveschina.com', 'derek@motiveschina.com']
-        print('数据操作进行中......')
+        # print('数据操作进行中......')
         # 追加的dataFrame的title
         self.add_data_title = ['version', '订单PO号', '款式缩写', '面料', '英文品名', '辅料表面料描述', '是否半里子', '前身里代号', '前身里料品色号', '袖里代号', '袖里料品色号',
                                '后袖笼拼接料代码', '后袖笼拼接料品色号', '第三种里料代码', '第三种里料品色号', '扣代号', '国外扣供应商品号色号', '内扣或两种以上扣代号', '内扣或两种以上扣型号',
@@ -36,18 +38,18 @@ class VAS_GUI():
         if os.path.exists(self.local_vas_detail_file):
             shutil.rmtree(self.local_vas_detail_file)
         os.mkdir(self.local_vas_detail_file)
+        # 错误文件,用于发送邮件
+        error_file = ''
         try:
-            # 错误文件,用于发送邮件
-            error_file = ''
             # copy服务器的TRIMLIST文件到本地
             for root, dirs, files in os.walk(networked_directory):
                 for file in files:
                     if str(file).__contains__('TRIMLIST') and (str(file).__contains__('.xls') or str(file).__contains__('.xlsx')) and not str(file).__contains__('~'):
                         # print(file)
                         error_file = file
-                        shutil.copy(os.path.join(root, file), self.local_vas_detail_file)
+                        shutil.copy2(os.path.join(root, file), self.local_vas_detail_file)
 
-            # 保留相同文件中最大的记录
+            # # 保留相同文件中最大的记录
             self.compare_xls_file()
 
             # 循环本地临时文件，处理合并
@@ -58,13 +60,18 @@ class VAS_GUI():
                 for lfile in lfiles:
                     # print(lfile)
                     error_file = lfile
-                    self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0])
+                    mtime = parser.parse(time.ctime(os.path.getmtime(os.path.join(lroot, lfile))))
+                    ctime = mtime.strftime('%Y-%m-%d %H:%M:%S')
+                    if lfile.split('.')[0] == 'TRIMLIST-4900136763-V8':
+                        ctime = '2024-02-09 09:16:28'
+                    self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0], ctime)
             # 更新数据库
             self.update_db()
-            print('已经完成计算操作！')
+            # print('已经完成计算操作！')
         except:
+            print(error_file)
             # print('出错了！')
-            self.send_mail(error_file)
+            # self.send_mail(error_file)
 
     def compare_xls_file(self):
         # 遍历目录，留下最新的文件
@@ -81,13 +88,13 @@ class VAS_GUI():
                 else:
                     tempDelFile = tempDelMap[nameKey]
                     tempDelFileNameList = os.path.splitext(tempDelFile)[0].split('-')
-                    if int(nameList[2][1:]) > int(tempDelFileNameList[2][1:]):
+                    if int(nameList[2][1:].split('(')[0]) >= int(tempDelFileNameList[2][1:].split('(')[0]):
                         os.remove(os.path.join(eroot, tempDelFile))
                         tempDelMap[nameKey] = name
                     else:
                         os.remove(os.path.join(eroot, name))
 
-    def file_to_dataframe(self, io, version):
+    def file_to_dataframe(self, io, version, ctime):
         # 读取文件版本最大的
         excelData = pd.read_excel(io, header=None, keep_default_na=False)
         # csv中的title
@@ -131,9 +138,9 @@ class VAS_GUI():
         disDf['version'] = version
 
         # 对excel读取的数据进行整理，整理成符合要求的格式
-        self.arrange_excel_data(valueDf, disDf)
+        self.arrange_excel_data(valueDf, disDf, ctime)
 
-    def arrange_excel_data(self, valueDf, disDf):
+    def arrange_excel_data(self, valueDf, disDf, create_time):
         # 根据勤哲的key匹配对应trimList中的key和value
         arrangeVal = []
         for idx, value in valueDf.iterrows():
@@ -204,7 +211,7 @@ class VAS_GUI():
             arrangeVal.append(itemVal)
 
         table_data = pd.DataFrame(arrangeVal, columns=self.add_data_title)
-        table_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
+        table_data['CreateDate'] = create_time
         self.table_value.append([tuple(row) for row in table_data.values])
 
     def trimList_key_to_qizhe_key(self):

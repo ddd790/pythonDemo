@@ -40,7 +40,7 @@ class VAS_GUI():
                         'end_word': 'It requires the following components:'}
         # 运输方式
         self.Via = ['SEA', 'AIRV', 'AIRP']
-        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息'
+        networked_directory = r'\\192.168.0.3\01-业务一部资料\=14785212\PEERLESS\国内埃塞柬埔寨订单信息\临时'
         self.local_pdf_detail_file = 'd:\peerlessPdfSample'
 
         # 循环文件，处理合并
@@ -76,8 +76,8 @@ ________________________________________________________________________________
                 file_name = str(file).split('.')[0]
                 # print('文件名：' + str(file).split('-V')[0])
                 self.fileNameList.append(str(file).split('.')[0])
-                # if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and file_name not in file_name_old:
-                if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
+                if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and file_name not in file_name_old:
+                # if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                     mtime = parser.parse(time.ctime(os.path.getmtime(os.path.join(lroot, file))))
                     # ctime = time.ctime(os.path.getctime(
                     #     os.path.join(lroot, lfile)))
@@ -374,8 +374,8 @@ ________________________________________________________________________________
         # 删除已经存在的文件
         # delSql = 'delete from D_Peerless_Order_Sample where 文件名 = (%s)'
         # cursor.executemany(delSql, del_tuple)
-        delSql = 'TRUNCATE TABLE D_Peerless_Order_Sample'
-        cursor.execute(delSql)
+        # delSql = 'TRUNCATE TABLE D_Peerless_Order_Sample'
+        # cursor.execute(delSql)
         # 组装插入的值
         insertValue = []
         for tabVal in self.table_value:

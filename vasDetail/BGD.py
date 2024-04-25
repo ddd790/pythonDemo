@@ -52,9 +52,10 @@ class VAS_GUI():
                         # print(res_pdf)
 
         table_data = pd.DataFrame(self.arrangeVal, columns=self.add_data_title)
-        table_data['数量'] = table_data['数量'].astype('float')
-        table_data['单价'] = table_data['单价'].astype('float')
-        table_data['总价'] = table_data['总价'].astype('float')
+        # 去掉汉字，转换成浮点型
+        table_data['数量'] = re.sub(u"([^\u0030-\u0039\u002e])", "", table_data['数量']).astype('float')
+        table_data['单价'] = re.sub(u"([^\u0030-\u0039\u002e])", "", table_data['单价']).astype('float')
+        table_data['总价'] = re.sub(u"([^\u0030-\u0039\u002e])", "", table_data['总价']).astype('float')
         # 导出excel,追加在old的后面
         excelUrl = self.trim_list_file_finish + '\\进口报关单.xlsx'
         writer = pd.ExcelWriter(excelUrl, engine='xlsxwriter')

@@ -130,8 +130,7 @@ class VAS_GUI():
                                 for row in self.table_data.values])
         # NEXT的 size的dataframe
         self.table_value_next_size = []
-        self.table_value_next_size.append(
-            [tuple(row) for row in self.table_data_next_size.values])
+        self.table_value_next_size.append([tuple(row) for row in self.table_data_next_size.values])
         # 更新PO表
         self.update_db()
         if self.radio_val.get() == 0:
@@ -377,6 +376,7 @@ class VAS_GUI():
             cursor.executemany(delSql, del_tuple)
         # 组装插入的值
         insertValue = []
+        print(self.table_value)
         for tabVal in self.table_value:
             insertValue += tabVal
         insertSql = 'INSERT INTO D_4DepPoInfo VALUES ('
@@ -410,6 +410,7 @@ class VAS_GUI():
         insertValue = []
         for tabVal in self.table_value_next_size:
             insertValue += tabVal
+        print(self.table_value_next_size)
         insertSql = ''
         if insertType == 0:
             insertSql = 'INSERT INTO D_4DepNEXTSize VALUES ('

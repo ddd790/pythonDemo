@@ -68,7 +68,7 @@ class VAS_GUI():
                         tempDelMap[nameKey] = name
                     else:
                         if len(nameList) > 5:
-                            if int(tempDelFileNameList[5]) > int(nameList[5]):
+                            if int(tempDelFileNameList[5].split('(')[0]) > int(nameList[5].split('(')[0]):
                                 os.remove(os.path.join(eroot, name))
                             else:
                                 os.remove(os.path.join(eroot, tempDelFile))

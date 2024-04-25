@@ -43,8 +43,9 @@ class VAS_GUI():
         for lroot, ldirs, lfiles in os.walk(self.local_trim_list_file):
             for lfile in lfiles:
                 print(lfile)
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(
-                    lfile).split('.')[0])
+                # UNDER COLLAR 的值为 SHELL，需要追加一行
+                self.underCollarFlag = False
+                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0])
 
         # 循环读取文件，修改样式
         for root, dirs, files in os.walk(self.trim_list_file_finish):
@@ -230,6 +231,9 @@ class VAS_GUI():
             # 标题的汉字列，填入到最后的对应列中（最终文件的B列）
             column_dic = self.get_file_name_by_num_style(len(list(valueDf)), materialType)
             for title in list(valueDf):
+                # UNDER COLLAR 的值为 SHELL，需要追加一行
+                if title == 'UNDER COLLAR' and str(value[title]) == 'SHELL':
+                    self.underCollarFlag = True
                 arrangeVal.append([title, str(column_dic[title]), str(value[title]), str(disDf.loc[idx][title]), ''])
                 # 从ZROH FRONT开始
                 if firstflag and title.__contains__('ZROH'):
@@ -258,11 +262,15 @@ class VAS_GUI():
             for i in range(len(sameKey)):
                 sameDic.setdefault(sameKey[i], []).append(self.en_cn[sameVal[i]])
             # 遍历整理好的字典,进行dataframe值的整理
+            self.baotiaoFlag = False
             for key, value in sameDic.items():
                 valTempArr = []
                 # 逗号分割值
                 tempValString = "/".join(str(i) for i in value)
                 tempkey = ''
+                # 内夹牙/内包条,需要在最后一行，追加【包条加工】
+                if tempValString.__contains__(self.piping_list[0]):
+                    self.baotiaoFlag = True
                 if tempValString.__contains__('面料') or tempValString == '补充意见 1' or tempValString == '补充意见 2' or tempValString == '补充意见 3' or tempValString == '补充意见 4':
                     tempkey = key[0:key.rfind('^_^')]
                 else:
@@ -293,6 +301,7 @@ class VAS_GUI():
                     arrangeVal.append([tempValString[len(tempValString_first) - 1:].strip('/'), key[key.rfind('^_^') + 3:], '', '', ''])
             basicType = str(disDf.loc[idx]['Material'])
             table_data = pd.DataFrame(self.arrange_appand_by_type(arrangeVal, basicType), columns=self.add_data_title)
+            self.baotiaoFlag = False
             # 导出excel,追加在old的后面
             excelUrl = self.trim_list_file_finish + '\\' + tempFileName + '.xlsx'
             writer = pd.ExcelWriter(excelUrl, engine='xlsxwriter')
@@ -314,6 +323,11 @@ class VAS_GUI():
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
             arrangeVal.append(['小棉带', '小棉带', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
+            if self.baotiaoFlag:
+                arrangeVal.append(['包条加工', '包条加工', '', '', ''])
+            # UNDER COLLAR 的值为 SHELL，需要追加一行
+            if self.underCollarFlag:
+                arrangeVal.append(['领底衬（领底上+领底座）', '9050', '黑', '148cm', ''])
         elif type.__contains__('Pants'):
             arrangeVal.append(['腰里上部/腰里下部', '', '', '', ''])
             arrangeVal.append(['腰里夹牙', '', '', '', ''])
@@ -356,6 +370,11 @@ class VAS_GUI():
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
+            if self.baotiaoFlag:
+                arrangeVal.append(['包条加工', '包条加工', '', '', ''])
+            # UNDER COLLAR 的值为 SHELL，需要追加一行
+            if self.underCollarFlag:
+                arrangeVal.append(['领底衬（领底上+领底座）', '9050', '黑', '148cm', ''])
         else:
             arrangeVal.append(['口袋布 上衣+马甲', 'ECO-8301', '黑', '146cm', ''])
             arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
@@ -377,6 +396,11 @@ class VAS_GUI():
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])
             arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
+            if self.baotiaoFlag:
+                arrangeVal.append(['包条加工', '包条加工', '', '', ''])
+            # UNDER COLLAR 的值为 SHELL，需要追加一行
+            if self.underCollarFlag:
+                arrangeVal.append(['领底衬（领底上+领底座）', '9050', '黑', '148cm', ''])
         return arrangeVal
 
     def get_file_name_by_num_style(self, num, style):

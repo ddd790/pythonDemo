@@ -11,7 +11,7 @@ import stat
 
 
 class VAS_GUI():
-    # 小帅报关单数据提取
+    # 电子发票数据提取
     def get_files(self):
         # print('数据操作进行中......' + str(datetime.datetime.now()).split('.')[0])
         # sql服务器名
@@ -30,6 +30,7 @@ class VAS_GUI():
         self.number_item = ['Number', 'UnitPrice', 'Price', 'Rate', 'Tax', 'TotalPrice',]
         # 服务器发票文件路径
         networked_directory = r'\\192.168.0.3\18-电子发票'
+        # self.local_list_file = 'd:\\fapiaoTest'
         self.local_list_file = 'd:\\fapiao'
         self.local_list_file_j = 'd:\\fapiao\加工费和成衣'
         self.local_list_file_w = 'd:\\fapiao\物料发票'
@@ -45,9 +46,9 @@ class VAS_GUI():
             for file in files:
                 if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and not str(file).__contains__('~'):
                     if root.__contains__('加工费和成衣'):
-                        shutil.copy(os.path.join(root, file), self.local_list_file_j)
+                        shutil.copy2(os.path.join(root, file), self.local_list_file_j)
                     elif root.__contains__('物料发票'):
-                        shutil.copy(os.path.join(root, file), self.local_list_file_w)
+                        shutil.copy2(os.path.join(root, file), self.local_list_file_w)
         # 最终dataframe
         self.table_data = pd.DataFrame(data=None, columns=self.add_data_title)
         # 查询数据库已经存在的发票号码
@@ -56,6 +57,7 @@ class VAS_GUI():
         # 循环文件，处理合并
         for lroot, ldirs, lfiles in os.walk(self.local_list_file):
             for lfile in lfiles:
+                # print(lfile)
                 # 发票文件类型,目前只有【物料发票】和【加工费和成衣】
                 file_type = '物料发票'
                 if lroot.__contains__('加工费和成衣'):
@@ -65,9 +67,9 @@ class VAS_GUI():
         # 更新数据库
         self.update_db()
         # 回车退出
-        # print('------------------------------------------------------------')
-        # print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
-        # input('按回车退出 ')
+        print('------------------------------------------------------------')
+        print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
+        input('按回车退出 ')
 
     def file_to_dataframe(self, io, lfile, file_type):
         pdf_df = pd.DataFrame(data=None, columns=self.add_data_title)
@@ -87,6 +89,9 @@ class VAS_GUI():
             text = page.extract_text()
             invoice_no = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:20]
             invoice_date = self.get_value_two_word(text, '开票日期：', None)[:10].replace('年', '-').replace('月', '-')
+            if invoice_no.__contains__('年'):
+                invoice_no = self.get_value_two_word(text, '电子发票（增值税专用发票）', '发票号码：').strip().replace('\n', '')[:20]
+                invoice_date = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:10].replace('年', '-').replace('月', '-')
             # 项目明细数据
             text = text.replace('税   额', '税  额')
             detail_info = self.get_value_two_word(text, '税  额\n', '合 计').strip()
@@ -101,7 +106,10 @@ class VAS_GUI():
             rate_list = []
             tax_list = []
             for item in detali_info_list:
+                # print(item)
+                # item = item.replace('  ', ' ')
                 detail_item_list = item.split(' ')
+                # print(detail_item_list)
                 # 不满足条件的单行数据跳过
                 if len(detail_item_list) < 6:
                     continue
@@ -111,7 +119,10 @@ class VAS_GUI():
                 price_list.append(detail_item_list[-3])
                 unit_price_list.append(detail_item_list[-4])
                 number_list.append(detail_item_list[-5])
-                unit_list.append(detail_item_list[-6])
+                if detail_item_list[-6].__contains__('*') or len(detail_item_list[-6]) > 5:
+                    unit_list.append('')
+                else:
+                    unit_list.append(detail_item_list[-6])
                 size_list.append(self.get_value_two_word(item, detail_item_list[0], detail_item_list[-6]).strip())
             # 读取不到表格的情况
             if len(page.extract_tables()) == 0:
@@ -127,9 +138,9 @@ class VAS_GUI():
                     one_table = table[0]
                     # 另外一种发票，读取的是第二个表格的内容
                     # print(one_table)
-                    if not one_table[0].__contains__('购'):
+                    if one_table[0] != None and not one_table[0].__contains__('购'):
                         continue
-                    buy_name = self.get_value_two_word(one_table[1].split('\n')[0],  '名称：', None).strip()
+                    buy_name = self.get_value_two_word(one_table[1].split('\n')[0],  '名称：', None).strip().replace('\n', '')
                     buy_no = self.get_value_two_word(one_table[1],  '识别号：', None).strip().replace('\n', '')
                     sell_name = self.get_value_two_word(one_table[-1].split('\n')[0],  '名称：', None).strip().replace('\n', '')
                     sell_no = self.get_value_two_word(one_table[-1],  '识别号：', None).strip().replace('\n', '')
@@ -190,6 +201,7 @@ class VAS_GUI():
             else:
                 insertSql += '%s, '
         insertSql += ')'
+        # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
@@ -211,7 +223,6 @@ class VAS_GUI():
     def readonly_handler(self, func, path, exc_info):
         os.chmod(path, stat.S_IWRITE)
         func(path)
-
 
 def gui_start():
     VAS = VAS_GUI()

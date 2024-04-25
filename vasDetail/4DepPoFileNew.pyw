@@ -83,20 +83,20 @@ class VAS_GUI:
         if self.radio_val.get() == 3:
             tmessage.showerror('错误', '人生苦短,目前还没有该客户的读取功能,施主请慢走！')
             return None
+        for lroot, ldirs, lfiles in os.walk(self.local_po_file):
+            if len(lfiles) == 0:
+                tmessage.showerror('错误', '没有找到任何文件！')
+                return None
+            for lfile in lfiles:
+                temp_file_root = os.path.join(lroot, lfile)
+                # print(temp_file_root)
+                ctime = parser.parse(time.ctime(os.path.getctime(temp_file_root)))
+                create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
+                self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
+        # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO", "IZAC")
+        self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
+        self.table_value = self.set_table_dataframe(self.table_data)
         try:
-            for lroot, ldirs, lfiles in os.walk(self.local_po_file):
-                if len(lfiles) == 0:
-                    tmessage.showerror('错误', '没有找到任何文件！')
-                    return None
-                for lfile in lfiles:
-                    temp_file_root = os.path.join(lroot, lfile)
-                    # print(temp_file_root)
-                    ctime = parser.parse(time.ctime(os.path.getctime(temp_file_root)))
-                    create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
-                    self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
-            # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO", "IZAC")
-            self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
-            self.table_value = self.set_table_dataframe(self.table_data)
             self.update_db()
             self.update_po_size_db()
             # print('----------------------------------')
