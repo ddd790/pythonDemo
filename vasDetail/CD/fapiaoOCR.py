@@ -26,6 +26,7 @@ class VAS_GUI():
         #                      '税率', '税额', '价税合计', '备注', '文件名', '文件类型', '创建时间']
         self.add_data_title = ['InvoiceNo', 'InvoiceDate', 'BuyName', 'BuyNo', 'SellName', 'SellNo', 'Name', 'Size', 'Unit', 'Number', 'UnitPrice', 'Price',
                                'Rate', 'Tax', 'TotalPrice', 'Remarks', 'FileName', 'FileType', 'CreateDate']
+        # self.add_data_title = ['test']
         # 数字类型的字段
         self.number_item = ['Number', 'UnitPrice', 'Price', 'Rate', 'Tax', 'TotalPrice',]
         # 服务器发票文件路径
@@ -42,9 +43,16 @@ class VAS_GUI():
             shutil.rmtree(self.local_list_file_w, onerror=self.readonly_handler)
         os.mkdir(self.local_list_file_w)
         # copy服务器的发票文件到本地
+        self.table_value = []
+        self.table_data = pd.DataFrame(data=None, columns=['test'])
         for root, dirs, files in os.walk(networked_directory):
             for file in files:
+                # print(str(root) + str(file))
+                # self.table_data.append([str(str(root) + str(file)).replace('\\', '~')])
+                # self.table_data.append(pd.DataFrame([tmp_str],columns=['test']), )
                 if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and not str(file).__contains__('~'):
+                    # tmp_str = str(str(root) + '*' + str(file)).replace('\\', '*')
+                    # self.table_data = pd.concat([self.table_data, pd.DataFrame([tmp_str], columns=['test'])]).reset_index(drop=True)
                     if root.__contains__('加工费和成衣'):
                         shutil.copy2(os.path.join(root, file), self.local_list_file_j)
                     elif root.__contains__('物料发票'):
@@ -66,6 +74,7 @@ class VAS_GUI():
         self.table_value.append([tuple(row) for row in self.table_data.values])
         # 更新数据库
         self.update_db()
+        # self.update_db_test()
         # 回车退出
         print('------------------------------------------------------------')
         print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
@@ -109,7 +118,6 @@ class VAS_GUI():
                 # print(item)
                 # item = item.replace('  ', ' ')
                 detail_item_list = item.split(' ')
-                # print(detail_item_list)
                 # 不满足条件的单行数据跳过
                 if len(detail_item_list) < 6:
                     continue
@@ -202,6 +210,24 @@ class VAS_GUI():
                 insertSql += '%s, '
         insertSql += ')'
         # print(insertValue)
+        cursor.executemany(insertSql, insertValue)
+        conn.commit()
+        conn.close()
+
+    def update_db_test(self):
+        dbCol = self.add_data_title[:]
+        # 建立连接并获取cursor
+        conn = pymssql.connect(self.serverName, self.userName, self.passWord, self.dbName)
+        cursor = conn.cursor()
+        # 组装插入的值
+        insertValue = []
+        for tabVal in self.table_value:
+            insertValue += tabVal
+        insertSql = 'INSERT INTO test (' + (",".join(str(i) for i in dbCol)) + ') VALUES ('
+        for colVal in dbCol:
+            insertSql += '%s'
+        insertSql += ')'
+        print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

@@ -50,7 +50,7 @@ class VAS_GUI():
                 print(lfile)
                 # UNDER COLLAR 的值为 SHELL，需要追加一行
                 self.underCollarFlag = False
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0])
+                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).replace('.pdf', '').replace('.PDF', ''))
 
         # 循环读取文件，修改样式
         for root, dirs, files in os.walk(self.trim_list_file_finish):
@@ -193,6 +193,8 @@ class VAS_GUI():
     def file_to_dataframe(self, io, lfile):
         pdf = pdfplumber.open(io)
         colorlist= []
+        pdf_title = []
+        colorlist = []
         # 打开电子发票的PDF文件  
         for page in pdf.pages:
             # 提取文本内容 
@@ -200,9 +202,12 @@ class VAS_GUI():
             if not text.__contains__('TRIMS'):
                 continue
             # 提取表格2中非None的颜色列表
+            print(page.extract_tables()[1])
             colorlist_tmp = [i for i in page.extract_tables()[1][0] if i != None and i != '']
             # 提取表格2中的数据
             colorlist = colorlist_tmp[1:]
+            if len(colorlist) == 0:
+                colorlist = [i for i in page.extract_tables()[1][1] if i != None and i != '']
             pdf_data = page.extract_tables()[1][1:]
             pdf_title = np.append(['用料名称', '供应商', '备注', '有效幅宽/规格'], colorlist)
             if len(pdf_data[0]) != len(pdf_title):
@@ -217,6 +222,8 @@ class VAS_GUI():
         self.add_data_title = self.add_data_title_1 + colorlist + self.add_data_title_2
         # 追加品号title
         add_title = []
+        print(pdf_title)
+        print(colorlist)
         for item in colorlist:
             add_title.append('品号')
         table_data = pd.DataFrame(None, columns=self.add_data_title)
@@ -258,14 +265,14 @@ class VAS_GUI():
         m_name = ['兜布', '有纺衬', '无纺衬', '拉丝衬', '无纺有胶衬', '无纺纸衬', '马鬃', '胸棉', '袖山棉', '拉丝直条', '拉丝斜条', '双面胶', '直条', '小白带', '加丝中打条', '洗涤', '商标', '合缝线', '锁眼线']
         c_code = ['', 'FW2157 - 黑色/白色', 'XH-5050 - 黑色/白色', 'XH-NP5050 - 黑色/白色', 'BW70 - 灰色/白色', '254 - 灰色/白色', 'FC0179 150 8010 - 本色', 'AH-80 - 黑色/白色', '688-80 - 黑色/白色', '1月-32 - 黑色/白色', '7158 - 灰色/白色', '双面胶 - 透明', '5850-1 - 黑色/白色', 'YL-C03 - 黑色/白色', 'ZD-3030 - 黑色/白色', '', '', '2974100', '2974080']
         vender = ['', '库夫纳', '金林', '金林', '科德宝', '科德宝', '库夫纳', '佳峰', '佳峰', '鑫海', '齐祥', '鑫海', '鑫海', '桥新', '齐祥', '', '', '高士', '高士']
-        specs = ['', '150cm', '100cm', '100cm', '90cm', '100cm', '150cm', '100cm', '100cm', '1cm', '1.5cm', '1cm', '2cm', '0.3cm', '2cm+1.5cm', '', '', 'TEX30', 'TEX40']
+        specs = ['', '150cm', '100cm', '100cm', '90cm', '100cm', '150cm', '100cm', '100cm', '1cm', '1.5cm', '1cm', '2cm', '0.3cm', '2cm+1.5cm', '', '', 'TEX24/27', 'TEX40']
         part = ['腰兜附上一层，内部兜袋，前肩条+前袖笼上端条+后袖笼条', '前片+贴边+领面/领座+大小袖山+后袖笼', '马面下+后下摆+后开祺+袖口+腰兜口+省尖+兜位+台场', '贴边领口+前片领口+下摆圆+后肩+马面上', '胸兜牌', '里兜牙+三角牌', '主胸鬃+挺肩鬃', '胸衬', '袖山棉条', '止口+肩缝', '后中缝+侧缝+外袖缝', '', '驳口条', '袖笼', '', '夹入穿者左侧内兜垫带，见工艺指示', '穿者左侧内贴边，见工艺指示', '面合缝+里合缝+打结', '扣眼']
         consumption = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1', '1', '', '']
         if lfile.__contains__('PANT'):
             m_name = ['兜布', '无纺衬', '有纺衬', '板带衬', '拉丝斜条', '商标', '洗涤', '合缝线', '码边线', '锁眼线']
             c_code = ['', 'XH-5050 - 黑色/白色', 'HM050 - 黑色/白色', '4947 - 黑色/白色', '7158 - 灰色/白色', '', '', '2974100 - 顺面料色', '8754140 - 顺面料色', '2974080 - 顺面料色']
             vender = ['', '金林', '恒明', '', '齐祥', '', '', '高士', '高士', '高士']
-            specs = ['', '100cm', '150cm', '1cm', '1.5cm', '', '', 'TEX30', 'TEX21', 'TEX40']
+            specs = ['', '100cm', '150cm', '1cm', '1.5cm', '', '', 'TEX24/27', 'TEX21', 'TEX40']
             part = ['前后兜袋', '门刀+门襟+后兜牙/后兜口+侧兜口贴+(腰里+腰面没有皮筋部分）', '腰面先粘一层无纺衬再粘有纺衬', '绊带', '后档', '位置见工艺指示', '位置见工艺指示', '面合缝+里合缝+打结', '码边', '扣眼']
             consumption = ['', '', '', '', '', '1', '1', '', '', '']
         add_data.loc[:, '用料名称'] = m_name
