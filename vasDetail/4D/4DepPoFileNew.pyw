@@ -647,7 +647,11 @@ class VAS_GUI:
                         if order_flag and row[0] != '':
                             po = str(row[0]).replace('PRE', '').strip()
                             incoterm = str(row[2])
-                            handover_date = self.format_shipping_date(str(row[4]))
+                            # handover_date = self.format_shipping_date(str(row[4]))
+                            if str(row[4]).__contains__('/'):
+                                handover_date = self.format_shipping_date(str(row[4]).replace('\n', ''))
+                            else:
+                                handover_date = self.format_shipping_date(str(row[3]).replace('\n', ''))
                             transport_mode = str(row[5])
                             order_flag = False
                         if str(row[0]).strip() == 'COLOUR' or str(row[0]).strip() == 'COLOUR / 颜色':
@@ -690,7 +694,12 @@ class VAS_GUI:
                         po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
                         self.table_data = self.table_data.append(po_detail, ignore_index=True)
                         for s_idx in range(len(size_list)):
-                            temp_size_detail = temp_po_detail + [size_list[s_idx], int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))]
+                            tmpNum = 0
+                            try:
+                                tmpNum = int(str(first_page_size_num_list[n_idx][s_idx]).replace(',', ''))
+                            except:
+                                tmpNum = 0
+                            temp_size_detail = temp_po_detail + [size_list[s_idx], tmpNum]
                             zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
                             self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
         if one_page_flag:
@@ -1015,6 +1024,7 @@ class VAS_GUI:
             'JAN': '01',
             'FEB': '02',
             'MAR': '03',
+            'MARCH': '03',
             'APR': '04',
             'APRIL': '04',
             'MAY': '05',
@@ -1024,7 +1034,7 @@ class VAS_GUI:
             'SEPT': '09',
             'OCT': '10',
             'NOV': '11',
-            'DEC': '12'
+            'DEC': '12',
         }
         month = key_list[date_list[0]]
         day = date_list[1][:-2]

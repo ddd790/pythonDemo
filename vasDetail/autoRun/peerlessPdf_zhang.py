@@ -184,7 +184,7 @@ ________________________________________________________________________________
             print(fileName)
         if len(detail_info_list) > 0:
             for i in range(len(detail_info_list)):
-                temp_info_list = detail_info_list[i].split('|')
+                temp_info_list = detail_info_list[i].replace('|(RCS)', '').split('|')
                 detail_info = []
                 # 文件名
                 detail_info.append(tx_fileName)

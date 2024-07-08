@@ -44,7 +44,7 @@ class VAS_GUI():
         os.mkdir(self.local_list_file_w)
         # copy服务器的发票文件到本地
         self.table_value = []
-        self.table_data = pd.DataFrame(data=None, columns=['test'])
+        # self.table_data = pd.DataFrame(data=None, columns=['test'])
         for root, dirs, files in os.walk(networked_directory):
             for file in files:
                 # print(str(root) + str(file))
@@ -59,7 +59,7 @@ class VAS_GUI():
                         shutil.copy2(os.path.join(root, file), self.local_list_file_w)
         # 最终dataframe
         self.table_data = pd.DataFrame(data=None, columns=self.add_data_title)
-        # 查询数据库已经存在的发票号码
+        # # 查询数据库已经存在的发票号码
         self.select_invoice_old_value()
         self.table_value = []
         # 循环文件，处理合并
@@ -116,7 +116,7 @@ class VAS_GUI():
             tax_list = []
             for item in detali_info_list:
                 # print(item)
-                # item = item.replace('  ', ' ')
+                item = item.replace('  ', ' ')
                 detail_item_list = item.split(' ')
                 # 不满足条件的单行数据跳过
                 if len(detail_item_list) < 6:
@@ -227,7 +227,7 @@ class VAS_GUI():
         for colVal in dbCol:
             insertSql += '%s'
         insertSql += ')'
-        print(insertValue)
+        # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

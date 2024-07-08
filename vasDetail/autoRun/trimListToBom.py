@@ -76,7 +76,7 @@ class VAS_GUI():
         ws.column_dimensions['B'].width = 46
         ws.column_dimensions['C'].width = 21.3
         ws.column_dimensions['D'].width = 55
-        ws.column_dimensions['E'].width = 10
+        ws.column_dimensions['E'].width = 12.38
 
         # 定义表头颜色样式为橙色
         header_fill = PatternFill('solid', fgColor='FFFF00')
@@ -331,13 +331,14 @@ class VAS_GUI():
         elif type.__contains__('Pants'):
             arrangeVal.append(['腰里上部/腰里下部', '', '', '', ''])
             arrangeVal.append(['腰里夹牙', '', '', '', ''])
-            arrangeVal.append(['裤口袋布/腰里上部/腰里下部', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布/腰里上部/腰里下部', '全涤人字纹-HB-100 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
             arrangeVal.append(['无纺衬-小部位', 'PE125 ', '炭灰', '150cm', ''])
             arrangeVal.append(['无纺衬-腰里下部', 'PE125 ', '炭灰', '150cm', ''])
             arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
+            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '150cm', '用于腰衬加工'])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
@@ -362,11 +363,12 @@ class VAS_GUI():
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
-            arrangeVal.append(['裤口袋布', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布', '全涤人字纹-HB-100 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
             arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
+            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '150cm', '用于腰衬加工'])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
@@ -387,11 +389,12 @@ class VAS_GUI():
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
-            arrangeVal.append(['裤口袋布', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布', '全涤人字纹-HB-100 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498', '亮银色', '', '1.00'])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
             arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
+            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '150cm', '用于腰衬加工'])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])

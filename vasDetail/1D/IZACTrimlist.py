@@ -19,14 +19,7 @@ class VAS_GUI():
         # self.add_data_title = ['用料名称', '品号', '颜色', '规格', '预估单耗']
         self.add_data_title = []
         self.add_data_title_1 = ['用料名称']
-        self.add_data_title_2 = ['供应商', '有效幅宽/规格', '使用部位', '单耗', '单价', '币种', '损耗率（%）', '备注']
-        # 排除列
-        self.out_column = ['FUSIBLE', 'CHEST PIECE', 'SLEEVE HEAD', 'Vendor', 'Date', 'THREAD', 'THREAD BTN HOLE LAPEL', 'WAISTBAND FUSIBLE',
-                           'BARTACKS OUT', 'BARTACKS IN', 'SADDLE STITCH', 'OUTSIDE STITCH', 'INSIDE STITCH', 'COAT POCKETING',
-                           'COAT POCKETING OUTSIDE', 'PANT POCKETING', 'INSIDE PANT BUTTON', 'ZIPPER', 'ZROH PANT M', 'PANT THREAD', 'VEST POCKETING',
-                           'VEST POCKETING OUTSIDE', 'VENT TACK']
-        # 包含包条的列名
-        self.piping_list = ['内夹牙/内包条', '外夹牙/外包条', '腰面夹牙/腰面包条']
+        self.add_data_title_2 = ['供应商', '有效幅宽/规格', '使用部位', '单耗', '单价', '克重', '成份' '损耗率（%）', '备注']
         # 根据勤哲的key匹配对应trimList中的key和value
         self.local_trim_list_file = 'd:\\IZACTrimlist'
         self.trim_list_file_finish = 'd:\\IZACTrimlist结果'
@@ -150,21 +143,23 @@ class VAS_GUI():
             cell.border = border
             cell.font = Font(bold=True)
         step = 0
+        # 合并单元格行号
+        merge_row_no = 0
         for row in ws.iter_rows(min_row=row_use_name + 1, max_row=ws.max_row):
             step = step + 1
             ws.row_dimensions[row_use_name + step].height = 26
-            special_backcolor_flag = 0
+            column_no = 0
             for cell in row:
-                # 判断【胸兜牌衬】和【腰硬衬】，对应的D列需要背景色为黄色
-                if str(cell.value).__contains__('胸兜牌衬') or str(cell.value).__contains__('腰硬衬'):
-                    special_backcolor_flag = 1
-                if special_backcolor_flag >= 1:
-                    special_backcolor_flag = special_backcolor_flag + 1
-                if special_backcolor_flag == 5:
+                column_no = column_no + 1
+                # 判断【衬布颜色请按照面料颜色决定】，对应的D列需要背景色为黄色
+                if str(cell.value).__contains__('衬布颜色请按照面料颜色决定'):
                     # 设置单元格填充颜色
                     cell.fill = header_fill
+                    merge_row_no = step + 2
                 cell.alignment = align_center
                 cell.border = border
+        # 合并单元格
+        ws.merge_cells(start_row=merge_row_no, start_column=1, end_row=merge_row_no, end_column=column_no)
 
         # 设置打印标题和打印列
         # ws.print_title_rows = '3:1'
@@ -202,7 +197,6 @@ class VAS_GUI():
             if not text.__contains__('TRIMS'):
                 continue
             # 提取表格2中非None的颜色列表
-            print(page.extract_tables()[1])
             colorlist_tmp = [i for i in page.extract_tables()[1][0] if i != None and i != '']
             # 提取表格2中的数据
             colorlist = colorlist_tmp[1:]
@@ -222,8 +216,6 @@ class VAS_GUI():
         self.add_data_title = self.add_data_title_1 + colorlist + self.add_data_title_2
         # 追加品号title
         add_title = []
-        print(pdf_title)
-        print(colorlist)
         for item in colorlist:
             add_title.append('品号')
         table_data = pd.DataFrame(None, columns=self.add_data_title)
@@ -262,19 +254,19 @@ class VAS_GUI():
         # 尾部追加固定内容
         add_data =  pd.DataFrame(None, columns=self.add_data_title)
         # 用料名称固定列
-        m_name = ['兜布', '有纺衬', '无纺衬', '拉丝衬', '无纺有胶衬', '无纺纸衬', '马鬃', '胸棉', '袖山棉', '拉丝直条', '拉丝斜条', '双面胶', '直条', '小白带', '加丝中打条', '洗涤', '商标', '合缝线', '锁眼线']
-        c_code = ['', 'FW2157 - 黑色/白色', 'XH-5050 - 黑色/白色', 'XH-NP5050 - 黑色/白色', 'BW70 - 灰色/白色', '254 - 灰色/白色', 'FC0179 150 8010 - 本色', 'AH-80 - 黑色/白色', '688-80 - 黑色/白色', '1月-32 - 黑色/白色', '7158 - 灰色/白色', '双面胶 - 透明', '5850-1 - 黑色/白色', 'YL-C03 - 黑色/白色', 'ZD-3030 - 黑色/白色', '', '', '2974100', '2974080']
-        vender = ['', '库夫纳', '金林', '金林', '科德宝', '科德宝', '库夫纳', '佳峰', '佳峰', '鑫海', '齐祥', '鑫海', '鑫海', '桥新', '齐祥', '', '', '高士', '高士']
-        specs = ['', '150cm', '100cm', '100cm', '90cm', '100cm', '150cm', '100cm', '100cm', '1cm', '1.5cm', '1cm', '2cm', '0.3cm', '2cm+1.5cm', '', '', 'TEX24/27', 'TEX40']
-        part = ['腰兜附上一层，内部兜袋，前肩条+前袖笼上端条+后袖笼条', '前片+贴边+领面/领座+大小袖山+后袖笼', '马面下+后下摆+后开祺+袖口+腰兜口+省尖+兜位+台场', '贴边领口+前片领口+下摆圆+后肩+马面上', '胸兜牌', '里兜牙+三角牌', '主胸鬃+挺肩鬃', '胸衬', '袖山棉条', '止口+肩缝', '后中缝+侧缝+外袖缝', '', '驳口条', '袖笼', '', '夹入穿者左侧内兜垫带，见工艺指示', '穿者左侧内贴边，见工艺指示', '面合缝+里合缝+打结', '扣眼']
-        consumption = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1', '1', '', '']
+        m_name = ['衬布颜色请按照面料颜色决定，如果面料是深色用黑色衬，如果面料是浅色用白色衬布', '兜布', '有纺衬', '无纺衬', '拉丝衬', '无纺有胶衬', '无纺纸衬', '马鬃', '胸棉', '袖山棉', '拉丝直条', '拉丝斜条', '双面胶', '直条', '小白带', '加丝中打条', '洗涤', '商标', '合缝线', '锁眼线']
+        c_code = ['', '', 'FW2157 - 黑色/白色', 'XH-5050 - 黑色/白色', 'XH-NP5050 - 黑色/白色', 'BW70 - 灰色/白色', '254 - 灰色/白色', 'FC0179 150 8010 - 本色', 'AH-80 - 黑色/白色', '688-80 - 黑色/白色', '9332-1 - 黑色/白色', '7158 - 灰色/白色', '双面胶 - 透明', '5850-1 - 黑色/白色', 'YL-C03 - 黑色/白色', 'ZD-3030 - 黑色/白色', '', '', '2974100', '2974080']
+        vender = ['', '', '库夫纳', '金林', '金林', '科德宝', '科德宝', '库夫纳', '佳峰', '佳峰', '鑫海', '齐祥', '鑫海', '鑫海', '桥新', '齐祥', '', '', '高士', '高士']
+        specs = ['', '', '150cm', '100cm', '100cm', '90cm', '100cm', '150cm', '100cm', '100cm', '1cm', '1.5cm', '1cm', '2cm', '0.3cm', '2cm+1.5cm', '', '', 'TEX24/27', 'TEX40']
+        part = ['', '腰兜附上一层，内部兜袋，前肩条+前袖笼上端条+后袖笼条', '前片+贴边+领面/领座+大小袖山+后袖笼', '马面下+后下摆+后开祺+袖口+腰兜口+省尖+兜位+台场', '贴边领口+前片领口+下摆圆+后肩+马面上', '胸兜牌', '里兜牙+三角牌', '主胸鬃+挺肩鬃', '胸衬', '袖山棉条', '止口+肩缝', '后中缝+侧缝+外袖缝', '', '驳口条', '袖笼', '', '夹入穿者左侧内兜垫带，见工艺指示', '穿者左侧内贴边，见工艺指示', '面合缝+里合缝+打结', '扣眼']
+        consumption = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '1', '1', '', '']
         if lfile.__contains__('PANT'):
-            m_name = ['兜布', '无纺衬', '有纺衬', '板带衬', '拉丝斜条', '商标', '洗涤', '合缝线', '码边线', '锁眼线']
-            c_code = ['', 'XH-5050 - 黑色/白色', 'HM050 - 黑色/白色', '4947 - 黑色/白色', '7158 - 灰色/白色', '', '', '2974100 - 顺面料色', '8754140 - 顺面料色', '2974080 - 顺面料色']
-            vender = ['', '金林', '恒明', '', '齐祥', '', '', '高士', '高士', '高士']
-            specs = ['', '100cm', '150cm', '1cm', '1.5cm', '', '', 'TEX24/27', 'TEX21', 'TEX40']
-            part = ['前后兜袋', '门刀+门襟+后兜牙/后兜口+侧兜口贴+(腰里+腰面没有皮筋部分）', '腰面先粘一层无纺衬再粘有纺衬', '绊带', '后档', '位置见工艺指示', '位置见工艺指示', '面合缝+里合缝+打结', '码边', '扣眼']
-            consumption = ['', '', '', '', '', '1', '1', '', '', '']
+            m_name = ['衬布颜色请按照面料颜色决定，如果面料是深色用黑色衬，如果面料是浅色用白色衬布', '兜布', '无纺衬', '有纺衬', '板带衬', '拉丝斜条', '商标', '洗涤', '合缝线', '码边线', '锁眼线']
+            c_code = ['', '', 'XH-5050 - 黑色/白色', 'HM050 - 黑色/白色', '4947 - 黑色/白色', '7158 - 灰色/白色', '', '', '2974100 - 顺面料色', '8754140 - 顺面料色', '2974080 - 顺面料色']
+            vender = ['', '', '金林', '恒明', '', '齐祥', '', '', '高士', '高士', '高士']
+            specs = ['', '', '100cm', '150cm', '1cm', '1.5cm', '', '', 'TEX24/27', 'TEX21', 'TEX40']
+            part = ['', '前后兜袋', '门刀+门襟+后兜牙/后兜口+侧兜口贴+(腰里+腰面没有皮筋部分）', '腰面先粘一层无纺衬再粘有纺衬', '绊带', '后档', '位置见工艺指示', '位置见工艺指示', '面合缝+里合缝+打结', '码边', '扣眼']
+            consumption = ['', '', '', '', '', '', '1', '1', '', '', '']
         add_data.loc[:, '用料名称'] = m_name
         add_data.loc[:, '供应商'] = vender
         add_data.loc[:, '有效幅宽/规格'] = specs

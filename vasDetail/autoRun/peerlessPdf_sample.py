@@ -196,6 +196,7 @@ ________________________________________________________________________________
         tx = tx.replace('\n', '|')
         tx = tx.replace('  ', '|')
         tx = self.deduplicate(tx, '|')
+        tx = tx.replace('| (RCS)', '')
         detail_count = tx.count(self.keyword['end_word'])
         detail_info_list = []
         if detail_count > 0:

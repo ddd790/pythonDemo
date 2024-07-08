@@ -35,7 +35,9 @@ class VAS_GUI():
                 if str(lfile).__contains__('VAS_PPR'):
                     # 循环当天数据
                     ctime = parser.parse(time.ctime(os.path.getctime(os.path.join(lroot, lfile))))
-                    if ctime.date() == datetime.datetime.now().date():
+                    # if ctime.date() == datetime.datetime.now().date():
+                    # 日期取前年份
+                    if ctime.date().year >= 2024:
                         self.arrange_excel_data(os.path.join(lroot, lfile))
         # 追加数据(1是删除所有数据，2是删除当天数据，3是不删除直接追加)
         self.batch_update_db(self.df_data, 1)
