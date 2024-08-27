@@ -21,7 +21,7 @@ class VAS_GUI():
         self.mail_pass = '9573CCf0fd37BA42'
         self.sender = 'derek@motiveschina.com'
         self.receivers = ['sibyl@motiveschina.com', 'derek@motiveschina.com']
-        # print('数据操作进行中......')
+        print('数据操作进行中......')
         # 追加的dataFrame的title
         self.add_data_title = ['version', '订单PO号', '款式缩写', '面料', '英文品名', '辅料表面料描述', '是否半里子', '前身里代号', '前身里料品色号', '袖里代号', '袖里料品色号',
                                '后袖笼拼接料代码', '后袖笼拼接料品色号', '第三种里料代码', '第三种里料品色号', '扣代号', '国外扣供应商品号色号', '内扣或两种以上扣代号', '内扣或两种以上扣型号',
@@ -67,7 +67,7 @@ class VAS_GUI():
                     self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('-')[2].split('.')[0], ctime)
             # 更新数据库
             self.update_db()
-            # print('已经完成计算操作！')
+            print('已经完成计算操作！')
         except:
             print(error_file)
             # print('出错了！')

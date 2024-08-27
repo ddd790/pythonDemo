@@ -25,8 +25,8 @@ class VAS_GUI():
         # 根据勤哲的key匹配对应trimList中的key和value
         self.local_trim_list_file = 'd:\\trimlistToBom'
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
-        self.en_cn_file = r'\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\en_cn.xlsx'
-        self.cn_sample_file = r'\\192.168.0.3\01-业务一部资料\A-Serena\2 - 辅料表\样例'
+        self.en_cn_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\en_cn.xlsx'
+        self.cn_sample_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\样例'
         # 删除目录内文件
         if os.path.exists(self.trim_list_file_finish):
             shutil.rmtree(self.trim_list_file_finish)

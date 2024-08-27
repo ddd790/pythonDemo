@@ -57,12 +57,10 @@ ________________________________________________________________________________
         os.mkdir(self.local_pdf_detail_file)
         # copy服务器的TRIMLIST文件到本地
         for root, dirs, files in os.walk(networked_directory):
-            if root.__contains__('2023') or root.__contains__('2024'):
+            if root.__contains__('2024') or root.__contains__('2025'):
                 for file in files:
                     if str(file).__contains__('PO-') and (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                         shutil.copy2(os.path.join(root, file), self.local_pdf_detail_file)
-        # 保留相同文件中最大的记录
-
         # 查询已存在的记录
         self.select_po_old_value()
         # 已经存在的文件名(去重)
@@ -79,17 +77,10 @@ ________________________________________________________________________________
                 if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and file_name not in file_name_old:
                 # if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                     mtime = parser.parse(time.ctime(os.path.getmtime(os.path.join(lroot, file))))
-                    # ctime = time.ctime(os.path.getctime(
-                    #     os.path.join(lroot, lfile)))
                     create_time = mtime.strftime('%Y-%m-%d %H:%M:%S')
                     self.file_to_dataframe_pdfplumber(file, create_time)
-                    # try:
-                    # except:
-                    #     continue
         # 将pdf结果转成dataFrame
         table_data = pd.DataFrame(self.pdf_data_val, columns=self.add_data_title)
-        # table_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
-        # table_data['CreateDate'] = '2022-01-01 00:00:00'
         self.table_value = []
         self.table_value.append([tuple(row) for row in table_data.values])
 
@@ -138,8 +129,7 @@ ________________________________________________________________________________
         # print('新增文件名：' + tx_fileName)
         # PO
         tx_po = tx_fileName.split('-')[1]
-        pdfreader = pdfplumber.open(
-            self.local_pdf_detail_file + '\\' + fileName)
+        pdfreader = pdfplumber.open(self.local_pdf_detail_file + '\\' + fileName)
         tx_val = []
         # 循环读取pdf内容
         for index in range(len(pdfreader.pages)):
@@ -225,6 +215,9 @@ ________________________________________________________________________________
         if len(detail_info_list) > 0:
             for i in range(len(detail_info_list)):
                 temp_info_list = detail_info_list[i].split('|')
+                # 去掉无用的数据(RCS)
+                if str(detail_info_list[i]).__contains__('(RCS)'):
+                    temp_info_list.remove("(RCS)")
                 detail_info = []
                 # 文件名
                 detail_info.append(tx_fileName)
@@ -239,7 +232,7 @@ ________________________________________________________________________________
                     temp_info_list.insert(5, temp_info_list[4].strip())
                 if temp_info_list[6].count('.') == 2:
                     del temp_info_list[6]
-                else:
+                elif temp_info_list[6].count('.') != 2 and temp_info_list[5].count('.') != 2 :
                     temp_info_list[5] = temp_info_list[4]
                 if not str(temp_info_list[7]).__contains__(','):
                     temp_info_list.pop(7)
@@ -270,11 +263,11 @@ ________________________________________________________________________________
                 # PO
                 detail_info.append(tx_po)
                 # 完整款
-                detail_info.append(self.get_value_two_word(
-                    temp_info_list[2].strip(), None, ' '))
+                # if str(fileName).__contains__('4900140266-REV-QTY-SH-DATE-V7') :
+                #     print(temp_info_list)
+                detail_info.append(self.get_value_two_word(temp_info_list[2].strip(), None, ' '))
                 # 款号
-                detail_info.append(self.get_value_two_word(
-                    temp_info_list[1], None, '-'))
+                detail_info.append(self.get_value_two_word(temp_info_list[1], None, '-'))
                 # Description
                 detail_info.append(temp_info_list[3].strip())
                 # 成分
@@ -290,20 +283,15 @@ ________________________________________________________________________________
                 detail_info.append(self.get_value_two_word(
                     temp_info_list[11], self.keyword['zroh'], self.keyword['color_des']))
                 # 面料描述
-                detail_info.append(self.get_value_two_word(
-                    temp_info_list[11], self.keyword['color_des'], None))
+                detail_info.append(self.get_value_two_word(temp_info_list[11], self.keyword['color_des'], None))
                 # 排产日
-                detail_info.append(self.str2datatime(
-                    temp_info_list[4].strip()))
+                detail_info.append(self.str2datatime(temp_info_list[4].strip()))
                 # 船期
-                detail_info.append(self.str2datatime(
-                    temp_info_list[5].strip()))
+                detail_info.append(self.str2datatime(temp_info_list[5].strip()))
                 # 季节
-                detail_info.append(self.get_value_two_word(
-                    temp_info_list[13], self.keyword['season'], None)[:3])
+                detail_info.append(self.get_value_two_word(temp_info_list[13], self.keyword['season'], None)[:3])
                 # 单价
-                detail_info.append(
-                    float(temp_info_list[7].replace(',', '.').strip()))
+                detail_info.append(float(temp_info_list[7].replace(',', '.').strip()))
                 # 品牌
                 detail_info.append(tx_pinpai)
                 # 目的地
@@ -318,12 +306,11 @@ ________________________________________________________________________________
                     tx_via = self.Via[0]
                 detail_info.append(tx_via)
                 # 款式类型
-                detail_info.append(
-                    temp_info_list[2].strip() + temp_info_list[3])
+                detail_info.append(temp_info_list[2].strip() + temp_info_list[3])
                 # 联系人
                 detail_info.append(tx_person.strip())
                 # 批注
-                detail_info.append(tx_cc)
+                detail_info.append(temp_info_list[14].replace('Note: ', ''))
                 # Rmk
                 detail_info.append(tx_Rmk)
                 # HSCode
@@ -367,8 +354,7 @@ ________________________________________________________________________________
     def update_db(self):
         dbCol = self.add_data_title[:]
         # 建立连接并获取cursor
-        conn = pymssql.connect(
-            self.serverName, self.userName, self.passWord, self.dbName)
+        conn = pymssql.connect(self.serverName, self.userName, self.passWord, self.dbName)
         cursor = conn.cursor()
         # 组装删除的值
         # del_tuple = tuple(self.fileNameList)

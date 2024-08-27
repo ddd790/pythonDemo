@@ -89,22 +89,20 @@ class VAS_GUI:
                 return None
             for lfile in lfiles:
                 temp_file_root = os.path.join(lroot, lfile)
-                # print(temp_file_root)
+                print(lfile)
                 ctime = parser.parse(time.ctime(os.path.getctime(temp_file_root)))
                 create_time = ctime.strftime('%Y-%m-%d %H:%M:%S')
                 self.file_to_dataframe(temp_file_root, str(lfile).split('.')[0], self.radio_val.get(), create_time)
         # 客户("NEXT", "SLATERS", "DEVRED", "BS", "ITX", "CELIO", "IZAC")
         self.table_data['客户'] = str(self.costmer_option[self.radio_val.get()])
         self.table_value = self.set_table_dataframe(self.table_data)
+        # print('----------------------------------')
         try:
             self.update_db()
             self.update_po_size_db()
-            # print('----------------------------------')
-            # print(self.table_data)
-            # print(self.table_value_zara_size)
             tmessage.showinfo('成功', '恭喜操作成功，请到勤哲系统中查看结果吧！')
         except:
-            tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部孙适老师！')
+            tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部！')
 
     def update_po_size_db(self):
         if self.radio_val.get() == 0:
@@ -174,10 +172,16 @@ class VAS_GUI:
             file_txt = str(page.extract_text())
             delivery_date = ''
             if file_txt.__contains__('SHIPMENT DATE:'):
-                delivery_date = self.format_shipping_date(self.get_value_two_word(file_txt, 'SHIPMENT DATE:', None).strip()[:10])
+                tmp_delivery_date = self.get_value_two_word(file_txt, 'SHIPMENT DATE:', None).strip()[:10]
+                if tmp_delivery_date.__contains__('from'):
+                    tmp_delivery_date = self.get_value_two_word(file_txt, 'SHIPMENT DATE:', None).strip()[:29].split('to')[1].strip()
+                delivery_date = self.format_shipping_date(tmp_delivery_date)
+            # 船期为空的继续从Shipping Date : 取
+            if delivery_date.strip() == '':
+                delivery_date = self.format_shipping_date(self.get_value_two_word(file_txt, 'Shipping Date :', None).strip()[:10])
             if file_txt.__contains__('Incoterm :'):
                 trade_mode = self.get_value_two_word(file_txt, 'Incoterm :', 'Transport :').strip()
-                shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Transporteur :').strip()
+                shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Buying Terms').strip()[:3]
             if page.page_number == 1:
                 po_no_tmp = self.get_value_two_word(file_txt, 'Order Number :', 'Invoicing :').strip()
                 po_no = "".join(list(filter(str.isdigit, po_no_tmp[:6])))
@@ -187,7 +191,7 @@ class VAS_GUI:
                 hs_code = self.get_value_two_word(file_txt, 'Nomenclature douanière :', 'Collection :').strip()
                 season = self.get_value_two_word(file_txt, 'Collection :', 'Thème :').strip()
                 trade_mode = self.get_value_two_word(file_txt, 'Incoterm :', 'Transport :').strip()
-                shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Transporteur :').strip()
+                shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Buying Terms').strip()[:3]
                 come_date = self.format_shipping_date(self.get_value_two_word(po_no_tmp, 'Date :', 'Invoicing :').strip()[:10])
                 unit_price = self.get_value_two_word(file_txt, 'Net Buying Price ex VAT :', 'Discount :').strip()
                 # 获取pdf第一个表格
@@ -237,10 +241,11 @@ class VAS_GUI:
             self.table_data = self.table_data.append(po_detail, ignore_index=True)
             for s_idx in range(len(size_list[input_color])):
                 if int(str(size_detail_list[input_color][s_idx])) > 0:
-                    temp_size_detail = temp_po_detail + \
-                        [self.change_izac_size(size_list[input_color][s_idx]), int(str(size_detail_list[input_color][s_idx]))]
+                    temp_size_detail = temp_po_detail + [self.change_izac_size(size_list[input_color][s_idx]), int(str(size_detail_list[input_color][s_idx]))]
                     zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
                     self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
+        self.table_data['面料颜色'] = self.table_data['面料颜色'].replace(' ','', regex=True)
+        self.table_data_zara_size['面料颜色'] = self.table_data_zara_size['面料颜色'].replace(' ','', regex=True)
         # print(self.table_data)
         # print(self.table_data_zara_size)
         self.nextPoList.append(po_no)
@@ -644,6 +649,7 @@ class VAS_GUI:
                         if str(row[0]).__contains__('LOGISTIC ORDER'):
                             order_flag = True
                             continue
+                        print(row)
                         if order_flag and row[0] != '':
                             po = str(row[0]).replace('PRE', '').strip()
                             incoterm = str(row[2])
@@ -922,6 +928,7 @@ class VAS_GUI:
                 continue
             insertSql += '%s, '
         insertSql += ')'
+        print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
@@ -979,6 +986,7 @@ class VAS_GUI:
         return {'size_list': res_size_list, 'num_list': res_num_list}
 
     def format_shipping_date(self, temp_str):
+        print(temp_str)
         if temp_str == '':
             now = datetime.datetime.now()
             return str(now.year) + '-' + str('{:02d}'.format(now.month)) + '-' + str('{:02d}'.format(now.day))

@@ -72,6 +72,7 @@ class VAS_GUI():
                     file_type = '加工费和成衣'
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0], file_type)
         self.table_value.append([tuple(row) for row in self.table_data.values])
+        # print(self.table_value)
         # 更新数据库
         self.update_db()
         # self.update_db_test()
@@ -97,13 +98,13 @@ class VAS_GUI():
             # 提取第一页的文本内容  
             text = page.extract_text()
             invoice_no = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:20]
-            invoice_date = self.get_value_two_word(text, '开票日期：', None)[:10].replace('年', '-').replace('月', '-')
+            invoice_date = self.get_value_two_word(text, '开票日期：', None)[:11].replace('年', '-').replace('月', '-').replace('日', '').replace(' ', '')
             if invoice_no.__contains__('年'):
                 invoice_no = self.get_value_two_word(text, '电子发票（增值税专用发票）', '发票号码：').strip().replace('\n', '')[:20]
-                invoice_date = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:10].replace('年', '-').replace('月', '-')
+                invoice_date = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:11].replace('年', '-').replace('月', '-').replace('日', '').replace(' ', '')
             # 项目明细数据
-            text = text.replace('税   额', '税  额')
-            detail_info = self.get_value_two_word(text, '税  额\n', '合 计').strip()
+            text = text.replace('税   额', '税  额').replace('税  额', '税 额')
+            detail_info = self.get_value_two_word(text, '税 额\n', '合 计').strip()
             detali_info_list = detail_info.split('\n')
             # ['项目名称', '规格型号', '单位', '数量', '单价', '金额', '税率', '税额']的集合
             name_list = []
@@ -136,7 +137,7 @@ class VAS_GUI():
             if len(page.extract_tables()) == 0:
                 buy_name = self.get_value_two_word(text, '购 名称：', '销 名称：').strip().replace('\n', '')
                 sell_name = self.get_value_two_word(text,  '销 名称：', None).split(' ')[0]
-                no_list = text.split('统一社会信用代码/纳税人识别号：')
+                no_list = text.split('社会信用代码/纳税人识别号')
                 buy_no = no_list[1].split(' ')[0]
                 sell_no = no_list[2].split(' ')[0]
                 total_price = text.split('（小写）¥')[1].replace('\n', ' ').split(' ')[0]
@@ -149,9 +150,9 @@ class VAS_GUI():
                     if one_table[0] != None and not one_table[0].__contains__('购'):
                         continue
                     buy_name = self.get_value_two_word(one_table[1].split('\n')[0],  '名称：', None).strip().replace('\n', '')
-                    buy_no = self.get_value_two_word(one_table[1],  '识别号：', None).strip().replace('\n', '')
+                    buy_no = self.get_value_two_word(one_table[1],  '识别号', None).strip().replace('\n', '')
                     sell_name = self.get_value_two_word(one_table[-1].split('\n')[0],  '名称：', None).strip().replace('\n', '')
-                    sell_no = self.get_value_two_word(one_table[-1],  '识别号：', None).strip().replace('\n', '')
+                    sell_no = self.get_value_two_word(one_table[-1],  '识别号', None).strip().replace('\n', '')
                     total_price = self.get_value_two_word(table[2][2], '¥', None).strip().replace('\n', '')
                     remarks = str(table[3][1].strip())
         # ['发票号码', '开票日期','购买方名称', '购买方纳税人识别号', '销售方名称', '销售方纳税人识别号', '项目名称', '规格型号', '单位', '数量', '单价', '金额', '税率', '税额', '价税合计', '备注']
@@ -171,10 +172,10 @@ class VAS_GUI():
             pdf_df.loc[:, self.add_data_title[18]] = str(datetime.datetime.now()).split('.')[0]
             pdf_df.loc[:, self.add_data_title[0]] = invoice_no
             pdf_df.loc[:, self.add_data_title[1]] = invoice_date
-            pdf_df.loc[:, self.add_data_title[2]] = buy_name
-            pdf_df.loc[:, self.add_data_title[3]] = buy_no
-            pdf_df.loc[:, self.add_data_title[4]] = sell_name
-            pdf_df.loc[:, self.add_data_title[5]] = sell_no
+            pdf_df.loc[:, self.add_data_title[2]] = buy_name.replace(':', '').replace('：', '')
+            pdf_df.loc[:, self.add_data_title[3]] = buy_no.replace(':', '').replace('：', '')
+            pdf_df.loc[:, self.add_data_title[4]] = sell_name.replace(':', '').replace('：', '')
+            pdf_df.loc[:, self.add_data_title[5]] = sell_no.replace(':', '').replace('：', '')
             self.table_data = self.table_data.append(pdf_df, ignore_index=True)
         pdf.close()
 
@@ -209,6 +210,7 @@ class VAS_GUI():
             else:
                 insertSql += '%s, '
         insertSql += ')'
+        # print(insertSql)
         # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
@@ -227,7 +229,7 @@ class VAS_GUI():
         for colVal in dbCol:
             insertSql += '%s'
         insertSql += ')'
-        # print(insertValue)
+        print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
