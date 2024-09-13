@@ -72,7 +72,11 @@ class VAS_GUI():
                     file_type = '加工费和成衣'
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0], file_type)
         self.table_value.append([tuple(row) for row in self.table_data.values])
-        # print(self.table_value)
+        for row in self.table_data.itertuples(index=False):
+            # 判断是否为数字，不是数字则输出文件名
+            if not self.is_number(row.Number):
+                print('文件名：' + row.FileName + '，发票号码：' + row.InvoiceNo + '，项目明细数据有误，请检查！')
+                continue
         # 更新数据库
         self.update_db()
         # self.update_db_test()
@@ -252,6 +256,22 @@ class VAS_GUI():
     def readonly_handler(self, func, path, exc_info):
         os.chmod(path, stat.S_IWRITE)
         func(path)
+    
+    def is_number(self, s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            pass
+
+        try:
+            import unicodedata
+            unicodedata.numeric(s)
+            return True
+        except (TypeError, ValueError):
+            pass
+
+        return False
 
 def gui_start():
     VAS = VAS_GUI()
