@@ -38,9 +38,7 @@ class VAS_GUI():
         # 更新数据库
         self.update_db()
         # 删除目录内文件
-        if os.path.exists(self.local_excel_detail_file):
-            shutil.rmtree(self.local_excel_detail_file)
-        os.mkdir(self.local_excel_detail_file)
+        self.delete_files_in_folder(self.local_excel_detail_file)
         print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
         input('按回车退出 ')
 
@@ -54,6 +52,7 @@ class VAS_GUI():
         v_key = str(style) + '_' + str(category)
         # 取出用料中含有面料的行（10-21行中）
         rows_of_interest = df.iloc[9:21, 0]
+        rows_of_interest = rows_of_interest.fillna('')
         contains_fabric = rows_of_interest.str.contains('面料', case=False)
         row_indices_with_fabric = contains_fabric[contains_fabric].index.tolist()
         # 用料相关信息
@@ -61,6 +60,9 @@ class VAS_GUI():
         table_data.columns = self.add_data_title[0:6]
         table_data.fillna(0, inplace=True)
         # 订单相关信息
+        table_data['实测幅宽'] = table_data['实测幅宽'].astype(str)
+        table_data['报价单耗'] = table_data['报价单耗'].astype(str)
+        table_data['订料单耗'] = table_data['订料单耗'].astype(str)
         table_data['客户'] = customer
         table_data['款号'] = style
         table_data['类别'] = category
@@ -114,7 +116,25 @@ class VAS_GUI():
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
+        
+    def delete_files_in_folder(self, folder_path):
+        # 确保提供的路径是一个有效的文件夹路径
+        if not os.path.isdir(folder_path):
+            print(f"Path {folder_path} is not a valid directory.")
+            return
 
+        # 获取文件夹中的所有文件
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            
+            # 检查是否为文件
+            if os.path.isfile(file_path):
+                try:
+                    # 删除文件
+                    os.remove(file_path)
+                    print(f"Deleted file: {file_path}")
+                except Exception as e:
+                    print(f"Failed to delete {file_path}. Error: {e}")
 
 def gui_start():
     VAS = VAS_GUI()

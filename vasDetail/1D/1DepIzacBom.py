@@ -81,7 +81,7 @@ class VAS_GUI():
             table_data_add = table_data_add.append(table_data, ignore_index=True)
         self.delList.extend(table_data_add['delKey'].tolist())
         self.table_value.append([tuple(row) for row in table_data_add.values])
-        # print(self.table_value)
+        print(self.table_value)
 
     def update_db(self):
         dbCol = self.add_data_title[:]
@@ -108,6 +108,7 @@ class VAS_GUI():
             else:
                 insertSql += '%s, '
         insertSql += ')'
+        # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

@@ -33,11 +33,12 @@ class VAS_GUI():
             for lfile in lfiles:
                 if not str(lfile).__contains__('~'):
                     print('文件名：' + str(lfile).split('.')[0])
-                    df = pd.read_excel(os.path.join(lroot, lfile), sheet_name=0, nrows=1000,converters={'Ticket Style ':str, 'RMS Color Code ':str})
+                    df = pd.read_excel(os.path.join(lroot, lfile), sheet_name=0, nrows=1000,converters={'PO No':str, 'Dept':str, 'Spec Style ':str, 'SKU':str, 'Ticket Style ':str, 'RMS Color Code ':str, 'Vendor id':str, 'Factory':str})
                     table_data = pd.DataFrame(df)
                     table_data.columns = self.add_data_title
                     table_data['FileName'] = str(lfile).split('.')[0]
                     table_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
+                    table_data = table_data.fillna('')
                     self.SKUList.extend(table_data['SKU'].tolist())
                     self.table_value.append([tuple(row) for row in table_data.values])
 
@@ -73,6 +74,7 @@ class VAS_GUI():
             else:
                 insertSql += '%s, '
         insertSql += ')'
+        # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

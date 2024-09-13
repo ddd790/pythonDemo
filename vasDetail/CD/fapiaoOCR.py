@@ -119,8 +119,9 @@ class VAS_GUI():
                 # print(item)
                 item = item.replace('  ', ' ')
                 detail_item_list = item.split(' ')
+                temp_list = [item for item in detail_item_list if item != '']
                 # 不满足条件的单行数据跳过
-                if len(detail_item_list) < 6:
+                if len(temp_list) < 6:
                     continue
                 name_list.append(self.deleteByStar(detail_item_list[0]))
                 tax_list.append(detail_item_list[-1])
@@ -229,7 +230,7 @@ class VAS_GUI():
         for colVal in dbCol:
             insertSql += '%s'
         insertSql += ')'
-        print(insertValue)
+        # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

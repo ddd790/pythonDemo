@@ -44,9 +44,8 @@ class VAS_GUI():
 
         # 更新数据库，删除文件
         self.update_db()
-        if os.path.exists(self.local_cai_detail_file):
-            shutil.rmtree(self.local_cai_detail_file)
-        os.mkdir(self.local_cai_detail_file)
+        # 删除目录内文件
+        self.delete_files_in_folder(self.local_cai_detail_file)
         input('按回车退出 ')
 
     def format_dataframe(self, df, lfile, ship_list, season_year):
@@ -144,6 +143,25 @@ class VAS_GUI():
         if len(day) == 1:
             day = '0' + day
         return year + '-' + month + '-' + day + ' 00:00:00'
+
+    def delete_files_in_folder(self, folder_path):
+        # 确保提供的路径是一个有效的文件夹路径
+        if not os.path.isdir(folder_path):
+            print(f"Path {folder_path} is not a valid directory.")
+            return
+
+        # 获取文件夹中的所有文件
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            
+            # 检查是否为文件
+            if os.path.isfile(file_path):
+                try:
+                    # 删除文件
+                    os.remove(file_path)
+                    print(f"Deleted file: {file_path}")
+                except Exception as e:
+                    print(f"Failed to delete {file_path}. Error: {e}")
 
 def gui_start():
     VAS = VAS_GUI()

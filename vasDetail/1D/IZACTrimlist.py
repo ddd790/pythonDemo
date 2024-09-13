@@ -81,7 +81,7 @@ class VAS_GUI():
 
         # 定义表头颜色样式为橙色
         header_fill = PatternFill('solid', fgColor='FFFF00')
-        header_fill_qing = PatternFill('solid', fgColor='00FFFF')
+        header_fill_qing = PatternFill('solid', fgColor='F4BD6C')
         header_fill_lan = PatternFill('solid', fgColor='EE82EE')
 
         # 定义对齐样式横向居中、纵向居中
@@ -93,26 +93,27 @@ class VAS_GUI():
         side = Side('thin')
         # 定义边框样式，有底边和右边
         border = Border(top=side, bottom=side, left=side, right=side)
-
-        # 用料名称所在行
+        
+        # 设置品号列的样式
+        col_dict = {2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G', 8: 'H', 9: 'I', 10: 'J', 11: 'K', 12: 'L', 13: 'M', 13: 'N'}
+        align_col = []
+        for i in range(2, 13):
+            data_value = ws.cell(row=2, column=i).value
+            if data_value == '品号':
+                ws.column_dimensions[col_dict[i]].width = 38
+            elif data_value == '用料名称':
+                ws.column_dimensions[col_dict[i]].width = 48
+            elif data_value == '颜色' or data_value == '有效幅宽/规格' or  data_value == '供应商' or  data_value == '单耗' or  data_value == '单位':
+                ws.column_dimensions[col_dict[i]].width = 12
+                align_col.append(col_dict[i])
+        
+        # 品类所在行
         row_use_name = 0
         for i in range(1, self.max_en + 5):
             data_value = ws.cell(row=i, column=1).value
             if data_value == '品类':
                 row_use_name = i
                 break
-        
-        # 设置品号列的样式
-        col_dict = {2: 'B', 3: 'C', 4: 'D', 5: 'E', 6: 'F', 7: 'G', 8: 'H', 9: 'I'}
-        for i in range(2, 10):
-            data_value = ws.cell(row=2, column=i).value
-            if data_value == '品号':
-                ws.column_dimensions[col_dict[i]].width = 38
-            elif data_value == '用料名称':
-                ws.column_dimensions[col_dict[i]].width = 48
-            elif data_value == '颜色' or data_value == '有效幅宽/规格' or  data_value == '供应商':
-                ws.column_dimensions[col_dict[i]].width = 12
-        
         # 设置基本数据的样式
         base_step = 0
         for row in ws.iter_rows(min_row=1, max_row=row_use_name):
@@ -122,17 +123,14 @@ class VAS_GUI():
             for cell in row:
                 cell.alignment = align_center
                 cell.font = Font(size=12)
-                if str(cell.value).__contains__('接缝滑移'):
-                    # 设置单元格填充颜色
-                    cell.fill = header_fill_lan
-                    cell.font = Font(bold=True)
-                if str(cell.value).__contains__('面料描述'):
+                if str(cell.value) == '款号' or str(cell.value) == 'PO' or str(cell.value) == '款式':
                     # 设置单元格填充颜色
                     cell.fill = header_fill_qing
                     # 设置单元格对齐方式
                     cell.font = Font(bold=True)
 
         # 设置用料名称单元格格式
+        ws.row_dimensions[1].height = 30
         ws.row_dimensions[row_use_name].height = 30
         for cell in ws[row_use_name]:
             # 设置单元格填充颜色
@@ -160,9 +158,8 @@ class VAS_GUI():
                 cell.border = border
         # 合并单元格
         # ws.merge_cells(start_row=merge_row_no, start_column=1, end_row=merge_row_no, end_column=column_no)
-
-        # D E F列居中
-        for col in ['D', 'E', 'F']:
+        # 居中
+        for col in align_col:
             for cell in ws[col]:
                 cell.alignment = align
 
@@ -212,8 +209,9 @@ class VAS_GUI():
                 colorlist = [i for i in page.extract_tables()[1][1] if i != None and i != '' and i not in not_color_key]
             pdf_data = page.extract_tables()[1][1:]
             pdf_title = np.append(['品类', '供应商', '备注', '有效幅宽/规格'], colorlist)
+            # 有的PDF可能需要修改列的数量，todo
             if len(pdf_data[0]) != len(pdf_title):
-                pdf_title = np.append(['品类', '供应商', '有效幅宽/规格'], colorlist)
+                pdf_title = np.append(['品类', '供应商', '备注', '有效幅宽/规格'], colorlist)
             # 去掉数据尾部的空值
             for i in range(len(pdf_data)):
                 pdf_data[i] = pdf_data[i][:len(pdf_title)]
@@ -231,6 +229,7 @@ class VAS_GUI():
         for item in colorlist:
             add_title.append('品号')
         table_data = pd.DataFrame(None, columns=self.add_data_title)
+        # print(data_df)
         for item in self.add_data_title:
             if item in pdf_title:
                 table_data.loc[:, item] = data_df[item]
@@ -272,29 +271,29 @@ class VAS_GUI():
         # 尾部追加固定内容
         add_data =  pd.DataFrame(None, columns=self.add_data_title)
         # 品类固定列
-        m_name = ['兜布', '有纺衬', '无纺衬', '拉丝衬', '无纺有胶衬', '无纺纸衬', '马鬃', '胸棉', '袖山棉', '袖山鬃', '肩垫', '拉丝直条', '拉丝斜条', '双面胶', '直条', '小白带', '加丝中打条', '线色']
-        c_code = ['', 'FW2157', 'XH-5050', 'XH-NP5050', 'BW70', '254', 'FC0179 150 8010', 'AH-80', '688-80', 'B409919W', 'BY-Z0328', '9332-1', '7158', '双面胶', '5850-1', 'YL-C03', 'ZD-3030', '']
-        vender = ['', '库夫纳', '金林', '金林', '科德宝', '科德宝', '库夫纳', '佳峰', '佳峰', 'SOCO', '白云', '鑫海', '齐祥', '鑫海', '鑫海', '桥新', '齐祥', '']
-        specs = ['', '150cm', '100cm', '100cm', '90cm', '100cm', '150cm', '100cm', '100cm', '150cm', '', '1cm', '1.5cm', '1cm', '2cm', '0.3cm', '2cm+1.5cm', '']
-        part = ['腰兜附上一层，内部兜袋，前肩条+前袖笼上端条+后袖笼条', '前片+贴边+领面/领座+大小袖山+后袖笼', '马面下+后下摆+后开祺+袖口+腰兜口+省尖+兜位+台场', '贴边领口+前片领口+下摆圆+后肩+马面上', '胸兜牌', '里兜牙+三角牌', '主胸鬃+挺肩鬃', '胸衬', '袖山棉条', '袖山鬃', '肩', '止口', '后中缝，侧缝，外袖缝，后档', '胸兜牌，兜盖，领内口，贴边上端里面', '驳口条', '袖笼', '', '']
-        consumption = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
-        c_color = ['', '黑', '黑', '黑', '灰', '黑', '本', '黑', '黑', '本', '黑', '黑', '灰', '透明', '黑', '黑', '黑', '顺色线']
-        c_union = ['米', '米', '米', '米', '米', '米', '米', '米', '米', '米', '副', '米', '米', '米', '米', '米', '米', '米']
+        m_name = ['兜布', '织带', '有纺衬', '无纺衬', '拉丝衬', '胸兜牌衬', '无纺纸衬', '马鬃', '胸棉', '袖山棉', '袖山鬃', '肩垫', '拉丝直条', '拉丝斜条', '双面胶', '直条', '贴边扦条', '小白带', '加丝中打条', '线色']
+        c_code = ['', 'NO.SH6950', 'FW2157', 'XH-5050', 'XH-NP5050', '2346-2HE', '254', 'FC0179 150 8010', 'AH-80', '688-80', 'B409919W', 'BY-Z0328', '9332-1', '7158', '双面胶', '5850-1', 'IS-8330', 'YL-C03', 'ZD-3030', '']
+        vender = ['', '清川', '库夫纳', '金林', '金林', '科德宝', '科德宝', '库夫纳', '佳峰', '佳峰', 'SOCO', '白云', '鑫海', '齐祥', '鑫海', '鑫海', '鑫海', '桥新', '齐祥', '']
+        specs = ['', '6mm', '150cm', '100cm', '100cm', '', '100cm', '150cm', '100cm', '100cm', '150cm', '', '1cm', '1.5cm', '1cm', '2cm', '1.5cm', '0.3cm', '2cm，1.5cm', '']
+        part = ['腰兜附上一层，内部兜袋，前肩条1.2cm宽，前袖笼上端条1.2cm宽，后袖笼条', '内领 领吊', '前片，贴边，领面/领座，大小袖山，后袖笼', '马面下，后下摆，后开祺，袖口，腰兜口，省尖，兜位，台场', '贴边领口，前片领口，下摆圆，后肩，马面上', '胸兜牌', '里兜牙，三角牌', '主胸鬃，挺肩鬃', '胸衬', '袖山棉条', '袖山鬃', '肩', '止口', '后中缝，侧缝，外袖缝', '胸兜牌，兜盖，领内口，贴边上端里面', '驳口条', '扦贴边里面，胸衬下层', '袖笼,后领口', '前片马面，后片下摆', '']
+        consumption = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+        c_color = ['', '顺面料色', '黑', '黑', '黑', '黑', '黑', '自然', '黑', '黑', '本', '黑', '黑', '灰', '透明', '黑', '黑', '黑', '黑', '顺色线']
+        c_union = ['米', '米', '米', '米', '米', '米', '米', '米', '米', '米', '米', '副', '米', '米', '米', '米', '米', '米', '米', '米']
         if lfile[:1] == 'P':
-            m_name = ['兜布', '裤膝', '无纺衬', '有纺衬', '裤钩垫衬', '拉丝斜条', '板带衬', '线色']
-            c_code = ['', 'PL-2100-1', 'XH-5050', 'HM050', 'EXP155', '7158', '4947', '']
-            vender = ['', '海特恩德', '金林', '恒明', '鑫海', '齐祥', '鑫海', '']
-            specs = ['', '72cm', '100cm', '150cm', '3.1cm', '1.5cm', '0.9cm', '']
-            part = ['前后兜袋，下巾里子，门刀包条', '裤膝', '门刀+门襟+后兜牙/后兜口+侧兜口+表兜牙+腰面', '腰面先粘一层无纺衬再粘有纺衬', '裤钩垫衬', '后档', '绊带', '']
-            consumption = ['', '', '', '', '', '', '', '']
-            c_color = ['', '黑', '黑', '黑', '黑', '黑', '黑', '顺色线']
-            c_union = ['米', '米', '米', '米', '米', '米', '米', '米']
+            m_name = ['拉链', '裤钩', '兜布', '裤膝', '裤膝', '腰里加工', '无纺衬', '有纺衬', '裤钩垫衬', '拉丝斜条', '板带衬', '线色']
+            c_code = ['CFC-39 DS H3 P12', 'HHK-0013','', 'PL-2100-1', 'KN7200', '腰里加工', 'XH-5050', 'HM050', 'EXP155', '7158', '4947', '']
+            vender = ['YKK', '上海柯桥','', '海特恩德', 'YCHT', '', '金林', '恒明', '鑫海', '齐祥', '鑫海', '']
+            specs = ['', '', '', '72cm', '72cm', '', '100cm', '150cm', '3cm', '1.5cm', '0.9cm', '']
+            part = ['前门襟', '腰头','前后兜袋，下巾里子，门刀包条', '裤膝', '裤膝', '', '门刀，门襟，后兜牙/后兜口，侧兜口，表兜牙，腰面', '腰面先粘一层无纺衬再粘有纺衬', '裤钩垫衬', '后档', '绊带', '']
+            consumption = ['', '', '', '', '', '', '', '', '', '', '', '']
+            c_color = ['顺面料色', '','', '黑', '顺面料色', '', '黑', '黑', '黑', '黑', '黑', '顺色线']
+            c_union = ['条', '套', '米', '米', '米', '米', '米', '米', '米', '米', '米', '米']
         # vas列添加
         m_name.extend(['VAS', '主标', '洗涤', '条码', '主吊牌（含吊粒）', '可回收涤吊牌', '弹力吊牌', '备扣袋', '塑料袋', '衣架', 'IZAC贴纸', 'IZAC贴纸', '主标', '主吊牌（含吊粒）', '吊牌', '洗涤', '条码洗涤', '备扣袋', '塑料袋', '裤架', '纸箱', '垫板', '胶带', '牛皮纸', '贴纸', '贴纸', '小箱贴', '大箱贴'])
         c_code.extend(['', 'IZAWLN08', 'IZAC缎带印唛', 'IZAC无纺印唛', 'IZAHTN01', 'IZAHPP010-PR', 'IZAHTI02-STR ', 'IZAC备扣袋', 'IZAC塑料袋', 'MAYSHINE 2179', '白底黑色', '白底黑色', 'IZAWLN03', 'IZAHTN02', 'IZAHTI02-JER', 'IZAC缎带印唛', 'IZAC无纺印唛', 'IZAC备扣袋', 'IZAC塑料袋（3%可再生）', 'MAYSHINE 2164', '双层皮筋，无箱唛', '垫板', '6道透明印红字', '80克国产牛皮纸', 'IZAC贴纸', 'IZAC贴纸', 'IZAC贴纸', 'IZAC贴纸'])
         c_color.extend(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
         consumption.extend(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
-        specs.extend(['', '40*60mm', '50*100mm', '40*95mm', '16.5*3.5CM', '4*3.5CM', '10*5.5cm', '（98+5）*64cm', '46cm', '5.4CM, 10000个/盒', '45mm*35mm', '10*8cm', '25*60mm', '37*75mm', '35*73mm', '16.5*3.5cm', '4*3.5cm', '9.5*6cm', '（82+5）*50cm', '37cm', '80CM*50CM*20CM', '70*40CM', '5.5cm*100Y', '160cm,130m/卷', '45mm*35mm', '10*8cm', '45mm*35mm', '15*15cm'])
+        specs.extend(['', '40*60mm', '50*100mm', '40*95mm', '16.5*3.5CM', '4*3.5CM', '10*5.5cm', '（98，5）*64cm', '46cm', '5.4CM, 10000个/盒', '45mm*35mm', '10*8cm', '25*60mm', '37*75mm', '35*73mm', '16.5*3.5cm', '4*3.5cm', '9.5*6cm', '（82，5）*50cm', '37cm', '80CM*50CM*20CM', '70*40CM', '5.5cm*100Y', '160cm,130m/卷', '45mm*35mm', '10*8cm', '45mm*35mm', '15*15cm'])
         vender.extend(['', '常美', '博美', '博美', '常美', '常美', '常美', '鹏博', '鹏博', '顺淼', '浩源', '浩源', '常美', '常美', '常美', '博美', '博美', '鹏博', '鹏博', '顺淼', '浩源', '浩源', '毅成', '浩源', '浩源', '浩源', '浩源', '浩源'])
         part.extend(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
         c_union.extend(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''])
@@ -310,7 +309,7 @@ class VAS_GUI():
                 add_data.loc[:, item] = c_code
         # 修改"单位"这一列
         # table_data.loc[:2, '单位'] = table_data.loc[:2, '单位']
-        table_data.loc[2:,'单位'] = table_data.loc[2:].apply(lambda row: '个' if 'BUTTONS' in str(row['品类']) else '条' if 'ZIPPER' in str(row['品类']) else '米', axis=1)
+        table_data.loc[2:,'单位'] = table_data.loc[2:].apply(lambda row: '个' if 'BUTTONS' in str(row['品类']) else '条' if 'ZIPPER' in str(row['品类']) else '个' if 'PINS' in str(row['品类']) else '米', axis=1)
         table_data = pd.concat([table_data, add_data]).reset_index(drop=True)
         # 导出excel
         excelUrl = self.trim_list_file_finish + '\\' + lfile + '.xlsx'

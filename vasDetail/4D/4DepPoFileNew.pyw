@@ -1028,6 +1028,7 @@ class VAS_GUI:
 
     def change_shipping_date(self, ship_date, year):
         date_list = ship_date.split(' ')
+        print(date_list)
         key_list = {
             'JAN': '01',
             'FEB': '02',

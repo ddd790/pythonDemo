@@ -41,9 +41,9 @@ class VAS_GUI():
         # 更新数据库
         self.update_db()
         # 删除目录内文件
-        # if os.path.exists(self.local_list_file):
-        #     shutil.rmtree(self.local_list_file, onerror=self.readonly_handler)
-        # os.mkdir(self.local_list_file)
+        if os.path.exists(self.local_list_file):
+            shutil.rmtree(self.local_list_file, onerror=self.readonly_handler)
+        os.mkdir(self.local_list_file)
         # 回车退出
         print('------------------------------------------------------------')
         print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
@@ -59,6 +59,7 @@ class VAS_GUI():
         style_No_list = []
         fabric_No_list = []
         fabric_color_list = []
+        keys = []
         order_no = ''
         # 裁单的key
         key_dic = {}
@@ -67,20 +68,21 @@ class VAS_GUI():
             text = page.extract_text()
             order_no = text.split('Order No.:')[1].strip()[:5]
             detali_info_list = text.split('Delivery date')[1:]
-            for detali_info in detali_info_list:
+            # print(detali_info_list)
+            for index, detali_info in enumerate(detali_info_list):
                 # print(detali_info)
                 # 面料号和颜色号拼成key
                 size_info_list = []
                 style = str(detali_info.split('\n')[1].split(' ')[2]).strip()
                 fabric = str(detali_info.split('\n')[1].split(' ')[1]).strip()
                 color = str(detali_info.split('\n')[2]).strip()
-                tmp_key = fabric + '^' + color + '^' + style + '^' + order_no
+                tmp_key = fabric + '^' + color + '^' + style + '^' + order_no + '_' + str(page) + '_' + str(index)
                 for d_info in detali_info.split('\n'):
                     if d_info.strip().__contains__('/'):
                         size_info_list.append(d_info)
                 key_dic[tmp_key] = size_info_list
-        # print(key_dic)
         for key, value in key_dic.items():
+            db_key = key.split('_')[0]
             for size_info in list(value):
                 # print(size_info)
                 # print(key)
@@ -88,12 +90,13 @@ class VAS_GUI():
                     if str(tmp).strip().__contains__('/'):
                         size_list.append(str(tmp).strip().split('/')[1].replace(',', '.'))
                         number_list.append(int(str(tmp).strip().split('/')[0]))
-                        self.keyList.append(key)
+                        keys.append(db_key)
+                        self.keyList.append(db_key)
                         fabric_No_list.append(key.split('^')[0])
                         fabric_color_list.append(key.split('^')[1])
                         style_No_list.append(key.split('^')[2])
         # 'PK','Order_No','style_No', 'Fabric_No', 'Fabric_color', 'Size', 'Number', 'CreateDate'
-        pdf_df.loc[:, self.add_data_title[0]] = self.keyList
+        pdf_df.loc[:, self.add_data_title[0]] = keys
         pdf_df.loc[:, self.add_data_title[1]] = order_no
         pdf_df.loc[:, self.add_data_title[2]] = style_No_list
         pdf_df.loc[:, self.add_data_title[3]] = fabric_No_list

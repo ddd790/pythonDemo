@@ -62,23 +62,30 @@ class VAS_GUI():
             Grundware= ''
             table_num = 0
             for table in page.extract_tables():
+                if table.__len__() < 3:
+                    continue
                 type_val = {}
                 table_num += 1
                 # 第一个表格是PO基本信息
                 if table_num == 1:
+                    table_i = 0
                     for i in range(0, len(table)):
-                        if i == 0:
-                            Saison = table[i][0].split('\n')[1]
-                            Kollektion = table[i][1].split('\n')[1]
-                            Produktionsdekade = table[i][2].split('\n')[1]
-                        elif i == 1:
-                            Produzent = table[i][0].split('\n')[1]
-                            Auftrag = table[i][1].split('\n')[1]
-                            Liefertermin = table[i][2].split('\n')[1]
-                        elif i == 2:
-                            Artikelbezeichnung = table[i][0].split('\n')[1]
-                            Artikel = table[i][1].split('\n')[1]
-                            Grundware = table[i][2].split('\n')[1]
+                        table_tmp = [item for item in table[i] if item is not None]
+                        if table_tmp.__len__() != 3:
+                            continue
+                        table_i += 1
+                        if table_i == 1:
+                            Saison = table_tmp[0].split('\n')[1]
+                            Kollektion = table_tmp[1].split('\n')[1]
+                            Produktionsdekade = table_tmp[2].split('\n')[1]
+                        elif table_i == 2:
+                            Produzent = table_tmp[0].split('\n')[1]
+                            Auftrag = table_tmp[1].split('\n')[1]
+                            Liefertermin = table_tmp[2].split('\n')[1]
+                        elif table_i == 3:
+                            Artikelbezeichnung = table_tmp[0].split('\n')[1]
+                            Artikel = table_tmp[1].split('\n')[1]
+                            Grundware = table_tmp[2].split('\n')[1]
                 # 第二个表格是配码信息
                 else:
                     # 第一行是配码，第二行到倒数第二行中，第一列是type，后面的数据是该配码下的数量，
@@ -138,8 +145,9 @@ class VAS_GUI():
         conn.close()
     
     def change_date(self, date):
-        return str(date).split('.')[2] + '-' + str(date).split('.')[1] + '-' + str(date).split('.')[0] 
-
+        # 使用正则表达式提取所有数字
+        digits = re.sub(r'\D', '', str(date))
+        return str(digits[4:]) + '-' + str(digits[2:4]) + '-' + str(digits[:2])
 
 def gui_start():
     VAS = VAS_GUI()
