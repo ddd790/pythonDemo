@@ -25,8 +25,10 @@ class VAS_GUI():
         # 根据勤哲的key匹配对应trimList中的key和value
         self.local_trim_list_file = 'd:\\trimlistToBom'
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
-        self.en_cn_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\en_cn.xlsx'
-        self.cn_sample_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\样例'
+        self.en_cn_file = r'\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\en_cn.xlsx'
+        self.cn_sample_file = r'\\192.168.0.3\01-业务一部资料\A-Serena\2-辅料表\样例'
+        # self.en_cn_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\en_cn.xlsx'
+        # self.cn_sample_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\样例'
         # 删除目录内文件
         if os.path.exists(self.trim_list_file_finish):
             shutil.rmtree(self.trim_list_file_finish)
@@ -331,7 +333,7 @@ class VAS_GUI():
         elif type.__contains__('Pants'):
             arrangeVal.append(['腰里上部/腰里下部', '', '', '', ''])
             arrangeVal.append(['腰里夹牙', '', '', '', ''])
-            arrangeVal.append(['裤口袋布/腰里上部/腰里下部', '全涤人字纹-HB-100 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布/腰里上部/腰里下部', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
@@ -363,7 +365,7 @@ class VAS_GUI():
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
-            arrangeVal.append(['裤口袋布', '全涤人字纹-HB-100 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
@@ -389,7 +391,7 @@ class VAS_GUI():
             arrangeVal.append(['小棉带', '小棉带 ', '黑', '0.3cm', ''])
             arrangeVal.append(['贴边扦条', 'IS-8330', '黑', '1.5cm', ''])
             arrangeVal.append(['端打条', '5850-3 ', '黑', '1.2cm', ''])
-            arrangeVal.append(['裤口袋布', '全涤人字纹-HB-100 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
+            arrangeVal.append(['裤口袋布', '全涤人字纹-ECO-8303 / 涤棉人字纹-ECO-4303P', '黑', '146cm', ''])
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498', '亮银色', '', '1.00'])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])

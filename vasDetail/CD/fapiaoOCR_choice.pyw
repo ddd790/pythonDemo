@@ -8,12 +8,51 @@ from decimal import Decimal
 from aip import AipOcr
 import pymssql
 import stat
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog, messagebox
 
 
 class VAS_GUI():
+    def __init__(self, init_window_name):
+        self.init_window_name = init_window_name
+
+    def set_init_window(self):
+        # 设置标题
+        self.init_window_name.title('发票文件读取工具！')
+        # 设置窗口大小
+        self.init_window_name.geometry('400x300')
+        # tab页
+        tab = ttk.Notebook(self.init_window_name, height=300, width=380)
+        # po
+        poFrame = Frame(tab)
+        self.po_form_frame(poFrame)
+        tab.add(poFrame, text="客户文件读取")
+        tab.pack()
+
+    def po_form_frame(self, poFrame):
+        # 显示文字框
+        self.file_show_label = Text(poFrame, width=50, height=10)
+        self.file_show_label.grid(sticky=W, row=1, column=1, columnspan=10)
+
+        # 按钮
+        self.commit_button = Button(poFrame, text="选择上传文件", bg="lightblue", width=18, command=self.open_file)
+        self.commit_button.grid(sticky=W, row=7, column=1)
+        self.commit_button = Button(poFrame, text="点击上传数据", bg="lightblue", width=18, command=self.commit_form)
+        self.commit_button.grid(sticky=W, row=8, column=1)
+
+    def open_file(self):
+        self.file_path = filedialog.askopenfilenames(title=u'选择文件', initialdir=(os.path.expanduser(r'\\192.168.0.3\18-电子发票')))
+        self.file_show_label.delete(1.0, tk.END)
+        for path in self.file_path:
+            if '//192.168.0.3/18-电子发票' not in path:
+                messagebox.showerror("路径错误", f"路径错误: 请选择共享服务器下的【18-电子发票】文件夹下的文件！")
+                return
+            self.file_show_label.insert('insert', str(path.split('/')[-1]) + '\n')
+
     # 电子发票数据提取
-    def get_files(self):
-        # print('数据操作进行中......' + str(datetime.datetime.now()).split('.')[0])
+    def commit_form(self):
         # sql服务器名
         self.serverName = '192.168.0.11'
         # 登陆用户名和密码
@@ -26,12 +65,9 @@ class VAS_GUI():
         #                      '税率', '税额', '价税合计', '备注', '文件名', '文件类型', '创建时间']
         self.add_data_title = ['InvoiceNo', 'InvoiceDate', 'BuyName', 'BuyNo', 'SellName', 'SellNo', 'Name', 'Size', 'Unit', 'Number', 'UnitPrice', 'Price',
                                'Rate', 'Tax', 'TotalPrice', 'Remarks', 'FileName', 'FileType', 'CreateDate']
-        # self.add_data_title = ['test']
         # 数字类型的字段
         self.number_item = ['Number', 'UnitPrice', 'Price', 'Rate', 'Tax', 'TotalPrice',]
         # 服务器发票文件路径
-        networked_directory = r'\\192.168.0.3\18-电子发票'
-        # self.local_list_file = 'd:\\fapiaoTest'
         self.local_list_file = 'd:\\fapiao'
         self.local_list_file_j = 'd:\\fapiao\加工费和成衣'
         self.local_list_file_w = 'd:\\fapiao\物料发票'
@@ -45,13 +81,12 @@ class VAS_GUI():
         # 查询数据库已经存在的文件名
         self.select_fileName_old_value()
         # copy服务器的发票文件到本地
-        for root, dirs, files in os.walk(networked_directory):
-            for file in files:
-                if (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')) and not str(file).__contains__('~') and str(file).replace('.pdf', '') not in self.old_fileName_no_list:
-                    if root.__contains__('加工费和成衣'):
-                        shutil.copy2(os.path.join(root, file), self.local_list_file_j)
-                    elif root.__contains__('物料发票'):
-                        shutil.copy2(os.path.join(root, file), self.local_list_file_w)
+        for path in self.file_path:
+            if not str(path).__contains__('~') and str(path.split('/')[-1]).replace('.pdf', '') not in self.old_fileName_no_list:
+                if path.__contains__('加工费和成衣'):
+                    shutil.copy2(path, self.local_list_file_j)
+                elif path.__contains__('物料发票'):
+                    shutil.copy2(path, self.local_list_file_w)
         # 最终dataframe
         self.table_data = pd.DataFrame(data=None, columns=self.add_data_title)
         # 查询数据库已经存在的发票号码
@@ -60,7 +95,6 @@ class VAS_GUI():
         # 循环文件，处理合并
         for lroot, ldirs, lfiles in os.walk(self.local_list_file):
             for lfile in lfiles:
-                print(lfile)
                 # 发票文件类型,目前只有【物料发票】和【加工费和成衣】
                 file_type = '物料发票'
                 if lroot.__contains__('加工费和成衣'):
@@ -70,19 +104,14 @@ class VAS_GUI():
         for row in self.table_data.itertuples(index=False):
             # 判断是否为数字，不是数字则输出文件名
             if not self.is_number(row.Number):
-                print('文件名：' + row.FileName + '，发票号码：' + row.InvoiceNo + '，项目明细数据有误，请检查！')
+                self.file_show_label.insert('insert', '文件名：' + row.FileName + '，发票号码：' + row.InvoiceNo + '，项目明细数据有误，请检查！' + '\n')
                 continue
         # 更新数据库
         try:
             self.update_db()
-            print('------------------------------------------------------------')
-            print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
-            # 回车退出
-            input('按回车退出 ')
+            messagebox.showinfo("成功", f"已经提交成功了，请到勤哲里查看结果！")
         except:
-            print('数据更新失败！请不要关闭窗口，并联系管理员进行处理')
-            input('请暂时不要关闭窗口！')
-        # self.update_db_test()
+            messagebox.showerror("出错啦", f"提交错误，请联系管理员！")
 
     def file_to_dataframe(self, io, lfile, file_type):
         pdf_df = pd.DataFrame(data=None, columns=self.add_data_title)
@@ -97,7 +126,7 @@ class VAS_GUI():
         total_price = 0
         remarks = ''
         # 打开电子发票的PDF文件  
-        # for page in pdf.pages[0]:
+        # for page in pdf.pages:
         page = pdf.pages[0]
         # 提取第一页的文本内容  
         text = page.extract_text()
@@ -221,24 +250,6 @@ class VAS_GUI():
         conn.commit()
         conn.close()
 
-    def update_db_test(self):
-        dbCol = self.add_data_title[:]
-        # 建立连接并获取cursor
-        conn = pymssql.connect(self.serverName, self.userName, self.passWord, self.dbName)
-        cursor = conn.cursor()
-        # 组装插入的值
-        insertValue = []
-        for tabVal in self.table_value:
-            insertValue += tabVal
-        insertSql = 'INSERT INTO test (' + (",".join(str(i) for i in dbCol)) + ') VALUES ('
-        for colVal in dbCol:
-            insertSql += '%s'
-        insertSql += ')'
-        # print(insertValue)
-        cursor.executemany(insertSql, insertValue)
-        conn.commit()
-        conn.close()
-
     # 查询数据库已经存在的发票号码
     def select_invoice_old_value(self):
         # 建立连接并获取PO数据
@@ -287,8 +298,12 @@ class VAS_GUI():
         return False
 
 def gui_start():
-    VAS = VAS_GUI()
-    VAS.get_files()
+    init_window = Tk()  # 实例化出一个父窗口
+    VAS = VAS_GUI(init_window)
+    VAS.set_init_window()  # 设置根窗口默认属性
+    init_window.mainloop()  # 父窗口进入事件循环，可以理解为保持窗口运行，否则界面不展示
+    # VAS = VAS_GUI()
+    # VAS.get_files()
 
 
 if __name__ == '__main__':

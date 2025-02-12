@@ -35,12 +35,10 @@ class VAS_GUI():
         for lroot, ldirs, lfiles in os.walk(self.local_trim_list_file):
             for lfile in lfiles:
                 try:
-                    self.file_to_dataframe(os.path.join(lroot, lfile), str(
-                        lfile).split('.')[0])
+                    self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0])
                     # self.delete_file.append(lfile)
                 except:
-                    pdf_file = self.get_file_content(
-                        os.path.join(lroot, lfile))
+                    pdf_file = self.get_file_content(os.path.join(lroot, lfile))
                     # 调用通用文字识别（高精度版）
                     options = {}
                     options["detect_direction"] = "true"
@@ -79,7 +77,6 @@ class VAS_GUI():
             ocr_msg = ocr_msg + ('{}\n'.format(i.get('words')))
         for j in general.get('words_result'):
             ocr_msg_g = ocr_msg_g + ('{}\n'.format(j.get('words')))
-        # print(ocr_msg)
         # 申报日, 合同协议号（发票号）, 预录入编号的后8位表示报关单号， 生产销售单位是加工厂,备案号是手册号
         send_date = self.get_value_two_word(ocr_msg, '备案号\n', '\n境外收货人')
         boc_no = self.get_value_two_word(
@@ -110,8 +107,11 @@ class VAS_GUI():
             if len(table_detail_list[val_idx]) > 0:
                 val_detail_list = table_detail_list[val_idx].split('\n')
                 val_detail_list = [x for x in val_detail_list if len(x) > 1]
+                if len(val_detail_list) > 14:
+                    merged_field = val_detail_list[0] + val_detail_list[1]
+                    new_val_detail_list = [merged_field] + val_detail_list[2:]
+                    val_detail_list = new_val_detail_list
                 if len(val_detail_list) > 0:
-                    # print('---------------------val_detail_list----------------')
                     df_values = []
                     df_values.append(
                         send_date[0:4] + '/' + send_date[4:6] + '/' + send_date[6:8])
@@ -119,7 +119,6 @@ class VAS_GUI():
                     df_values.append(handbook_no)
                     df_values.append(boc_no)
                     df_values.append(pro_com)
-                    # print(val_detail_list)
                     # 报关品名
                     d_name = re.sub(r'[0-9]+', '', val_detail_list[0])
                     df_values.append(d_name.replace(':', ''))
@@ -129,8 +128,7 @@ class VAS_GUI():
                     # 单位
                     df_values.append(re.sub(r'[0-9.]+', '', val_detail_list[1]))
                     # 收汇USD
-                    df_values.append(
-                        round(Decimal(val_num) * Decimal(val_detail_list[2]), 2))
+                    df_values.append(round(Decimal(val_num) * Decimal(val_detail_list[2]), 2))
                     self.arrangeVal.append(df_values)
 
     def file_to_dataframe(self, io, lfile):
@@ -180,23 +178,22 @@ class VAS_GUI():
             for val_idx in range(len(table_detail_list)):
                 if val_idx % 3 == 0:
                     df_values = []
-                    df_values.append(
-                        send_date[0:4] + '/' + send_date[4:6] + '/' + send_date[6:8])
+                    df_values.append(send_date[0:4] + '/' + send_date[4:6] + '/' + send_date[6:8])
                     df_values.append(case_no)
                     df_values.append(handbook_no)
                     df_values.append(boc_no)
                     df_values.append(pro_com)
                     val_detail_list = table_detail_list[val_idx].split(' ')
+                    print(val_detail_list)
                     # 报关品名
-                    df_values.append(re.sub(r'[0-9]+', '', val_detail_list[1]))
+                    df_values.append(re.sub(r'[0-9]+', '', val_detail_list[2]))
                     # 数量
-                    val_num = re.sub('[^0-9.]', '', val_detail_list[2])
+                    val_num = re.sub('[^0-9.]', '', val_detail_list[3])
                     df_values.append(val_num)
                     # 单位
-                    df_values.append(re.sub(r'[0-9.]+', '', val_detail_list[2]))
+                    df_values.append(re.sub(r'[0-9.]+', '', val_detail_list[3]))
                     # 收汇USD
-                    df_values.append(
-                        round(Decimal(val_num) * Decimal(val_detail_list[3]), 2))
+                    df_values.append(round(Decimal(val_num) * Decimal(val_detail_list[4]), 2))
                     self.arrangeVal.append(df_values)
         pdf.close()
 

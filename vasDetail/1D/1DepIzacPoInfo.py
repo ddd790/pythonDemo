@@ -28,7 +28,8 @@ class VAS_GUI():
         self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  IZAC\E25  IZAC PO.xlsx'
         # self.local_vas_detail_file = r'D:\temp\E25  IZAC PO.xlsx'
         self.table_value = []
-        df = pd.read_excel(self.local_vas_detail_file, sheet_name=0, skiprows=1, dtype=str)
+        # 读取A到AT列的内容
+        df = pd.read_excel(self.local_vas_detail_file, sheet_name=0, skiprows=1, usecols='A:AT', dtype=str)
         table_data = pd.DataFrame(df)
         table_data.columns = self.add_data_title
         table_data['P_KEY'] = table_data['季节号'].astype(str) + '_' + table_data['PO号'].astype(str) + '_' + table_data['款式名称'].astype(str) + '_' + table_data['线上颜色'].astype(str)

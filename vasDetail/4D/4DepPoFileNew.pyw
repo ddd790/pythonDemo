@@ -99,30 +99,39 @@ class VAS_GUI:
         # print('----------------------------------')
         try:
             self.update_db()
-            self.update_po_size_db()
+            if self.radio_val.get() != 1:
+                self.update_po_size_db()
             tmessage.showinfo('成功', '恭喜操作成功，请到勤哲系统中查看结果吧！')
         except:
             tmessage.showerror('错误', '人生苦短,程序出错了,请联系信息部！')
 
     def update_po_size_db(self):
+        data_mapping = {
+            0: (self.table_data_next_size, self.add_data_title_size_next, 'D_4DepNEXTSize'),
+            2: (self.table_data_zara_size, self.add_data_title_size_zara, 'D_4DepDevredSize'),
+            4: (self.table_data_zara_size, self.add_data_title_size_zara, 'D_4DepZARASize'),
+            5: (self.table_data_zara_size, self.add_data_title_size_zara, 'D_4DepCelioSize'),
+            6: (self.table_data_zara_size, self.add_data_title_size_zara, 'D_4DepIZACSize')
+        }
+        selected_data = data_mapping.get(self.radio_val.get())
         if self.radio_val.get() == 0:
             self.table_value_next_size = self.set_table_dataframe(self.table_data_next_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_next, self.nextPoList, self.table_value_next_size, 'D_4DepNEXTSize')
-        elif self.radio_val.get() == 4:
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_next, self.nextPoList, self.table_value_next_size, selected_data[2])
+        else:
             self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepZARASize')
-        elif self.radio_val.get() == 2:
-            # DEVRED 跟zara一样
-            self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepDevredSize')
-        elif self.radio_val.get() == 5:
-            # CELIO 跟zara一样
-            self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepCelioSize')
-        elif self.radio_val.get() == 6:
-            # IZAC 跟zara一样
-            self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
-            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepIZACSize')
+            self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, selected_data[2])
+        # elif self.radio_val.get() == 2:
+        #     # DEVRED 跟zara一样
+        #     self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
+        #     self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepDevredSize')
+        # elif self.radio_val.get() == 5:
+        #     # CELIO 跟zara一样
+        #     self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
+        #     self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepCelioSize')
+        # elif self.radio_val.get() == 6:
+        #     # IZAC 跟zara一样
+        #     self.table_value_zara_size = self.set_table_dataframe(self.table_data_zara_size)
+        #     self.update_size_db(self.radio_type.get(), self.add_data_title_size_zara, self.nextPoList, self.table_value_zara_size, 'D_4DepIZACSize')
         # elif self.radio_val.get() == 1:
         #     self.table_value_slaters_size = self.set_table_dataframe(self.table_data_zara_size)
         #     # print(self.table_value_slaters_size)
@@ -928,7 +937,8 @@ class VAS_GUI:
                 continue
             insertSql += '%s, '
         insertSql += ')'
-        print(insertValue)
+        # print(insertSql)
+        # print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
@@ -1046,9 +1056,14 @@ class VAS_GUI:
             'DEC': '12',
         }
         month = key_list[date_list[0]]
-        day = date_list[1][:-2]
-        if len(day) == 1:
+        try:
+            day = date_list[1][:-2]
+        except:
+            day = '01'
+        if len(day.strip()) == 1 and (self.is_number(day.strip())):
             day = '0' + day
+        else:
+            day = '01'
         return year + '-' + month + '-' + day + ' 00:00:00'
 
 

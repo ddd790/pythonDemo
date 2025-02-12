@@ -139,7 +139,10 @@ class VAS_GUI():
             'DEC': '12',
         }
         month = key_list[date_list[0]]
-        day = date_list[1][:-2]
+        # 如果date_list长度为1，则day为'01'
+        day = '01'
+        if len(date_list) > 1:
+            day = date_list[1][:-2]
         if len(day) == 1:
             day = '0' + day
         return year + '-' + month + '-' + day + ' 00:00:00'

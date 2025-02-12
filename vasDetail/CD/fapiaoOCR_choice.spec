@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(
-    ['3DepFabricCon.pyw'],
+    ['fapiaoOCR_choice.pyw'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -26,7 +26,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='3DepFabricCon',
+    name='fapiaoOCR_choice',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -46,5 +46,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='3DepFabricCon',
+    name='fapiaoOCR_choice',
 )
