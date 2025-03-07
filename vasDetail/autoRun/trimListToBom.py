@@ -27,6 +27,8 @@ class VAS_GUI():
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
         self.en_cn_file = r'\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\en_cn.xlsx'
         self.cn_sample_file = r'\\192.168.0.3\01-业务一部资料\A-Serena\2-辅料表\样例'
+        # self.cn_sample_file = r"\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\样例"
+        # self.cn_sample_file = r"d:\样例"
         # self.en_cn_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\en_cn.xlsx'
         # self.cn_sample_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\样例'
         # 删除目录内文件
@@ -436,6 +438,11 @@ class VAS_GUI():
                 mtime = parser.parse(time.ctime(os.path.getmtime(
                     os.path.join(root, file))))
                 diff_time = mtime - last_time
+                # if diff_time.days > 0:
+                #     last_time = mtime
+                #     last_file_name = file
+                # print(file)
+                # print(diff_time)
                 if file_content_name == '套':
                     if str(file).__contains__(file_content_name) and str(file).__contains__(str(num)) and not str(file).__contains__('三') and diff_time.days > 0:
                         last_time = mtime
@@ -450,6 +457,7 @@ class VAS_GUI():
         # 读取文件版本最大的
         io = self.cn_sample_file + '\\' + last_file_name
         cn_column_dic = {}
+        # print(io)
         excelKey = pd.read_excel(
             io, header=None, keep_default_na=False, usecols=[0])
         excelValue = pd.read_excel(

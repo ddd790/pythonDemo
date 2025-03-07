@@ -130,6 +130,8 @@ class VAS_GUI():
         page = pdf.pages[0]
         # 提取第一页的文本内容  
         text = page.extract_text()
+        # print(text)
+        text = text.replace('发 票 号码：', '发票号码：').replace('开票 日期：', '开票日期：')
         invoice_no = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:20]
         invoice_date = self.get_value_two_word(text, '开票日期：', None)[:11].replace('年', '-').replace('月', '-').replace('日', '').replace(' ', '')
         if invoice_no.__contains__('年'):
@@ -211,6 +213,13 @@ class VAS_GUI():
             pdf_df.loc[:, self.add_data_title[4]] = sell_name.replace(':', '').replace('：', '')
             pdf_df.loc[:, self.add_data_title[5]] = sell_no.replace(':', '').replace('：', '')
             self.table_data = self.table_data.append(pdf_df, ignore_index=True)
+        # 如果table_data的InvoiceDate列长度不等于10，则将InvoiceDate列的值设置为当前时间
+        if len(self.table_data['InvoiceDate'].values[0]) != 10:
+            self.table_data['InvoiceDate'] = str(datetime.datetime.now()).split(' ')[0]
+        # 去掉table_data的BuyName和SellName列中的空格
+        self.table_data['BuyName'] = self.table_data['BuyName'].str.replace(' ', '')
+        self.table_data['SellName'] = self.table_data['SellName'].str.replace(' ', '')
+        # print(self.table_data)
         pdf.close()
 
     # 获取一个字符串中两个字母中间的值(one为None时从第一位取, two为None时取到最后)

@@ -66,9 +66,9 @@ class VAS_GUI():
         # 打开的PDF文件  
         for page in pdf.pages:
             text = page.extract_text()
-            order_no = text.split('Order No.:')[1].strip()[:5]
+            # print(text)
+            order_no = str(text.split('Order No.:')[1].strip()[:6]).strip()
             detali_info_list = text.split('Delivery date')[1:]
-            # print(detali_info_list)
             for index, detali_info in enumerate(detali_info_list):
                 # print(detali_info)
                 # 面料号和颜色号拼成key

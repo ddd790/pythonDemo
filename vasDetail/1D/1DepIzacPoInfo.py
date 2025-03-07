@@ -25,30 +25,41 @@ class VAS_GUI():
         # 日期类型的字段
         self.date_item = ['来单日期', '客人到料时间', '采购到料时间', '给生产到料时间', '交期']
         # 循环文件，处理合并，并存入数据库
-        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  IZAC\E25  IZAC PO.xlsx'
-        # self.local_vas_detail_file = r'D:\temp\E25  IZAC PO.xlsx'
+        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  IZAC\5.H25\H25 IZAC PO.xlsx'
+        # self.local_vas_detail_file = r'D:\temp\H25 IZAC PO.xlsx'
         self.table_value = []
+        # 删除文件的list
+        self.keyList = []
         # 读取A到AT列的内容
-        df = pd.read_excel(self.local_vas_detail_file, sheet_name=0, skiprows=1, usecols='A:AT', dtype=str)
+        df = pd.read_excel(self.local_vas_detail_file, sheet_name=0, skiprows=1, usecols='A:BD', dtype=str)
         table_data = pd.DataFrame(df)
-        table_data.columns = self.add_data_title
-        table_data['P_KEY'] = table_data['季节号'].astype(str) + '_' + table_data['PO号'].astype(str) + '_' + table_data['款式名称'].astype(str) + '_' + table_data['线上颜色'].astype(str)
-        table_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
-        table_data['P_KEY'] = table_data['P_KEY'].str.strip()
-        for column in table_data:
+        add_data = pd.DataFrame(data=None, columns=self.add_data_title)
+        # title对应的excel列
+        col_idx = [0, 23, 1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 10, 11, 12, 14, 15, 16, 17, 49, 19, 18, 21, 22, 13, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 47, 35, 36, 37, 38, 39, 40, 41, 42, 43]
+        for i in range(len(self.add_data_title)):
+            add_data[self.add_data_title[i]] = table_data.iloc[:, col_idx[i]]
+        # 将add_data的NaN替换为空字符串
+        add_data = add_data.drop_duplicates()
+        add_data['P_KEY'] = add_data['季节号'].astype(str) + '_' + add_data['PO号'].astype(str) + '_' + add_data['款式名称'].astype(str) + '_' + add_data['面料颜色'].astype(str)
+        add_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
+        add_data['P_KEY'] = add_data['P_KEY'].str.strip()
+        # keyList去重
+        self.keyList = list(set(add_data['季节号'].tolist()))
+        for column in add_data:
             if column in self.number_item[:3]:
-                df[column] = df[column].fillna(0)
-                df[column] = df[column].astype(int)
+                # 将add_data的NaN替换为0
+                add_data[column].fillna(0, inplace=True)
+                add_data[column] = add_data[column].astype(int)
             elif column in self.number_item[3:]:
-                df[column] = df[column].fillna(0)
-                df[column] = df[column].astype(float)
+                add_data[column].fillna(0, inplace=True)
+                add_data[column] = add_data[column].astype(float)
             elif column in self.date_item:
-                df[column] = df[column].fillna('1977-01-01')
-                df[column] = pd.to_datetime(df[column])
+                add_data[column].fillna('1977-01-01', inplace=True)
+                add_data[column] = pd.to_datetime(add_data[column])
             else:
-                df[column] = df[column].fillna('')
-                df[column] = df[column].astype(str)
-        self.table_value.append([tuple(row) for row in table_data.values])
+                add_data[column].fillna('', inplace=True)
+                add_data[column] = add_data[column].astype(str)
+        self.table_value.append([tuple(row) for row in add_data.values])
         # 追加数据
         # print(self.table_value)
         self.update_db()
@@ -63,7 +74,13 @@ class VAS_GUI():
         conn = pymssql.connect(self.serverName, self.userName, self.passWord, self.dbName)
         cursor = conn.cursor()
         # 删除已经存在的文件
-        cursor.execute('TRUNCATE TABLE D_1DepIzacPoInfo')
+        if len(self.keyList) > 0:
+            keylist = list(set(self.keyList))
+            del_tuple = []
+            for tuple_po in keylist:
+                del_tuple.append((tuple_po, tuple_po))
+            delSql = 'delete from D_1DepIzacPoInfo where 季节号 = (%s)'
+            cursor.executemany(delSql, del_tuple)
         # 组装插入的值
         insertValue = []
         for tabVal in self.table_value:

@@ -32,10 +32,10 @@ class VAS_GUI():
         # self.local_list_file = 'd:\\fapiaoTest'
         self.local_list_file = 'd:\\haiyun\\1'
         # 遍历服务器文件
-        # for root, dirs, files in os.walk(networked_directory):
-        #     for file in files:
-        #         if (str(file).__contains__('.xlsx') or str(file).__contains__('.xls')) and not str(file).__contains__('~') and str(file).__contains__('海运大表'):
-        #             shutil.copy2(os.path.join(root, file), self.local_list_file)
+        for root, dirs, files in os.walk(networked_directory):
+            for file in files:
+                if (str(file).__contains__('.xlsx') or str(file).__contains__('.xls')) and not str(file).__contains__('~') and str(file).__contains__('陆运大表'):
+                    shutil.copy2(os.path.join(root, file), self.local_list_file)
         all_data = pd.DataFrame()
         # 遍历文件夹中的所有文件
         for filename in os.listdir(self.local_list_file):
