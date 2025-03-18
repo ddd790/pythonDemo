@@ -110,7 +110,13 @@ class VAS_GUI():
         else:
             rows_of_interest = df.iloc[6:20, 1]
         rows_of_interest = rows_of_interest.fillna('')
-        contains_fabric = rows_of_interest.str.contains('面料', case=False)
+        # 包含面料或者fabric的行的索引
+        contains_shell_fabric = rows_of_interest.str.contains('fabric', case=False)
+        # 判断contains_shell_fabric中是否有True
+        if contains_shell_fabric.any():
+            contains_fabric = rows_of_interest.str.contains('fabric', case=False)
+        else:
+            contains_fabric = rows_of_interest.str.contains('面料', case=False)
         row_indices_with_fabric = contains_fabric[contains_fabric].index.tolist()
         # 用料相关信息
         if radio_val == 0:
