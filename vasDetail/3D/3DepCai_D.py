@@ -75,7 +75,14 @@ class VAS_GUI():
                 size_info_list = []
                 style = str(detali_info.split('\n')[1].split(' ')[2]).strip()
                 fabric = str(detali_info.split('\n')[1].split(' ')[1]).strip()
+                # 如果fabric包含JL,则取第三位
+                if fabric.__contains__('JL'):
+                    style = str(detali_info.split('\n')[1].split(' ')[3]).strip()
+                    fabric = str(detali_info.split('\n')[1].split(' ')[2]).strip()
                 color = str(detali_info.split('\n')[2]).strip()
+                # 如果color包含空格，则取最后一个空格后的值
+                if color.__contains__(' '):
+                    color = color.split(' ')[-1]
                 tmp_key = fabric + '^' + color + '^' + style + '^' + order_no + '_' + str(page) + '_' + str(index)
                 for d_info in detali_info.split('\n'):
                     if d_info.strip().__contains__('/'):

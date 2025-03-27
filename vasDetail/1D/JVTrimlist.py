@@ -84,9 +84,9 @@ class VAS_GUI():
             align_col = []
             for i in range(2, 19):
                 data_value = ws.cell(row=2, column=i).value
-                if data_value == '品号':
+                if data_value == 'art number品号':
                     ws.column_dimensions[col_dict[i]].width = 38
-                elif data_value == '用料名称' or data_value == '备注':
+                elif data_value == 'material details 用料名称：' or data_value == 'remark备注':
                     ws.column_dimensions[col_dict[i]].width = 48
                 elif data_value in self.add_data_title_2:
                     ws.column_dimensions[col_dict[i]].width = 12
@@ -96,7 +96,7 @@ class VAS_GUI():
             row_use_name = 0
             for i in range(1, self.max_en + 5):
                 data_value = ws.cell(row=i, column=1).value
-                if data_value == '品类':
+                if data_value == 'type品类':
                     row_use_name = i
                     break
             # 设置基本数据的样式
@@ -117,7 +117,7 @@ class VAS_GUI():
 
             # 设置用料名称单元格格式
             ws.row_dimensions[1].height = 30
-            ws.row_dimensions[row_use_name].height = 30
+            ws.row_dimensions[row_use_name].height = 61.5
             for cell in ws[row_use_name]:
                 # 设置单元格填充颜色
                 cell.fill = header_fill
@@ -142,6 +142,19 @@ class VAS_GUI():
                         merge_row_no = step + 2
                     cell.alignment = align_center
                     cell.border = border
+            
+            # 设置行高
+            for i in range(3, 39):
+                data_value = ws.cell(row=i, column=1).value
+                # 如果data_value包含Fabric，设置行高为135
+                if str(data_value).__contains__('Fabric'):
+                    ws.row_dimensions[i].height = 135
+                elif str(data_value).__contains__('body'):
+                    ws.row_dimensions[i].height = 94.5
+                elif str(data_value).__contains__('non woven fusible'):
+                    ws.row_dimensions[i].height = 108
+                elif str(data_value).__contains__('COAT POCKETING*上衣口袋布'):
+                    ws.row_dimensions[i].height = 81
             # 合并单元格
             # ws.merge_cells(start_row=merge_row_no, start_column=1, end_row=merge_row_no, end_column=column_no)
             # 居中
@@ -213,39 +226,39 @@ class VAS_GUI():
                 category = row_df.iloc[0]['CATEGORY']
                 # 保留的列
                 main_title = ['Lot #', 'Fabric Art', 'body lining A', 'body lining B', 'Besom/Envelope pocketing lining', 'sleeve lining', 
-                              'Button', 'Pant piping', 'Pant upper waistband', 'Pant lower waistband', 'Pant pocketing']
+                              'Button', 'Under collar', 'Pant upper waistband', 'Pant lower waistband', 'Pant pocketing']
                 # 删除掉除了main_title的列
                 row_df = row_df.drop([col for col in row_df.columns if col not in main_title], axis=1)
-                tmp = pd.melt(row_df,id_vars='Lot #',var_name='品类',value_name='品号')
+                tmp = pd.melt(row_df,id_vars='Lot #',var_name='type品类',value_name='art number品号')
                 # 清空品类为Pant piping所在行的内容
-                tmp.loc[tmp['品类'] == 'Pant piping', '品号'] = ''
-                tmp.loc[tmp['品类'] == 'Pant piping', '品类'] = ''
+                # tmp.loc[tmp['type品类'] == 'Pant piping', 'art number品号'] = ''
+                # tmp.loc[tmp['type品类'] == 'Pant piping', 'type品类'] = ''
                 # 如果'body lining A', 'body lining B', 'Besom/Envelope pocketing lining'三个列的值相同，将其合并
-                if (tmp.loc[tmp['品类'] == 'body lining A', '品号'].values[0] == tmp.loc[tmp['品类'] == 'body lining B', '品号'].values[0] 
-                    and tmp.loc[tmp['品类'] == 'body lining A', '品号'].values[0] == tmp.loc[tmp['品类'] == 'Besom/Envelope pocketing lining', '品号'].values[0]
-                    ) or (pd.isna(tmp.loc[tmp['品类'] == 'body lining A', '品号'].values[0]) 
-                          and pd.isna(tmp.loc[tmp['品类'] == 'body lining B', '品号'].values[0]) 
-                          and pd.isna(tmp.loc[tmp['品类'] == 'Besom/Envelope pocketing lining', '品号'].values[0])):
+                if (tmp.loc[tmp['type品类'] == 'body lining A', 'art number品号'].values[0] == tmp.loc[tmp['type品类'] == 'body lining B', 'art number品号'].values[0] 
+                    and tmp.loc[tmp['type品类'] == 'body lining A', 'art number品号'].values[0] == tmp.loc[tmp['type品类'] == 'Besom/Envelope pocketing lining', 'art number品号'].values[0]
+                    ) or (pd.isna(tmp.loc[tmp['type品类'] == 'body lining A', 'art number品号'].values[0]) 
+                          and pd.isna(tmp.loc[tmp['type品类'] == 'body lining B', 'art number品号'].values[0]) 
+                          and pd.isna(tmp.loc[tmp['type品类'] == 'Besom/Envelope pocketing lining', 'art number品号'].values[0])):
                     # 将品类为body lining A的行的品类改为body lining A/body lining B/Besom/Envelope pocketing lining
-                    tmp.loc[tmp['品类'] == 'body lining A', '品类'] = 'body lining A/body lining B/Besom/Envelope pocketing lining'
+                    tmp.loc[tmp['type品类'] == 'body lining A', 'type品类'] = 'body lining A/body lining B/Besom/Envelope pocketing lining'
                     # 删除品类为body lining B和Besom/Envelope pocketing lining的行
-                    tmp = tmp.drop(tmp[tmp['品类'] == 'body lining B'].index)
-                    tmp = tmp.drop(tmp[tmp['品类'] == 'Besom/Envelope pocketing lining'].index)
+                    tmp = tmp.drop(tmp[tmp['type品类'] == 'body lining B'].index)
+                    tmp = tmp.drop(tmp[tmp['type品类'] == 'Besom/Envelope pocketing lining'].index)
                 # 追加款号行和title行
                 title_list = []
                 first_row_data = []
                 for index in range(len(self.add_data_title_2)):
                     tmp_val = ''
                     if index == 0:
-                        tmp_val = 'STYLE NUMBER*款号'
+                        tmp_val = 'STYLE NUMBER*订单号'
                     elif index == 1:
-                        tmp_val = style_number
+                        tmp_val = ''
                     elif index == 2:
                         tmp_val = 'Model Name*款号'
                     elif index == 3:
                         tmp_val = model_name
                     elif index == 4:
-                        tmp_val = 'CATEGORY*品类'
+                        tmp_val = 'CATEGORY*type品类'
                     elif index == 5:
                         tmp_val = category
                     first_row_data.append(tmp_val)
@@ -254,9 +267,32 @@ class VAS_GUI():
                 # 组装列的数值
                 now_row = pd.DataFrame(title_list, columns=self.add_data_title_2)
                 tmp_table_data = pd.DataFrame(columns=self.add_data_title_2)
-                tmp_table_data['品类'] = tmp['品类']
-                tmp_table_data['品号'] = tmp['品号']
+                tmp_table_data['type品类'] = tmp['type品类']
+                tmp_table_data['art number品号'] = tmp['art number品号']
                 table_data = pd.concat([now_row, tmp_table_data, table_data]).reset_index(drop=True)
+                # 复制'type品类'列的内容为Button的行
+                button_row = table_data.loc[table_data['type品类'] == 'Button']
+                # 找到Button的行
+                button_row_index = table_data[table_data['type品类'] == 'Button'].index[0]
+                # 插入到Button的行的下面
+                table_data = pd.concat([table_data.loc[:button_row_index], button_row, table_data.loc[button_row_index + 1:]]).reset_index(drop=True)
+                # 插入一行新的内容
+                waistband_row = pd.DataFrame({'type品类': ['waistband piping 腰里夹牙'], 'material details 用料名称：': ['waistband piping 腰里夹牙'], 'unit单位': ['M/米']})
+                # 找到Pant upper waistband的行
+                waistband_row_index = table_data[table_data['type品类'] == 'Pant upper waistband'].index[0]
+                # 插入到Pant upper waistband的行的下面
+                table_data = pd.concat([table_data.loc[:waistband_row_index], waistband_row, table_data.loc[waistband_row_index + 1:]]).reset_index(drop=True)
+                # 'type品类'列的内容为Button的行, material details 用料名称：列的内容为'front 2,spare 1 止口2，备扣1'
+                table_data.loc[table_data['type品类'] == 'Button', 'material details 用料名称：'] = 'front 2,spare 1 止口2，备扣1'
+                # 'type品类'列的内容包含FABRIC的行, material details 用料名称：列的内容为'前片，马面'
+                table_data.loc[table_data['type品类'].str.contains('Fabric'), 'material details 用料名称：'] = 'front,sidebody,back,sleeve,lower flap/besom,welt,welt pocketing one layer,front dart placemat,french facing split,collar,collar stand,pant front/back,waistband,belt,fly,under fly,waistband extension, waistband tab,side pocket facing/patch,back pocket besom/facing 前片，马面，后片，袖，腰兜盖/兜牙，胸兜牌，胸兜布一层，前省布，内台场，领面，领座，裤前/后片，腰面，绊带，前门刀，下门襟，腰探头，腰头小鼻，侧兜垫带/侧兜贴布，后兜牙/垫带'
+                table_data.loc[table_data['type品类'].str.contains('Fabric'), 'art number品号'] = str(row_df.iloc[0]['Lot #'])
+                table_data.loc[table_data['type品类'].str.contains('body lining'), 'material details 用料名称：'] = 'front lining,sidebody lining,back lining,armshield,inside pocket besom/facing,call besom/facing,triangle tab,inside button loop, flap，lower pocket facing，waistband piping 前里子，马面里子，后里子，汗垫，里兜牙/垫带，手机兜牙/手机兜垫带，三角牌，内扣鼻，兜盖,腰兜垫带，腰里夹牙'
+                table_data.loc[table_data['type品类'].str.contains('sleeve lining'), 'material details 用料名称：'] = 'sleeve,sleeve tape*4 袖里，袖里拉条*4'
+                table_data.loc[table_data['type品类'].str.contains('Under collar'), 'material details 用料名称：'] = 'under collar 领底'
+                table_data.loc[table_data['type品类'].str.contains('upper waistband'), 'material details 用料名称：'] = 'upper waistband 腰里上部'
+                table_data.loc[table_data['type品类'].str.contains('lower waistband'), 'material details 用料名称：'] = 'lower waistband 腰里下部'
+                table_data.loc[table_data['type品类'].str.contains('Pant pocketing'), 'material details 用料名称：'] = 'under fly, front pocketing, back pocketing 下巾里，前兜布，后兜布'
                 # 追加空白行及固定行
                 blank_row = []
                 for i in self.add_data_title_2:
@@ -264,41 +300,46 @@ class VAS_GUI():
                 # 尾部追加固定内容
                 add_data =  pd.DataFrame(None, columns=self.add_data_title_2)
                 # 向add_data中追加数据
-                add_data.loc[len(add_data.index)] = ['鬃衬包','','','','','','','','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['有纺衬1','PE206','白','148cm','科德宝','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['有纺衬2','PE207','白','148cm','科德宝','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['主鬃','PE326','本','158cm','科德宝','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['次鬃','PE319','本','158cm','科德宝','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['肩鬃','PE319','本','158cm','科德宝','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['胸棉','B25TH80-150（或TH-85）','白','148cm','索科','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['袖山鬃','B409919W','本','148cm','索科','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['袖山棉条','B44C160B','白','158cm','索科','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['无纺衬','PE125','白','150cm','科德宝','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['兜位衬','0118N ','白','99cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['拉丝衬','F0125N ','白','99cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['无胶衬','SF-35 ','白','99cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['胸兜牌衬 ','2346-2HE ','白','2.1cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['有纺直条','5850-1 ','白','2.0cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['拉丝无纺衬条 ','9332-1 ','白','1.0cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['端打条','5850-3 ','白','1.2cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['双面胶 上衣+裤子','双面胶 ','白','0.8cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['小棉带','小棉带 ','白','0.3cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['贴边扦条','IS-8330','白','1.5cm','鑫海','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['线色','','','','','','','米','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['VAS','','','','','','','','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','个','','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['pin 胸针','','','','','lapel buttnhole 驳头扣眼','1','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['COAT POCKETING*上衣口袋布','K10110-4','','','','inside pocketing, welt pocketing one layer, back neck tape,front shouler tape 45°，front armhole tape 45°,back armhole tape,straight tape,open seam tape,lower pocketing/tape，chest tape里兜布，胸兜布一层，后领口布，前肩条，前袖窿条，后袖窿条，直条，肩劈缝条，腰兜布/拉条,胸衬拉条','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['ZIPPER*拉链','','','','','front fly 前门刀','','PC/条','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['KNEE LINING*裤膝','','','','','front half knee lining 前片半裤膝','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['鬃衬包','','','','','','','','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['woven fusible 1 有纺衬1','BVM50','白','148cm','科德宝','front,lower flap,前片衬，腰兜盖衬','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['woven fusible 2 有纺衬2','ME9013','白','148cm','科德宝','facing,lower pocket position, collar point，inside facing split pocket position 贴边衬,腰兜位衬，领头衬，里兜位','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['main canvas 主鬃','K380C','自然','158cm','科德宝','main canvas，canvas placemat 主鬃，胸衬毛棕垫','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['second canvas 次鬃','K380C','自然','158cm','科德宝','second canvas 次鬃','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['shoulder canvas 肩鬃','KO183','自然','55cm','科德宝','shoulder canvas 肩鬃','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['chest felt 胸棉','KW997','白','145cm','科德宝','chest felt 胸棉','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['sleeve canvas 袖山鬃','KO361C','自然','158cm','科德宝','sleeve head canvas front，back，canvas tape，袖山鬃，前，后，毛棕小条X1，毛棕大条X1','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['sleeve felt 袖山棉条','GO414','黑','158cm','科德宝','sleeve head felt 袖山棉条','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['shoulder pad 肩垫','','黑','','','shoulder 肩','1','PC/付','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['non woven fusible 无纺衬','CE6025','白','88cm','科德宝','sleeve cuff,back vent,back bottom,back neck,sidebody bottom,front neck,facing neck,french facing,front dart point,pant back pocket besom/ position,side pocket opening,fly,under fly,waistband extension/tab 袖口衬，后开祺衬，后下摆衬，后领口衬，马面下摆衬，前片领口，贴边领口，台场衬，省尖衬，裤子后兜牙/位，侧斗口，上巾，下巾，腰探头，腰头小鼻','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['under collar fusible 领底衬','735-4000 ','白','107m','科德宝','under collar 领底','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 无胶衬','SF-35 ','白','99cm','鑫海','inside besom, call pocket besom/position 里兜牙，手机兜牙/兜位','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 胸兜牌衬','BW70','白','90cm','科德宝','welt 胸兜牌','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 拉丝无纺衬条 ','9332-1 ','白','1.0cm','鑫海','front edge 前止口','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 双面胶 上衣+裤子','双面胶 ','白','0.8cm','鑫海','coats,pants 上衣，裤子','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 小棉带','小棉带','白','0.3cm','鑫海','collar felt, front/side body armhole，flap 领绒聚量，前片，马面袖窿，兜盖聚量','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 贴边扦条','IS-8330','白','1.5cm','鑫海','扦贴边','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 绊带衬','4947','白','0.9cm','鑫海','belt loop 绊带','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 腰网衬','6148','白','5.5cm','鑫海','inside waistband  腰里','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 腰硬衬','EC1095E','白','3.3cm','鑫海','waistband 腰面','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 线色','','','','','','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['VAS','','','','','','','','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
                 # 修改"单位"这一列
-                table_data.loc[2:,'单位'] = table_data.loc[2:].apply(lambda row: '个' if ('BUTTONS' in str(row['品类']) or 'Button' in str(row['品类'])) else '条' if 'ZIPPER' in str(row['品类']) else '个' if 'PINS' in str(row['品类']) else '米', axis=1)
+                table_data.loc[2:,'unit单位'] = table_data.loc[2:].apply(lambda row: 'PC/个' if ('BUTTONS' in str(row['type品类']) or 'Button' in str(row['type品类'])) else 'PC/条' if 'ZIPPER' in str(row['type品类']) else 'PC/个' if 'PINS' in str(row['type品类']) else 'M/米', axis=1)
                 table_data = pd.concat([table_data, add_data]).reset_index(drop=True)
                 # 导出excel
                 table_data.to_excel(writer, sheet_name=str(row_df.iloc[0]['Lot #']), index=False, header=None)

@@ -83,6 +83,7 @@ class VAS_GUI():
                     new_row = pd.DataFrame([tmp_date_row], columns=self.add_data_title)
                     # 使用concat()函数对dataframe进行合并
                     self.table_data = pd.concat([self.table_data, new_row], axis=0).reset_index(drop=True)
+                    self.delete_key.append(po_no + '_' + supplier_no + '_' + style_no + '_' + row[0].replace(' ', ''))
         # 删除table_data中的数量是空的行, 并重新设置索引
         self.table_data = self.table_data[self.table_data['Qty'] != ''].reset_index(drop=True)
         # 将table_data中的数量转化为数字
@@ -90,7 +91,8 @@ class VAS_GUI():
         self.table_data['Total'] = self.table_data['Total'].astype(int)
         self.table_data['Price'] = self.table_data['Price'].astype(float)
         self.table_data['DelKey'] = po_no + '_' + supplier_no + '_' + style_no
-        self.delete_key.append(po_no + '_' + supplier_no + '_' + style_no)
+        # DelKey列的内容追加Colour的内容
+        self.table_data['DelKey'] = self.table_data['DelKey'] + '_' + self.table_data['Colour']
 
     # 获取一个字符串中两个字母中间的值(one为None时从第一位取, two为None时取到最后)
     def get_value_two_word(self, txt_str, one, two):
