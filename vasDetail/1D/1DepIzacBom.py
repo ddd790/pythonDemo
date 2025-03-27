@@ -48,7 +48,6 @@ class VAS_GUI():
         for sheet_name, sheet_data in df.items():
             # 读取当前sheet
             df_po = pd.read_excel(file_path, sheet_name=sheet_name, header=None, keep_default_na=False)
-            # print(df_po)
             # 根据A1的内容判断客户
             customer_flag = str(df_po.iloc[0, 0])
             # 获取B1和D1的内容
@@ -62,7 +61,6 @@ class VAS_GUI():
                 customer = 'JV'
             # 对每个sheet页的数据进行处理
             table_data= pd.DataFrame(sheet_data, columns=self.base_title)
-            print(table_data)
             # 如果customer_flag的内容是“STYLE NUMBER*订单号”，按照新列读取
             if customer_flag.__contains__('STYLE NUMBER*订单号'):
                 table_data= pd.DataFrame(None, columns=self.base_title)

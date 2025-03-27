@@ -145,7 +145,12 @@ class VAS_GUI():
             day = date_list[1][:-2]
         if len(day) == 1:
             day = '0' + day
-        return year + '-' + month + '-' + day + ' 00:00:00'
+        retrun_date = year + '-' + month + '-' + day + ' 00:00:00'
+        # 如果retrun_date小于当前日期，则加一年
+        if datetime.datetime.now() > datetime.datetime.strptime(retrun_date, '%Y-%m-%d %H:%M:%S'):
+            year = str(int(year) + 1)
+            retrun_date = year + '-' + month + '-' + day + ' 00:00:00'
+        return retrun_date
 
     def delete_files_in_folder(self, folder_path):
         # 确保提供的路径是一个有效的文件夹路径

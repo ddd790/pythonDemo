@@ -155,6 +155,8 @@ class VAS_GUI():
                     ws.row_dimensions[i].height = 108
                 elif str(data_value).__contains__('COAT POCKETING*上衣口袋布'):
                     ws.row_dimensions[i].height = 81
+                elif str(data_value).__contains__('woven fusible 2'):
+                    ws.row_dimensions[i].height = 40.5
             # 合并单元格
             # ws.merge_cells(start_row=merge_row_no, start_column=1, end_row=merge_row_no, end_column=column_no)
             # 居中
@@ -272,6 +274,7 @@ class VAS_GUI():
                 table_data = pd.concat([now_row, tmp_table_data, table_data]).reset_index(drop=True)
                 # 复制'type品类'列的内容为Button的行
                 button_row = table_data.loc[table_data['type品类'] == 'Button']
+                button_row['material details 用料名称：'] = 'sleeve 8,pant 5, spare 2 袖扣8，裤扣5，备扣2'
                 # 找到Button的行
                 button_row_index = table_data[table_data['type品类'] == 'Button'].index[0]
                 # 插入到Button的行的下面
@@ -287,12 +290,12 @@ class VAS_GUI():
                 # 'type品类'列的内容包含FABRIC的行, material details 用料名称：列的内容为'前片，马面'
                 table_data.loc[table_data['type品类'].str.contains('Fabric'), 'material details 用料名称：'] = 'front,sidebody,back,sleeve,lower flap/besom,welt,welt pocketing one layer,front dart placemat,french facing split,collar,collar stand,pant front/back,waistband,belt,fly,under fly,waistband extension, waistband tab,side pocket facing/patch,back pocket besom/facing 前片，马面，后片，袖，腰兜盖/兜牙，胸兜牌，胸兜布一层，前省布，内台场，领面，领座，裤前/后片，腰面，绊带，前门刀，下门襟，腰探头，腰头小鼻，侧兜垫带/侧兜贴布，后兜牙/垫带'
                 table_data.loc[table_data['type品类'].str.contains('Fabric'), 'art number品号'] = str(row_df.iloc[0]['Lot #'])
-                table_data.loc[table_data['type品类'].str.contains('body lining'), 'material details 用料名称：'] = 'front lining,sidebody lining,back lining,armshield,inside pocket besom/facing,call besom/facing,triangle tab,inside button loop, flap，lower pocket facing，waistband piping 前里子，马面里子，后里子，汗垫，里兜牙/垫带，手机兜牙/手机兜垫带，三角牌，内扣鼻，兜盖,腰兜垫带，腰里夹牙'
+                table_data.loc[table_data['type品类'].str.contains('body lining'), 'material details 用料名称：'] = 'front lining,sidebody lining,back lining,armshield,inside pocket besom/facing,call besom/facing,triangle tab,inside button loop, flap，lower pocket facing 前里子，马面里子，后里子，汗垫，里兜牙/垫带，手机兜牙/手机兜垫带，三角牌，内扣鼻，兜盖,腰兜垫带'
                 table_data.loc[table_data['type品类'].str.contains('sleeve lining'), 'material details 用料名称：'] = 'sleeve,sleeve tape*4 袖里，袖里拉条*4'
                 table_data.loc[table_data['type品类'].str.contains('Under collar'), 'material details 用料名称：'] = 'under collar 领底'
                 table_data.loc[table_data['type品类'].str.contains('upper waistband'), 'material details 用料名称：'] = 'upper waistband 腰里上部'
                 table_data.loc[table_data['type品类'].str.contains('lower waistband'), 'material details 用料名称：'] = 'lower waistband 腰里下部'
-                table_data.loc[table_data['type品类'].str.contains('Pant pocketing'), 'material details 用料名称：'] = 'under fly, front pocketing, back pocketing 下巾里，前兜布，后兜布'
+                table_data.loc[table_data['type品类'].str.contains('Pant pocketing'), 'material details 用料名称：'] = 'under fly, front pocketing, back pocketing, cover crotch, pocket bag extension 下巾里，前兜布，后兜布，裆布，侧兜拉布'
                 # 追加空白行及固定行
                 blank_row = []
                 for i in self.add_data_title_2:
@@ -324,7 +327,7 @@ class VAS_GUI():
                 add_data.loc[len(add_data.index)] = ['tape 贴边扦条','IS-8330','白','1.5cm','鑫海','扦贴边','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 绊带衬','4947','白','0.9cm','鑫海','belt loop 绊带','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 腰网衬','6148','白','5.5cm','鑫海','inside waistband  腰里','','M/米','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['tape 腰硬衬','EC1095E','白','3.3cm','鑫海','waistband 腰面','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 腰硬衬','KS107S','白','3.3cm','清川','waistband 腰面','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 线色','','','','','','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['VAS','','','','','','','','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
