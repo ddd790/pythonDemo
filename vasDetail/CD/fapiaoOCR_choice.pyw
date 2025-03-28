@@ -131,7 +131,7 @@ class VAS_GUI():
         # 提取第一页的文本内容  
         text = page.extract_text()
         # print(text)
-        text = text.replace('发 票 号码：', '发票号码：').replace('开票 日期：', '开票日期：')
+        text = text.replace('发 票 号码：', '发票号码：').replace('发 票 号 码 ：', '发票号码：').replace('开票 日期：', '开票日期：').replace('电 子 发 票 （ 增 值 税 专 用 发 票 ）', '电子发票（增值税专用发票）')
         invoice_no = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:20]
         invoice_date = self.get_value_two_word(text, '开票日期：', None)[:11].replace('年', '-').replace('月', '-').replace('日', '').replace(' ', '')
         if invoice_no.__contains__('年'):
