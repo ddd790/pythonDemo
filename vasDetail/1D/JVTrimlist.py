@@ -293,6 +293,8 @@ class VAS_GUI():
                 table_data.loc[table_data['type品类'].str.contains('body lining'), 'material details 用料名称：'] = 'front lining,sidebody lining,back lining,armshield,inside pocket besom/facing,call besom/facing,triangle tab,inside button loop, flap，lower pocket facing 前里子，马面里子，后里子，汗垫，里兜牙/垫带，手机兜牙/手机兜垫带，三角牌，内扣鼻，兜盖,腰兜垫带'
                 table_data.loc[table_data['type品类'].str.contains('sleeve lining'), 'material details 用料名称：'] = 'sleeve,sleeve tape*4 袖里，袖里拉条*4'
                 table_data.loc[table_data['type品类'].str.contains('Under collar'), 'material details 用料名称：'] = 'under collar 领底'
+                table_data.loc[table_data['type品类'].str.contains('Under collar'), 'color颜色'] = 'FVL-022'
+                table_data.loc[table_data['type品类'].str.contains('Under collar'), 'art number品号'] = 'WP3071'
                 table_data.loc[table_data['type品类'].str.contains('upper waistband'), 'material details 用料名称：'] = 'upper waistband 腰里上部'
                 table_data.loc[table_data['type品类'].str.contains('lower waistband'), 'material details 用料名称：'] = 'lower waistband 腰里下部'
                 table_data.loc[table_data['type品类'].str.contains('Pant pocketing'), 'material details 用料名称：'] = 'under fly, front pocketing, back pocketing, cover crotch, pocket bag extension 下巾里，前兜布，后兜布，裆布，侧兜拉布'
@@ -317,30 +319,26 @@ class VAS_GUI():
                 add_data.loc[len(add_data.index)] = ['sleeve canvas 袖山鬃','KO361C','自然','158cm','科德宝','sleeve head canvas front，back，canvas tape，袖山鬃，前，后，毛棕小条X1，毛棕大条X1','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['sleeve felt 袖山棉条','GO414','黑','158cm','科德宝','sleeve head felt 袖山棉条','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['shoulder pad 肩垫','','黑','','','shoulder 肩','1','PC/付','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['non woven fusible 无纺衬','CE6025','白','88cm','科德宝','sleeve cuff,back vent,back bottom,back neck,sidebody bottom,front neck,facing neck,french facing,front dart point,pant back pocket besom/ position,side pocket opening,fly,under fly,waistband extension/tab 袖口衬，后开祺衬，后下摆衬，后领口衬，马面下摆衬，前片领口，贴边领口，台场衬，省尖衬，裤子后兜牙/位，侧斗口，上巾，下巾，腰探头，腰头小鼻','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['non woven fusible 无纺衬','PE125','灰','150cm','科德宝','sleeve cuff,back vent,back bottom,back neck,sidebody bottom,front neck,facing neck,french facing,front dart point,pant back pocket besom/ position,side pocket opening,fly,under fly,waistband extension/tab 袖口衬，后开祺衬，后下摆衬，后领口衬，马面下摆衬，前片领口，贴边领口，台场衬，省尖衬，裤子后兜牙/位，侧斗口，上巾，下巾，腰探头，腰头小鼻','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['under collar fusible 领底衬','735-4000 ','白','107m','科德宝','under collar 领底','','M/米','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['tape 无胶衬','SF-35 ','白','99cm','鑫海','inside besom, call pocket besom/position 里兜牙，手机兜牙/兜位','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 无胶衬','SF-35 ','白','99cm','鑫海','inside besom, lower pocket besom 里兜牙，腰兜牙','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 胸兜牌衬','BW70','白','90cm','科德宝','welt 胸兜牌','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 拉丝无纺衬条 ','9332-1 ','白','1.0cm','鑫海','front edge 前止口','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 双面胶 上衣+裤子','双面胶 ','白','0.8cm','鑫海','coats,pants 上衣，裤子','','M/米','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['tape 小棉带','小棉带','白','0.3cm','鑫海','collar felt, front/side body armhole，flap 领绒聚量，前片，马面袖窿，兜盖聚量','','M/米','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['tape 贴边扦条','IS-8330','白','1.5cm','鑫海','扦贴边','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 小棉带','小棉带9950-1','白','0.3cm','鑫海','collar felt, front/side body armhole，flap 领绒聚量，前片，马面袖窿，兜盖聚量','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 贴边扦条','3300','白','1.5cm','鑫海','扦贴边','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 绊带衬','4947','白','0.9cm','鑫海','belt loop 绊带','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 腰网衬','6148','白','5.5cm','鑫海','inside waistband  腰里','','M/米','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['tape 腰硬衬','KS107S','白','3.3cm','清川','waistband 腰面','','M/米','','','','','','','','','']
+                add_data.loc[len(add_data.index)] = ['tape 腰硬衬','S300P','白','3.3cm','清川','waistband 腰面','','M/米','','','','','','','','','']
                 add_data.loc[len(add_data.index)] = ['tape 线色','','','','','','','M/米','','','','','','','','','']
+                # 循环添加30个空白行
+                for i in range(30):
+                    add_data.loc[len(add_data.index)] = ['','','','','','','','','','','','','','','','','']
+                # 添加VAS的行
                 add_data.loc[len(add_data.index)] = ['VAS','','','','','','','','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
-                add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
+                # 循环添加11个空白行
+                for i in range(11):
+                    add_data.loc[len(add_data.index)] = ['','','','','','','','PC/个','','','','','','','','','']
                 # 修改"单位"这一列
                 table_data.loc[2:,'unit单位'] = table_data.loc[2:].apply(lambda row: 'PC/个' if ('BUTTONS' in str(row['type品类']) or 'Button' in str(row['type品类'])) else 'PC/条' if 'ZIPPER' in str(row['type品类']) else 'PC/个' if 'PINS' in str(row['type品类']) else 'M/米', axis=1)
                 table_data = pd.concat([table_data, add_data]).reset_index(drop=True)

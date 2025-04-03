@@ -29,7 +29,7 @@ class VAS_GUI():
         # 日期类型的字段
         self.date_item = ['来单日期', '交期', '面料发货时间', '面料到厂时间', '辅料采购发货时间', '给采购的最晚到料时间']
         # 循环文件，处理合并，并存入数据库
-        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\新客户JV 2025\JV PO表.xlsx'
+        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表.xlsx'
         # self.local_vas_detail_file = r'D:\temp\H25 IZAC PO.xlsx'
         self.table_value = []
         # 删除文件的list
@@ -40,9 +40,9 @@ class VAS_GUI():
         add_data.columns = self.add_data_title
         # 将add_data的NaN替换为空字符串
         add_data = add_data.drop_duplicates()
-        add_data['P_KEY'] = add_data['季节号'].astype(str) + '_' + add_data['订单号'].astype(str) + '_' + add_data['款式名称'].astype(str) + '_' + add_data['面料颜色'].astype(str)
+        # 将P_KEY的值修改为从1开始的字符串
+        add_data['P_KEY'] = (add_data.index + 1).astype(str)
         add_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
-        add_data['P_KEY'] = add_data['P_KEY'].str.strip()
         # keyList去重
         self.keyList = list(set(add_data['季节号'].tolist()))
         for column in add_data:

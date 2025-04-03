@@ -4,6 +4,7 @@ import pdfplumber
 import re
 import pymssql
 import datetime
+import shutil
 
 class VAS_GUI():
     # 批量获取服务器数据，进行累加操作
@@ -22,10 +23,6 @@ class VAS_GUI():
         self.number_item = ['Qty', 'Total', 'Price']
         # 文件位置
         self.local_pdf_detail_file = 'd:\\BB裁单'
-        # 删除目录内文件
-        # if os.path.exists(self.local_pdf_detail_file):
-        #     shutil.rmtree(self.local_pdf_detail_file)
-        # os.mkdir(self.local_pdf_detail_file)
 
         # 最终dataframe
         self.table_data = pd.DataFrame(data=None, columns=self.add_data_title)
@@ -40,6 +37,10 @@ class VAS_GUI():
         self.table_value.append([tuple(row) for row in self.table_data.values])
         # 更新数据库
         self.update_db()
+        # 删除目录内文件
+        if os.path.exists(self.local_pdf_detail_file):
+            shutil.rmtree(self.local_pdf_detail_file)
+        os.mkdir(self.local_pdf_detail_file)
         print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
         input('按回车退出 ')
 
@@ -73,6 +74,8 @@ class VAS_GUI():
                     break
             # 循环表格的第二行到最后一行
             for idx, row in enumerate(table[1:]):
+                if row[0] == '':
+                    continue
                 # 循环size_list的长度，获取每一行的数据
                 for idx_s, size in enumerate(size_list):
                     # ['PO号', '供应商编号', '款号', '颜色', '尺码', '数量', '总数量', '价格', '币种', '船期', 'set号', '文件名']
