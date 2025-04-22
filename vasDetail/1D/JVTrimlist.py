@@ -24,6 +24,7 @@ class VAS_GUI():
         if os.path.exists(self.trim_list_file_finish):
             shutil.rmtree(self.trim_list_file_finish)
         os.mkdir(self.trim_list_file_finish)
+        os.mkdir(self.trim_list_file_finish + '/大货')
 
         # 读取中英文翻译的配置文件
         # 英文行数（默认最大是301行）
@@ -38,14 +39,27 @@ class VAS_GUI():
                 self.underCollarFlag = False
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).replace('.pdf', '').replace('.PDF', ''))
 
+        # 循环读取文件，复制大货
+        for root, dirs, files in os.walk(self.trim_list_file_finish):
+            dirs[:] = []
+            for file in files:
+                # 删除固定列
+                self.copy_and_rename_file(os.path.join(root, file), os.path.join(root + '/大货', str(file).split('.')[0] + '_大货.xlsx'))
         # 循环读取文件，修改样式
         for root, dirs, files in os.walk(self.trim_list_file_finish):
             for file in files:
                 self.change_file_style(os.path.join(root, file))
-
         # print(self.table_value)
         print('已经完成导出操作！请到D盘【IZACTrimlist结果】中查看文件吧~~~~')
         input('按回车退出 ')
+
+    def copy_and_rename_file(self, old_name, new_name):
+        df = pd.read_excel(old_name, header=None, sheet_name=None)
+        writer = pd.ExcelWriter(new_name, engine='openpyxl') 
+        for key in df:
+            df[key].drop(df[key].columns[[9, 10, 11, 12, 13, 14, 15]], axis=1, inplace=True)
+            df[key].to_excel(writer, key,index=False, header=False )
+        writer.save()
 
     # 修改文件样式
     def change_file_style(self, io):

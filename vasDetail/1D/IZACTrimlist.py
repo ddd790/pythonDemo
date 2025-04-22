@@ -28,6 +28,7 @@ class VAS_GUI():
         if os.path.exists(self.trim_list_file_finish):
             shutil.rmtree(self.trim_list_file_finish)
         os.mkdir(self.trim_list_file_finish)
+        os.mkdir(self.trim_list_file_finish + '/大货')
 
         # 读取中英文翻译的配置文件
         # 英文行数（默认最大是301行）
@@ -43,6 +44,13 @@ class VAS_GUI():
                 # UNDER COLLAR 的值为 SHELL，需要追加一行
                 self.underCollarFlag = False
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).replace('.pdf', '').replace('.PDF', ''))
+        
+        # 循环读取文件，复制大货
+        for root, dirs, files in os.walk(self.trim_list_file_finish):
+            dirs[:] = []
+            for file in files:
+                # 删除固定列
+                self.copy_and_rename_file(os.path.join(root, file), os.path.join(root + '/大货', str(file).split('.')[0] + '_大货.xlsx'))
 
         # 循环读取文件，修改样式
         for root, dirs, files in os.walk(self.trim_list_file_finish):
@@ -53,6 +61,16 @@ class VAS_GUI():
         print('已经完成导出操作！请到D盘【IZACTrimlist结果】中查看文件吧~~~~')
         input('按回车退出 ')
 
+    def copy_and_rename_file(self, old_name, new_name):
+        df = pd.read_excel(old_name, header=None, sheet_name=None)
+        writer = pd.ExcelWriter(new_name, engine='openpyxl') 
+        for key in df:
+            i, c = np.where(df[key] == '颜色')
+            # df[key]第二行内容为颜色的列号
+            columns = c[0]
+            df[key].drop(df[key].columns[[columns + 8, columns + 9, columns + 10, columns + 11, columns + 12, columns + 13, columns + 14]], axis=1, inplace=True)
+            df[key].to_excel(writer, key,index=False, header=False )
+        writer.save()
     # 获取中英文对照配置文件
     def get_en_cn_config(self, io):
         # 打开工作表

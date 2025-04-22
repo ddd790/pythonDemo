@@ -83,7 +83,7 @@ class VAS_GUI():
                 table_data = table_data[table_data['品类'] != '']
                 table_data = table_data.reset_index(drop=True)
             # table_data['单耗']列如果为''，默认为1.0
-            table_data['单耗'] = table_data['单耗'].replace('', '1.0')
+            table_data['单耗'] = table_data['单耗'].replace('', '0.0')
             table_data.fillna('', inplace=True)
             # 查找“品类”列为 "VAS" 的第一个位置
             vas_first_index = table_data[table_data['品类'] == 'VAS'].index.min()
@@ -92,7 +92,7 @@ class VAS_GUI():
             # print(vas_first_index)
             upper_half = table_data.iloc[:vas_first_index]
             upper_half['BOM类型'] = '面辅料'
-            upper_half.drop(upper_half.index[-1], inplace=True)
+            # upper_half.drop(upper_half.index[-1], inplace=True)
             # 下半部分的行
             lower_half = table_data.iloc[vas_first_index + 1:]
             lower_half['BOM类型'] = 'VAS'

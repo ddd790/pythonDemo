@@ -317,8 +317,8 @@ class VAS_GUI():
         # 根据类型追加固定字段
         if type.__contains__('coats'):
             arrangeVal.append(['兜布', 'ECO-8301 ', '黑', '146cm', ''])
-            arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
-            arrangeVal.append(['拉丝衬', 'F0125N', '黑', '99cm', ''])
+            arrangeVal.append(['兜位衬', '0118N/8025 ', '黑', '99cm', ''])
+            arrangeVal.append(['拉丝衬', 'F0125N/JS6038', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬', 'SF-35 ', '黑', '99cm', ''])
             arrangeVal.append(['胸兜牌衬', '2346-2HE', '黑', '2.1cm', ''])
             arrangeVal.append(['有纺直条', '5850-1', '黑', '2.0cm', ''])
@@ -331,7 +331,7 @@ class VAS_GUI():
                 arrangeVal.append(['包条加工', '包条加工', '', '', ''])
             # UNDER COLLAR 的值为 SHELL，需要追加一行
             if self.underCollarFlag:
-                arrangeVal.append(['领底衬（领底上+领底座）', '9050', '黑', '148cm', ''])
+                arrangeVal.append(['领底衬（领底上+领底座）', '9050/SJ8045AQ', '黑', '148cm', ''])
         elif type.__contains__('Pants'):
             arrangeVal.append(['腰里上部/腰里下部', '', '', '', ''])
             arrangeVal.append(['腰里夹牙', '', '', '', ''])
@@ -341,8 +341,8 @@ class VAS_GUI():
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
             arrangeVal.append(['无纺衬-小部位', 'PE125 ', '炭灰', '150cm', ''])
             arrangeVal.append(['无纺衬-腰里下部', 'PE125 ', '炭灰', '150cm', ''])
-            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
-            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '150cm', '用于腰衬加工'])
+            arrangeVal.append(['腰硬衬', 'FW6951M68/RP 1515 ', '黑', '3.3cm', ''])
+            arrangeVal.append(['腰硬衬', 'FW6951M68/RP 1515 ', '黑', '150cm', '用于腰衬加工'])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
@@ -357,8 +357,8 @@ class VAS_GUI():
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
         elif type.__contains__('2 Piece Suits'):
             arrangeVal.append(['上衣口袋布', 'ECO-8301', '黑', '146cm', ''])
-            arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
-            arrangeVal.append(['拉丝衬', 'F0125N ', '黑', '99cm', ''])
+            arrangeVal.append(['兜位衬', '0118N/8025 ', '黑', '99cm', ''])
+            arrangeVal.append(['拉丝衬', 'F0125N/JS6038 ', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬', 'SF-35 ', '黑', '99cm', ''])
             arrangeVal.append(['胸兜牌衬', '2346-2HE ', '黑', '2.1cm', ''])
             arrangeVal.append(['有纺直条', '5850-1 ', '黑', '2.0cm', ''])
@@ -371,8 +371,8 @@ class VAS_GUI():
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498 ', '亮银色', '', ''])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
-            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
-            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '150cm', '用于腰衬加工'])
+            arrangeVal.append(['腰硬衬', 'FW6951M68/RP 1515 ', '黑', '3.3cm', ''])
+            arrangeVal.append(['腰硬衬', 'FW6951M68/RP 1515 ', '黑', '150cm', '用于腰衬加工'])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['PL腰里加工', 'PL腰里加工', '', '', ''])
@@ -380,11 +380,11 @@ class VAS_GUI():
                 arrangeVal.append(['包条加工', '包条加工', '', '', ''])
             # UNDER COLLAR 的值为 SHELL，需要追加一行
             if self.underCollarFlag:
-                arrangeVal.append(['领底衬（领底上+领底座）', '9050', '黑', '148cm', ''])
+                arrangeVal.append(['领底衬（领底上+领底座）', '9050/SJ8045AQ', '黑', '148cm', ''])
         else:
             arrangeVal.append(['口袋布 上衣+马甲', 'ECO-8301', '黑', '146cm', ''])
-            arrangeVal.append(['兜位衬', '0118N ', '黑', '99cm', ''])
-            arrangeVal.append(['拉丝衬', 'F0125N ', '黑', '99cm', ''])
+            arrangeVal.append(['兜位衬', '0118N/8025 ', '黑', '99cm', ''])
+            arrangeVal.append(['拉丝衬', 'F0125N/JS6038 ', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬', 'SF-35 ', '黑', '99cm', ''])
             arrangeVal.append(['胸兜牌衬 上衣+马甲', '2346-2HE ', '黑', '2.1cm', ''])
             arrangeVal.append(['有纺直条', '5850-1 ', '黑', '2.0cm', ''])
@@ -397,8 +397,8 @@ class VAS_GUI():
             arrangeVal.append(['前门襟拉链', 'CFC-36 DA3', '', '', ''])
             arrangeVal.append(['裤钩', 'B498', '亮银色', '', '1.00'])
             arrangeVal.append(['裤内扣', 'SB', '黑', '22L', ''])
-            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '3.3cm', ''])
-            arrangeVal.append(['腰硬衬', 'FW6951M68 ', '黑', '150cm', '用于腰衬加工'])
+            arrangeVal.append(['腰硬衬', 'FW6951M68/RP 1515 ', '黑', '3.3cm', ''])
+            arrangeVal.append(['腰硬衬', 'FW6951M68/RP 1515 ', '黑', '150cm', '用于腰衬加工'])
             arrangeVal.append(['绊带衬', '4947', '黑', '0.9cm', ''])
             arrangeVal.append(['腰网衬', '6148', '黑', '5.5cm', ''])
             arrangeVal.append(['马甲钎子', 'BG87-006JZ', '古铜色', '', ''])
@@ -407,7 +407,7 @@ class VAS_GUI():
                 arrangeVal.append(['包条加工', '包条加工', '', '', ''])
             # UNDER COLLAR 的值为 SHELL，需要追加一行
             if self.underCollarFlag:
-                arrangeVal.append(['领底衬（领底上+领底座）', '9050', '黑', '148cm', ''])
+                arrangeVal.append(['领底衬（领底上+领底座）', '9050/SJ8045AQ', '黑', '148cm', ''])
         return arrangeVal
 
     def get_file_name_by_num_style(self, num, style):
@@ -432,36 +432,41 @@ class VAS_GUI():
         last_file_name = ''
         # 基础时间，设置为2018年9月
         last_time = parser.parse('2018 9 03')
+        break_flag = False
         for root, dirs, files in os.walk(self.cn_sample_file):
+            # 如果break_flag为True，则跳出循环
+            if break_flag:
+                break
             for file in files:
                 # 修改时间
-                mtime = parser.parse(time.ctime(os.path.getmtime(
-                    os.path.join(root, file))))
+                mtime = parser.parse(time.ctime(os.path.getmtime(os.path.join(root, file))))
                 diff_time = mtime - last_time
-                # if diff_time.days > 0:
-                #     last_time = mtime
-                #     last_file_name = file
-                # print(file)
-                # print(diff_time)
+                last_file_name = file
                 if file_content_name == '套':
                     if str(file).__contains__(file_content_name) and str(file).__contains__(str(num)) and not str(file).__contains__('三') and diff_time.days > 0:
                         last_time = mtime
                         last_file_name = file
+                        break_flag = True
+                        # 跳出循环
+                        break
                     elif str(file).__contains__(file_content_name) and str(file).__contains__(str(num)) and (str(file).__contains__('假') or str(file).__contains__('两')) and diff_time.days > 0:
                         last_time = mtime
                         last_file_name = file
+                        break_flag = True
+                        # 跳出循环
+                        break
                 else:
                     if str(file).__contains__(file_content_name) and str(file).__contains__(str(num)) and diff_time.days > 0:
                         last_time = mtime
                         last_file_name = file
+                        break_flag = True
+                        # 跳出循环
+                        break
         # 读取文件版本最大的
         io = self.cn_sample_file + '\\' + last_file_name
         cn_column_dic = {}
-        # print(io)
-        excelKey = pd.read_excel(
-            io, header=None, keep_default_na=False, usecols=[0])
-        excelValue = pd.read_excel(
-            io, header=None, keep_default_na=False, usecols=[1])
+        excelKey = pd.read_excel(io, header=None, keep_default_na=False, usecols=[0])
+        excelValue = pd.read_excel(io, header=None, keep_default_na=False, usecols=[1])
         # 第一列结果赋值list
         key_result = []
         for s_li in excelKey.values.tolist():

@@ -61,7 +61,7 @@ class VAS_GUI():
                 add_data[column] = add_data[column].astype(str)
         self.table_value.append([tuple(row) for row in add_data.values])
         # 追加数据
-        # print(self.table_value)
+        print(self.table_value)
         self.update_db()
         print('已经完成数据操作！')
         input('按回车退出 ')
