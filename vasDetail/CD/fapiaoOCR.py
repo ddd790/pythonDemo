@@ -66,12 +66,17 @@ class VAS_GUI():
                 if lroot.__contains__('加工费和成衣'):
                     file_type = '加工费和成衣'
                 self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0], file_type)
-        self.table_value.append([tuple(row) for row in self.table_data.values])
         for row in self.table_data.itertuples(index=False):
             # 判断是否为数字，不是数字则输出文件名
             if not self.is_number(row.Number):
-                print('文件名：' + row.FileName + '，发票号码：' + row.InvoiceNo + '，项目明细数据有误，请检查！')
+                print('文件名：' + row.FileName + '，发票号码：' + row.InvoiceNo + '，项目明细数据有误，已自动跳过！')
+                # 删除该条目
+                self.table_data.drop(self.table_data[self.table_data.InvoiceNo == row.InvoiceNo].index, inplace=True)
                 continue
+        # 去掉table_data中的BuyName和SellName的空格
+        self.table_data['BuyName'] = self.table_data['BuyName'].str.replace(' ', '')
+        self.table_data['SellName'] = self.table_data['SellName'].str.replace(' ', '')
+        self.table_value.append([tuple(row) for row in self.table_data.values])
         # 更新数据库
         try:
             self.update_db()
