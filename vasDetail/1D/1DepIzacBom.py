@@ -18,7 +18,7 @@ class VAS_GUI():
         # 数据库名
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title
-        self.base_title = ['品类', '品号', '用料颜色', '规格', '供应商', '用料名称', '单耗', '单位', '缩水率', '损耗率', '备注']
+        self.base_title = ['品类', '品号', '用料颜色', '规格', '供应商', '用料名称', '单耗', '单位', '损耗率', '备注']
         self.jv_title = ['品类', '品号', '用料颜色', '规格', '供应商', '用料名称', '单耗', '单位', '损耗率', '单价', '美金单价', '克重', '成份', '起订量', '小缸费', '生产周期', '备注']
         self.add_data_title = self.base_title.copy()
         self.add_data_title.extend(['BOM类型', '款号', 'PO号', '颜色', 'delKey', 'rowNum', '客户'])
@@ -76,9 +76,9 @@ class VAS_GUI():
                 table_data['单耗'] = df_po[6]
                 table_data['单位'] = df_po[7]
                 table_data['缩水率'] = ''
-                table_data['损耗率'] = df_po[9]
+                table_data['损耗率'] = df_po[8]
                 # 将table_data_jv中的备注列赋值给table_data中的备注列
-                table_data['备注'] = df_po[16]
+                table_data['备注'] = df_po[9]
                 # 删除品类为空的行，并删除索引
                 table_data = table_data[table_data['品类'] != '']
                 table_data = table_data.reset_index(drop=True)
@@ -101,7 +101,7 @@ class VAS_GUI():
             table_data['品号'] = table_data['品号'].astype(str)
             table_data['用料颜色'] = table_data['用料颜色'].astype(str)
             table_data['规格'] = table_data['规格'].astype(str)
-            table_data['缩水率'] = table_data['缩水率'].astype(str)
+            table_data['缩水率'] = ''
             table_data['损耗率'] = table_data['损耗率'].astype(str)
             table_data['单耗'] = table_data['单耗'].astype(float)
             table_data['款号'] = style_no

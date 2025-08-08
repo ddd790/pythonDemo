@@ -71,29 +71,41 @@ class VAS_GUI():
                 else:
                     break
             # 循环表格的第二行到最后一行
-            for idx, row in enumerate(table[1:]):
-                if row[0] == '':
-                    continue
-                # 循环size_list的长度，获取每一行的数据
-                for idx_s, size in enumerate(size_list):
-                    # ['PO号', '供应商编号', '款号', '颜色', '尺码', '数量', '总数量', '价格', '币种', '船期', 'set号', '文件名']
-                    tmp_date_row = [str(po_no), str(supplier_no), str(style_no), str(row[0]).replace(' ', ''), str(size), row[size_index[idx_s]].replace(' ', ''), row[size_index[-1] + 1], 
-                                    row[size_index[-1] + 2].replace(',', '.'), str(row[size_index[-1] + 3]), self.change_date(row[size_index[-1] + 4]), 
-                                    row[size_index[-1] + 5], lfile]
-                    # 创建要追加的新行数据
-                    new_row = pd.DataFrame([tmp_date_row], columns=self.add_data_title)
-                    # 使用concat()函数对dataframe进行合并
-                    self.table_data = pd.concat([self.table_data, new_row], axis=0).reset_index(drop=True)
-                    self.delete_key.append(po_no + '_' + supplier_no + '_' + style_no + '_' + row[0].replace(' ', ''))
+            try:
+                # print(table[1:])
+                for idx, row in enumerate(table[1:]):
+                    # print(row)
+                    if row[0] == '' or row[0] == None:
+                        continue
+                    # 循环size_list的长度，获取每一行的数据
+                    for idx_s, size in enumerate(size_list):
+                        # ['PO号', '供应商编号', '款号', '颜色', '尺码', '数量', '总数量', '价格', '币种', '船期', 'set号', '文件名']
+                        tmp_date_row = [str(po_no), str(supplier_no), str(style_no), str(row[0]).replace(' ', ''), str(size), row[size_index[idx_s]].replace(' ', ''), row[size_index[-1] + 1], 
+                                        row[size_index[-1] + 2].replace(',', '.'), str(row[size_index[-1] + 3]), self.change_date(row[size_index[-1] + 4]), 
+                                        row[size_index[-1] + 5], lfile]
+                        # 创建要追加的新行数据
+                        new_row = pd.DataFrame([tmp_date_row], columns=self.add_data_title)
+                        # 使用concat()函数对dataframe进行合并
+                        self.table_data = pd.concat([self.table_data, new_row], axis=0).reset_index(drop=True)
+                        # print(new_row)
+                        self.delete_key.append(po_no + '_' + supplier_no + '_' + style_no + '_' + row[0].replace(' ', ''))
+                #删除Qty列中为空的数据
+                self.table_data = self.table_data[self.table_data['Qty'] != '']
+            except:
+                #退出循环
+                break
         # 删除table_data中的数量是空的行, 并重新设置索引
         self.table_data = self.table_data[self.table_data['Qty'] != ''].reset_index(drop=True)
         # 将table_data中的数量转化为数字
+        self.table_data['Colour'] = self.table_data['Colour'].astype(str)
+        self.table_data['Size'] = self.table_data['Size'].astype(str)
         self.table_data['Qty'] = self.table_data['Qty'].astype(int)
         self.table_data['Total'] = self.table_data['Total'].astype(int)
         self.table_data['Price'] = self.table_data['Price'].astype(float)
         self.table_data['DelKey'] = po_no + '_' + supplier_no + '_' + style_no
         # DelKey列的内容追加Colour的内容
         self.table_data['DelKey'] = self.table_data['DelKey'] + '_' + self.table_data['Colour']
+        # print(self.table_data)
         # 关闭文件
         pdf.close()
 

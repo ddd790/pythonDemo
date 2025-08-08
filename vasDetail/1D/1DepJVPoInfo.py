@@ -2,6 +2,7 @@ import pandas as pd
 import datetime
 import pymssql
 from tkinter import *
+import os
 
 
 class VAS_GUI():
@@ -29,37 +30,48 @@ class VAS_GUI():
         # 日期类型的字段
         self.date_item = ['来单日期', '交期', '面料发货时间', '面料到厂时间', '辅料采购发货时间', '给采购的最晚到料时间']
         # 循环文件，处理合并，并存入数据库
-        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表.xlsx'
-        # self.local_vas_detail_file = r'D:\temp\H25 IZAC PO.xlsx'
+        self.local_list_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表'
+        # self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表.xlsx'
+        # self.local_list_file = r'D:\temp'
         self.table_value = []
         # 删除文件的list
         self.keyList = []
-        # 读取A到AZ列的内容,从第三行开始读取
-        add_data = pd.read_excel(self.local_vas_detail_file, sheet_name=0, header=1, usecols='A:AZ', dtype=str)
-        # 将df的列名转换为dataFrame的列名
-        add_data.columns = self.add_data_title
-        # 将add_data的NaN替换为空字符串
-        add_data = add_data.drop_duplicates()
-        # 将P_KEY的值修改为从1开始的字符串
-        add_data['P_KEY'] = (add_data.index + 1).astype(str)
-        add_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
-        # keyList去重
-        self.keyList = list(set(add_data['季节号'].tolist()))
-        for column in add_data:
-            if column in self.number_item[:4]:
-                # 将add_data的NaN替换为0
-                add_data[column].fillna(0, inplace=True)
-                add_data[column] = add_data[column].astype(int)
-            elif column in self.number_item[4:]:
-                add_data[column].fillna(0, inplace=True)
-                add_data[column] = add_data[column].astype(float)
-            elif column in self.date_item:
-                add_data[column].fillna('1977-01-01', inplace=True)
-                add_data[column] = pd.to_datetime(add_data[column])
-            else:
-                add_data[column].fillna('', inplace=True)
-                add_data[column] = add_data[column].astype(str)
-        self.table_value.append([tuple(row) for row in add_data.values])
+        for root, dirs, files in os.walk(self.local_list_file):
+            for file in files:
+                # 如果文件名不包含"~"的文件
+                if file.__contains__('~'):
+                    continue
+                print(file)
+                self.local_vas_detail_file = os.path.join(root, file)
+                # 读取A到AZ列的内容,从第三行开始读取
+                add_data = pd.read_excel(self.local_vas_detail_file, sheet_name=0, header=1, usecols='A:AZ', dtype=str)
+                # 将df的列名转换为dataFrame的列名
+                add_data.columns = self.add_data_title
+                # 将add_data的NaN替换为空字符串
+                add_data = add_data.drop_duplicates()
+                # 将P_KEY的值修改为从1开始的字符串
+                add_data['P_KEY'] = (add_data.index + 1).astype(str)
+                add_data['CreateDate'] = str(datetime.datetime.now()).split('.')[0]
+                for column in add_data:
+                    if column in self.number_item[:4]:
+                        # 将add_data的NaN替换为0
+                        add_data[column].fillna(0, inplace=True)
+                        add_data[column] = add_data[column].astype(int)
+                    elif column in self.number_item[4:]:
+                        add_data[column].fillna(0, inplace=True)
+                        add_data[column] = add_data[column].astype(float)
+                    elif column in self.date_item:
+                        add_data[column].fillna('1977-01-01', inplace=True)
+                        add_data[column] = pd.to_datetime(add_data[column])
+                    else:
+                        add_data[column].fillna('', inplace=True)
+                        add_data[column] = add_data[column].astype(str)
+                # 删除add_data中客户列为空的行
+                add_data = add_data[add_data['客户'] != '']
+                # keyList去重
+                tmp_keyList = list(set(add_data['季节号'].tolist()))
+                self.keyList.extend(tmp_keyList)
+                self.table_value.append([tuple(row) for row in add_data.values])
         # 追加数据
         self.update_db()
         print('已经完成数据操作！')

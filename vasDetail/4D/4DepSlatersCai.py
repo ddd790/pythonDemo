@@ -43,9 +43,10 @@ class VAS_GUI():
                     self.format_dataframe(df, lfile, ship_list, season_year)
 
         # 更新数据库，删除文件
+        print(self.StyleList)
         self.update_db()
         # 删除目录内文件
-        self.delete_files_in_folder(self.local_cai_detail_file)
+        # self.delete_files_in_folder(self.local_cai_detail_file)
         input('按回车退出 ')
 
     def format_dataframe(self, df, lfile, ship_list, season_year):

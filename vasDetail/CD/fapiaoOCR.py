@@ -65,7 +65,11 @@ class VAS_GUI():
                 file_type = '物料发票'
                 if lroot.__contains__('加工费和成衣'):
                     file_type = '加工费和成衣'
-                self.file_to_dataframe(os.path.join(lroot, lfile), str(lfile).split('.')[0], file_type)
+                # 获取文件名
+                file_name = str(lfile).split('.pdf')[0]
+                if lfile.__contains__('.PDF'):
+                    file_name = str(lfile).split('.PDF')[0]
+                self.file_to_dataframe(os.path.join(lroot, lfile), file_name, file_type)
         for row in self.table_data.itertuples(index=False):
             # 判断是否为数字，不是数字则输出文件名
             if not self.is_number(row.Number):
@@ -149,6 +153,8 @@ class VAS_GUI():
             buy_name = self.get_value_two_word(text, '购 名称：', '销 名称：').strip().replace('\n', '')
             sell_name = self.get_value_two_word(text,  '销 名称：', None).split(' ')[0]
             no_list = text.split('社会信用代码/纳税人识别号')
+            # print(no_list)
+            # print(lfile)
             buy_no = no_list[1].split(' ')[0]
             sell_no = no_list[2].split(' ')[0]
             total_price = text.split('（小写）¥')[1].replace('\n', ' ').split(' ')[0]
@@ -222,7 +228,7 @@ class VAS_GUI():
                 insertSql += '%s, '
         insertSql += ')'
         # print(insertSql)
-        # print(insertValue)
+        print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()
