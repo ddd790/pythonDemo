@@ -46,9 +46,9 @@ class VAS_GUI():
         self.file_path = filedialog.askopenfilenames(title=u'选择文件', initialdir=(os.path.expanduser(r'\\192.168.0.3\18-电子发票')))
         self.file_show_label.delete(1.0, tk.END)
         for path in self.file_path:
-            if '//192.168.0.3/18-电子发票' not in path:
-                messagebox.showerror("路径错误", f"路径错误: 请选择共享服务器下的【18-电子发票】文件夹下的文件！")
-                return
+            # if '//192.168.0.3/18-电子发票' not in path:
+            #     messagebox.showerror("路径错误", f"路径错误: 请选择共享服务器下的【18-电子发票】文件夹下的文件！")
+            #     return
             self.file_show_label.insert('insert', str(path.split('/')[-1]) + '\n')
 
     # 电子发票数据提取
@@ -254,7 +254,7 @@ class VAS_GUI():
                 insertSql += '%s, '
         insertSql += ')'
         # print(insertSql)
-        # print(insertValue)
+        print(insertValue)
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

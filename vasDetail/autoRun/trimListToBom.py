@@ -26,7 +26,7 @@ class VAS_GUI():
         self.local_trim_list_file = 'd:\\trimlistToBom'
         self.trim_list_file_finish = 'd:\\trimlistToBom结果'
         self.en_cn_file = r'\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\en_cn.xlsx'
-        self.cn_sample_file = r'\\192.168.0.3\01-业务一部资料\A-Serena\2-辅料表\样例'
+        self.cn_sample_file = r'\\192.168.0.3\01-业务一部资料\A-PEERLESS\大货资料\2-辅料表\样例'
         # self.cn_sample_file = r"\\192.168.0.3\01-业务一部资料\软件\trimlistToBom\样例"
         # self.cn_sample_file = r"d:\样例"
         # self.en_cn_file = r'\\192.168.0.3\05-业务五部共享\trimlistToBom\en_cn.xlsx'
@@ -227,7 +227,7 @@ class VAS_GUI():
             sameDic = {}
             # 源文件内容的dataframe
             # oldFileData = []
-            # 订单类型（上衣，裤子，马甲，套装，三件套）
+            # 订单类型（大衣, 上衣，裤子，马甲，套装，三件套）
             materialType = str(disDf.loc[idx]['Material'])
             # trimlist中有2种或者3中的订单类型，就是套装或者三件套
             if len(material_list) > 1:
@@ -315,7 +315,18 @@ class VAS_GUI():
 
     def arrange_appand_by_type(self, arrangeVal, type):
         # 根据类型追加固定字段
-        if type.__contains__('coats'):
+        if type.__contains__('Overcoats'):
+            arrangeVal.append(['兜布1/ 里兜布', 'ECO 8301', '黑', '150cm', ''])
+            arrangeVal.append(['兜布2/ 外腰兜', 'GBSN YH-B226 COL  CAMEL2', '驼色2', '152cm', ''])
+            arrangeVal.append(['兜位衬/里兜位', '9016', '黑', '100cm', ''])
+            arrangeVal.append(['拉丝衬/前片止口直缝部位/止口下摆贴边处/前肩缝/前袖笼上/后袖笼上（都是2CM宽）', 'AS901', '黑', '100cm', ''])
+            arrangeVal.append(['无胶衬/里兜牙', 'SF35', '黑', '100cm', ''])
+            arrangeVal.append(['有纺直条/反驳线胸衬拉量一层，后开衩', '5850-1', '黑', '2.0cm', ''])
+            arrangeVal.append(['有纺衬条/胸衬上第一次衬条', '3030', '黑', '1.5cm', ''])
+            arrangeVal.append(['有纺衬条/腰斗布贴边衬条/贴边下端固定衬条', '3030', '黑', '2.5cm', ''])
+            arrangeVal.append(['贴纸网状胶/粘领口领底呢/领座缝/贴边上端固定', '贴纸网状胶', '白', '0.8cm', ''])
+            arrangeVal.append(['小涤带/前后袖笼/后领口/领底', '小涤带', '黑', '0.3cm', ''])
+        elif type.__contains__('coats'):
             arrangeVal.append(['兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书）', 'ECO-8301 ', '黑', '146cm', ''])
             arrangeVal.append(['兜位衬/里兜位/手机兜位', '0118N/8025', '黑', '99cm', ''])
             arrangeVal.append(['拉丝衬/前袖窿上12CM长/前袖窿弯/前下摆圆', 'F0125N/JS6038', '黑', '99cm', ''])
@@ -414,7 +425,9 @@ class VAS_GUI():
     def get_file_name_by_num_style(self, num, style):
         # 根据类型和数字返回对应的文件名
         file_content_name = ''
-        if (style.__contains__('coats') and style.__contains__('Pants') and style.__contains__('Vests')) or (style.__contains__('3 Piece Suits')):
+        if (style.__contains__('Overcoats')):
+            file_content_name = '大衣'
+        elif (style.__contains__('coats') and style.__contains__('Pants') and style.__contains__('Vests')) or (style.__contains__('3 Piece Suits')):
             file_content_name = '三'
         elif (style.__contains__('coats') and style.__contains__('Pants')) or (style.__contains__('coats') and style.__contains__('Vests')):
             file_content_name = '套'
@@ -465,6 +478,7 @@ class VAS_GUI():
                         break
         # 读取文件版本最大的
         io = self.cn_sample_file + '\\' + last_file_name
+        print(io)
         cn_column_dic = {}
         excelKey = pd.read_excel(io, header=None, keep_default_na=False, usecols=[0])
         excelValue = pd.read_excel(io, header=None, keep_default_na=False, usecols=[1])

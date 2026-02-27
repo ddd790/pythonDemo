@@ -115,9 +115,11 @@ class VAS_GUI():
             # 删除空行
             table_data.dropna(subset=['品号'], inplace=True)
             table_data_add = table_data_add.append(table_data, ignore_index=True)
+            # 删除self.table_value[0]倒数第三列内容
+            # table_data_add.drop(table_data_add.columns[-3], axis=1, inplace=True)
         self.delList.extend(table_data_add['delKey'].tolist())
         self.table_value.append([tuple(row) for row in table_data_add.values])
-        # print(self.table_value)
+        # print(self.table_value[0][0])
 
     def update_db(self):
         dbCol = self.add_data_title[:]
@@ -144,7 +146,8 @@ class VAS_GUI():
             else:
                 insertSql += '%s, '
         insertSql += ')'
-        # print(insertValue)
+        # print(insertSql)
+        print(insertValue[0])
         cursor.executemany(insertSql, insertValue)
         conn.commit()
         conn.close()

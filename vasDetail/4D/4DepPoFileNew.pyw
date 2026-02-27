@@ -173,7 +173,6 @@ class VAS_GUI:
         currency = ''
         season = ''
         come_date = ''
-        sum_qty = 0
         hs_code = ''
         unit_price = ''
         table1 = []
@@ -202,55 +201,60 @@ class VAS_GUI:
                 trade_mode = self.get_value_two_word(file_txt, 'Incoterm :', 'Transport :').strip()
                 shipping_mode = self.get_value_two_word(file_txt, 'Transport :', 'Buying Terms').strip()[:3]
                 come_date = self.format_shipping_date(self.get_value_two_word(po_no_tmp, 'Date :', 'Invoicing :').strip()[:10])
-                unit_price = self.get_value_two_word(file_txt, 'Net Buying Price ex VAT :', 'Discount :').strip()
+                # unit_price = self.get_value_two_word(file_txt, 'Net Buying Price ex VAT :', 'Discount :').strip()
+                unit_price = self.get_value_two_word(file_txt, 'Net Buying Price ex VAT ', 'Total Quantity :').strip()
+                unit_price = unit_price.split('\n')[1].split(' ')[2].replace(',', '.')
                 # 获取pdf第一个表格
-                table = page.extract_tables()[0]
-                table1 = page.extract_tables()[1]
+                table = page.extract_tables()[12]
+                table1 = page.extract_tables()[13]
                 tmp_qty_info = 'Total Quantity :' + self.get_value_two_word(file_txt, 'Total Quantity :', None)
                 tmp_qty = self.get_value_two_word(tmp_qty_info, 'Total Quantity :', style_no).strip().replace(' ', '')
-                sum_qty = int(str(tmp_qty))
                 currency = self.get_value_two_word(tmp_qty_info, 'CURRENCY :', '\n').strip()
+                color_qty_list = {}
+                table = table[1:-1]
+                size_list = {}
+                qty_list = {}
                 for row in table:
-                    row.pop()
-                    tmp_size_type = row[0]
-                    if tmp_size_type is not None and tmp_size_type != '' and tmp_size_type != 'Color' and tmp_size_type != 'Total':
-                        del (row[0])
-                        fabric_list = tmp_size_type.split('\n')
-        # 获取size和颜色的列表
-        tmp_size_table = table1[1]
-        tmp_color_list = tmp_size_table[0].split('\n')
-        tmp_size_color = tmp_color_list[0]
-        tmp_size_list = tmp_size_table[1].split('\n')
-        tmp_qty_list = tmp_size_table[3].split('\n')
-        size_idx = 0
-        # 尺码和数量的list
-        size_list = {}
-        size_detail_list = {}
-        size_list_val = []
-        size_detail_list_val = []
-        for color_idx in range(len(tmp_color_list)):
-            if tmp_color_list[color_idx] != tmp_size_color:
-                tmp_size_color = tmp_color_list[color_idx]
-                size_idx = size_idx + 1
-                size_list_val = []
-                size_detail_list_val = []
-            size_list_val.append(tmp_size_list[color_idx])
-            size_detail_list_val.append(tmp_qty_list[color_idx])
-            size_list[tmp_color_list[color_idx]] = size_list_val
-            size_detail_list[tmp_color_list[color_idx]] = size_detail_list_val
-
+                    print(row)
+                    if row[-1] is None:
+                        # 如果row[0].split(' ')[1]是数字
+                        r_color = row[0].split(' ')[0] + ' ' + row[0].split(' ')[1]
+                        if row[0].split(' ')[1].isdigit():
+                            r_color = row[0].split(' ')[0]
+                        color_qty_list[r_color] = row[0].split(' ')[-1]
+                    else:
+                        color_qty_list[row[0]] = row[-1]
+                # 去掉table1的第一行记录
+                table1.pop(0)
+                fabric_list = list(color_qty_list.keys())
+                for color in fabric_list:
+                    size_list[color] = []
+                    qty_list[color] = []
+                print(size_list, qty_list)
+                for row in table1:
+                    # 如果row的最后一个记录为None, 则读取第一个记录
+                    if row[-1] is None:
+                        row_color = row[0].split(' ')[0]
+                        # 如果row[0]的个数大于4
+                        if len(row[0].split(' ')) > 4:
+                            row_color = row[0].split(' ')[0] + ' ' + row[0].split(' ')[1]
+                        size_list[row_color].append(row[0].split(' ')[-3])
+                        qty_list[row_color].append(row[0].split(' ')[-1])
+                    else:
+                        size_list[row[0]].append(row[1])
+                        qty_list[row[0]].append(row[3])
         for n_idx in range(len(fabric_list)):
             # 'TYPE', 'PO号', '款号', '英文款名', '订单数量', '客人船期', '目的港', '贸易方式', '走货方式', '商标', 'version', '面料颜色', '结汇币种', '季节号', '来单日期'
             # 由于其他的客户没有HS编码，【izac】这个客户的【TYPE】列存放HS编码。
             # 由于其他的客户没有结汇单价，【izac】这个客户的【商标】列存放结汇单价。
             input_color = fabric_list[n_idx]
-            temp_po_detail = [hs_code, po_no, style_no, en_style_name, sum_qty, delivery_date,
+            temp_po_detail = [hs_code, po_no, style_no, en_style_name, color_qty_list[input_color], delivery_date,
                               destination, trade_mode, shipping_mode, unit_price, 1, input_color, currency, season, come_date]
             po_detail = pd.Series(temp_po_detail, index=self.add_data_title)
             self.table_data = self.table_data.append(po_detail, ignore_index=True)
             for s_idx in range(len(size_list[input_color])):
-                if int(str(size_detail_list[input_color][s_idx])) > 0:
-                    temp_size_detail = temp_po_detail + [self.change_izac_size(size_list[input_color][s_idx]), int(str(size_detail_list[input_color][s_idx]))]
+                if int(str(qty_list[input_color][s_idx])) > 0:
+                    temp_size_detail = temp_po_detail + [self.change_izac_size(size_list[input_color][s_idx]), int(str(qty_list[input_color][s_idx]))]
                     zara_size_detail = pd.Series(temp_size_detail, index=self.add_data_title_size_zara)
                     self.table_data_zara_size = self.table_data_zara_size.append(zara_size_detail, ignore_index=True)
         self.table_data['面料颜色'] = self.table_data['面料颜色'].replace(' ','', regex=True)

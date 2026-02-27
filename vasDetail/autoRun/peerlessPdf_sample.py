@@ -57,7 +57,7 @@ ________________________________________________________________________________
         os.mkdir(self.local_pdf_detail_file)
         # copy服务器的TRIMLIST文件到本地
         for root, dirs, files in os.walk(networked_directory):
-            if root.__contains__('2024') or root.__contains__('2025'):
+            if root.__contains__('2025') or root.__contains__('2026'):
                 for file in files:
                     if str(file).__contains__('PO-') and (str(file).__contains__('.pdf') or str(file).__contains__('.PDF')):
                         shutil.copy2(os.path.join(root, file), self.local_pdf_detail_file)

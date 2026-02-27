@@ -30,9 +30,9 @@ class VAS_GUI():
         # 日期类型的字段
         self.date_item = ['来单日期', '交期', '面料发货时间', '面料到厂时间', '辅料采购发货时间', '给采购的最晚到料时间']
         # 循环文件，处理合并，并存入数据库
-        self.local_list_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表'
+        # self.local_list_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表'
         # self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  JV\JV PO表.xlsx'
-        # self.local_list_file = r'D:\temp'
+        self.local_list_file = r'D:\temp'
         self.table_value = []
         # 删除文件的list
         self.keyList = []

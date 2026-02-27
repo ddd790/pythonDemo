@@ -43,13 +43,13 @@ class VAS_GUI():
                     self.table_value.append([tuple(row) for row in table_data.values])
 
         # 更新数据库，删除文件
-        # print(self.table_value)
         # 删除self.table_value中Qty为0或者是空的行
         self.table_value = [row for row in self.table_value if row[0][self.add_data_title.index('Qty')] != 0 and row[0][self.add_data_title.index('Qty')] != '']
+        print(self.table_value)
         self.update_db()
-        if os.path.exists(self.local_cai_detail_file):
-            shutil.rmtree(self.local_cai_detail_file)
-        os.mkdir(self.local_cai_detail_file)
+        # if os.path.exists(self.local_cai_detail_file):
+        #     shutil.rmtree(self.local_cai_detail_file)
+        # os.mkdir(self.local_cai_detail_file)
         input('按回车退出 ')
 
     def update_db(self):

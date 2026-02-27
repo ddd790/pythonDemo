@@ -94,6 +94,7 @@ class VAS_GUI():
         # self.update_db_test()
 
     def file_to_dataframe(self, io, lfile, file_type):
+        # print(io)
         pdf_df = pd.DataFrame(data=None, columns=self.add_data_title)
         pdf = pdfplumber.open(io)
         # ['发票号码', '开票日期','购买方名称', '购买方纳税人识别号', '销售方名称', '销售方纳税人识别号', '项目名称', '规格型号', '单位', '数量', '单价', '金额', '税率', '税额', '价税合计', '备注']
@@ -116,6 +117,9 @@ class VAS_GUI():
         if invoice_no.__contains__('年'):
             invoice_no = self.get_value_two_word(text, '电子发票（增值税专用发票）', '发票号码：').strip().replace('\n', '')[:20]
             invoice_date = self.get_value_two_word(text, '发票号码：', '开票日期：').strip().replace('\n', '')[:11].replace('年', '-').replace('月', '-').replace('日', '').replace(' ', '')
+        # # 如果invoice_date的长度小于10，则补充1
+        # if len(invoice_date) < 10:
+        #     invoice_date = invoice_date + '1'
         # 项目明细数据
         text = text.replace('税   额', '税  额').replace('税  额', '税 额')
         detail_info = self.get_value_two_word(text, '税 额\n', '合 计').strip()
