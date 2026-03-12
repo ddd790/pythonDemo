@@ -143,7 +143,7 @@ def extract_word_info(file_path):
     if not isinstance(data, list) or len(data) == 0:
         return {"error": "JSON数据不是非空列表"}
 
-    # 3. 过滤出包含phrases且phrases非空的单词列表
+    # 3. 过滤出包含phrases且phrases非空，且headWord长度小于等于6的单词列表
     valid_words = []
     for word in data:
         # 逐层检查phrases是否存在且非空
@@ -152,12 +152,14 @@ def extract_word_info(file_path):
                           .get('content', {}) \
                           .get('phrase', {}) \
                           .get('phrases', [])
-        if isinstance(phrase_list, list) and len(phrase_list) > 0:
+        # 检查headWord长度是否小于等于6
+        head_word = word.get('headWord', '')
+        if isinstance(phrase_list, list) and len(phrase_list) > 0 and len(head_word) <= 6:
             valid_words.append(word)
     
-    # 4. 验证有效单词列表（防止所有单词都无phrases）
+    # 4. 验证有效单词列表（防止所有单词都无phrases或headWord长度超过6）
     if len(valid_words) == 0:
-        return {"error": "所有单词都没有有效的phrases数据"}
+        return {"error": "所有单词都没有有效的phrases数据或headWord长度超过6"}
 
     # 5. 从有效列表中随机选一个（确保有phrases）
     random_word = random.choice(valid_words)
