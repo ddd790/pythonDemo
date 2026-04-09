@@ -31,7 +31,8 @@ FUNC_TABLE_MAP = {
     "客户": "sys_customer",
     "货代": "sys_forwarder",
     "三方": "sys_third_company",
-    "物料": "sys_material"
+    "物料分类": "sys_material_type",
+    "物料明细": "sys_material"
 }
 
 # 新增：功能和勤哲表中的视图名的映射字典，
@@ -42,7 +43,8 @@ FUNC_VIEW_MAP = {
     "客户": "view_customer2ERP",
     "货代": "view_forwarder2ERP",
     "三方": "view_third2ERP",
-    "物料": "view_material2ERP"
+    "物料分类": "view_material_type2ERP",
+    "物料明细": "view_material2ERP"
 }
 
 # -------------------------- 核心功能函数 --------------------------
@@ -163,7 +165,7 @@ def append_button_click():
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("数据导入工具")
-    root.geometry("500x400")
+    root.geometry("450x500")
     root.resizable(False, False)
 
     # 1. 数据库连接区域
@@ -195,7 +197,7 @@ if __name__ == "__main__":
     entry_pwd.grid(row=3, column=1, padx=5, pady=5)
 
     # 2. 功能选择区域
-    frame_func = ttk.LabelFrame(root, text="功能选择", padding=(20, 10))
+    frame_func = ttk.LabelFrame(root, text="合作单位", padding=(20, 10))
     frame_func.pack(fill="x", padx=20, pady=10)
 
     func_var = tk.StringVar(value="供应商")  # 默认选中供应商
@@ -209,10 +211,17 @@ if __name__ == "__main__":
     rb_logistics.grid(row=0, column=3, padx=10, pady=1)
     rb_third = ttk.Radiobutton(frame_func, text="三方", variable=func_var, value="三方")
     rb_third.grid(row=0, column=4, padx=10, pady=1)
-    rb_material = ttk.Radiobutton(frame_func, text="物料", variable=func_var, value="物料")
-    rb_material.grid(row=0, column=5, padx=10, pady=1)
 
-    # 3. 操作区域
+    # 3. 物料相关区域
+    frame_material = ttk.LabelFrame(root, text="物料相关", padding=(20, 10))
+    frame_material.pack(fill="x", padx=20, pady=10)
+
+    rb_material_type = ttk.Radiobutton(frame_material, text="物料分类", variable=func_var, value="物料分类")
+    rb_material_type.grid(row=0, column=0, padx=10, pady=1)
+    rb_material = ttk.Radiobutton(frame_material, text="物料明细", variable=func_var, value="物料明细")
+    rb_material.grid(row=0, column=1, padx=10, pady=1)
+
+    # 4. 操作区域
     frame_operate = ttk.Frame(root, padding=(20, 10))
     frame_operate.pack(fill="x", padx=20, pady=20)
 
