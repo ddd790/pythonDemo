@@ -327,7 +327,7 @@ class VAS_GUI():
             arrangeVal.append(['贴纸网状胶/粘领口领底呢/领座缝/贴边上端固定', '贴纸网状胶', '白', '0.8cm', ''])
             arrangeVal.append(['小涤带/前后袖笼/后领口/领底', '小涤带', '黑', '0.3cm', ''])
         elif type.__contains__('coats'):
-            arrangeVal.append(['兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书）', 'ECO-8301 ', '黑', '146cm', ''])
+            arrangeVal.append(['兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书）/前肩22.5°条/肩直条12CM长2CM宽条', 'ECO-8301 ', '黑', '146cm', ''])
             arrangeVal.append(['兜位衬/里兜位/手机兜位', '0118N/8025', '黑', '99cm', ''])
             arrangeVal.append(['拉丝衬/前袖窿上12CM长/前袖窿弯/前下摆圆', 'F0125N/JS6038', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬/里兜牙2/手机兜牙1', 'SF-35 ', '黑', '99cm', ''])
@@ -368,7 +368,7 @@ class VAS_GUI():
             arrangeVal.append(['拉丝衬/止口2.5CM宽（AETA自裁）', 'F0125N/JS6038', '黑', '99cm', ''])
             arrangeVal.append(['双面胶', '双面胶', '白', '0.8cm', ''])
         elif type.__contains__('2 Piece Suits'):
-            arrangeVal.append(['兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书）', 'ECO-8301', '黑', '146cm', ''])
+            arrangeVal.append(['兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书）/前肩22.5°条/肩直条12CM长2CM宽条', 'ECO-8301', '黑', '146cm', ''])
             arrangeVal.append(['兜位衬/里兜位/手机兜位', '0118N/8025', '黑', '99cm', ''])
             arrangeVal.append(['拉丝衬/前袖窿上12CM长/前袖窿弯/前下摆圆', 'F0125N/JS6038 ', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬/里兜牙2/手机兜牙1', 'SF-35 ', '黑', '99cm', ''])
@@ -394,7 +394,7 @@ class VAS_GUI():
             if self.underCollarFlag:
                 arrangeVal.append(['领底衬（领底上+领底座）', '9050/SJ8045AQ', '黑', '148cm', ''])
         else:
-            arrangeVal.append(['口袋布/兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书） 上衣+马甲', 'ECO-8301', '黑', '146cm', ''])
+            arrangeVal.append(['口袋布/兜布/腰兜布/兜布拉条（贴兜不用）/贴兜封口条（大贴边不用）/ 里兜布/手机兜布/胸兜布（TALLIA品牌不用，看工艺书） 上衣+马甲/前肩22.5°条/肩直条12CM长2CM宽条', 'ECO-8301', '黑', '146cm', ''])
             arrangeVal.append(['兜位衬/里兜位/手机兜位', '0118N/8025', '黑', '99cm', ''])
             arrangeVal.append(['拉丝衬/前袖窿上12CM长/前袖窿弯/前下摆圆/马甲止口2.5CM宽（AETA自裁）', 'F0125N/JS6038 ', '黑', '99cm', ''])
             arrangeVal.append(['无胶衬/里兜牙2/手机兜牙1', 'SF-35 ', '黑', '99cm', ''])

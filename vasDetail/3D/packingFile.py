@@ -73,6 +73,7 @@ def process_excel_files(input_dir, output_dir):
                         continue
                     
                     # 提取数据
+                    size_base_rows = {}
                     size_base_cols = {}
                     results = []
                     row_num = 1
@@ -82,6 +83,8 @@ def process_excel_files(input_dir, output_dir):
                     
                     # 记录每个尺码第一次出现数量的行
                     col_first_qty_row = {}
+
+                    empty_row_idx = 0
                     
                     # 从 B12 开始到 Total 行
                     for i in range(11, total_row):  # 11 是因为 pandas 索引从 0 开始，B12 对应索引 11
@@ -101,7 +104,9 @@ def process_excel_files(input_dir, output_dir):
                             qty = df.iloc[i, j]
                             # 尺码应该有数据的列存储尺码数据，将/替换成空格
                             if i > 11 and j == i - 5:
-                                size_base_cols[str(df.iloc[10, j]).replace('/', ' ')] = i - 11
+                                size_base_rows[str(df.iloc[10, j]).replace('/', ' ')] = i - 11
+                            if i == 11:
+                                size_base_cols[str(df.iloc[10, j]).replace('/', ' ')] = j - 7
 
                             if pd.notna(qty) and str(qty).strip():
                                 box_order = df.iloc[i, 1]
@@ -123,24 +128,26 @@ def process_excel_files(input_dir, output_dir):
                             size_value = str(size_row.iloc[col_idx]) if col_idx < len(size_row) else ""
                             size_value = size_value.replace('/', ' ')
                             
-                            results.append([row_num, size_value, box_order, current_box_qty, qty])
+                            results.append([i - 11, size_value, box_order, current_box_qty, qty, col_idx])
                             row_num += 1
-                    # size_base_cols中的尺码对应的行号如果小于col_first_qty_row中尺码对应的行号，将尺码插入到results中，
+                    # size_base_rows中的尺码对应的行号如果小于col_first_qty_row中尺码对应的行号，将尺码插入到results中，
                     # 尺码为对应的尺码，箱序为0，箱量为0，件数为0，行号为0（解决空白尺码的问题）
-                    for size, row_idx in size_base_cols.items():
+                    for idx, (size, row_idx) in enumerate(size_base_rows.items()):
                         if size in col_first_qty_row and row_idx < col_first_qty_row[size]:
-                            results.append([0, size, 0, 0, 0])
-                    # 按照尺码和箱序升序排序
-                    results.sort(key=lambda x: (x[1], x[2]))
+                            results.append([empty_row_idx, size, 0, 0, 0, size_base_cols[size]])
+                            empty_row_idx += 1
+                    print(results)
+                    # 按照行号和箱序升序排序
+                    results.sort(key=lambda x: (x[0], x[1]))
                     # 重排results中的行号，从1开始
-                    for i in range(len(results)):
-                        results[i][0] = i + 1
+                    # for i in range(len(results)):
+                    #     results[i][0] = i + 1
                     # 生成输出文件名
                     output_file_name = f"result_{os.path.splitext(file_name)[0]}_{sheet_name}.xlsx"
                     output_file_path = os.path.join(output_dir, output_file_name)
                     
                     # 生成输出 DataFrame
-                    output_df = pd.DataFrame(results, columns=['行号', '尺码', '箱序', '箱量', '件数'])
+                    output_df = pd.DataFrame(results, columns=['行号', '尺码', '箱序', '箱量', '件数', '列索引'])
                     
                     # 保存为 Excel 文件
                     output_df.to_excel(output_file_path, index=False)
