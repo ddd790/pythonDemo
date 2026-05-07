@@ -32,6 +32,7 @@ FUNC_TABLE_MAP = {
     "货代": "sys_forwarder",
     "三方": "sys_third_company",
     "物料分类": "sys_material_type",
+    "物料单位": "sys_biz_dict",
     "物料明细": "sys_material"
 }
 
@@ -44,6 +45,7 @@ FUNC_VIEW_MAP = {
     "货代": "view_forwarder2ERP",
     "三方": "view_third2ERP",
     "物料分类": "view_material_type2ERP",
+    "物料单位": "view_material_unit2ERP",
     "物料明细": "view_material2ERP"
 }
 
@@ -82,31 +84,21 @@ def import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, table_name,
         engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
         engine = create_engine(engine_str, pool_pre_ping=True)
         
-        # 忽略表之间的外键约束，直接导入数据
-        with engine.connect() as conn:
+        with engine.begin() as conn:
             from sqlalchemy import text
             
             if if_exists == "replace":
-                # 使用TRUNCATE替代DROP TABLE，保留表结构
-                try:
-                    # 先禁用外键检查
-                    conn.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
-                    # 清空表数据
+                conn.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+                if table_name == "sys_biz_dict":
+                    conn.execute(text(f"DELETE FROM {table_name} WHERE dictionary = 'MaterialUnit';"))
+                else:
                     conn.execute(text(f"TRUNCATE TABLE {table_name};"))
-                    # 恢复外键检查
-                    conn.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
-                except Exception as truncate_error:
-                    # 如果表不存在，创建它
-                    if "doesn't exist" in str(truncate_error):
-                        pass  # to_sql会自动创建表
-                    else:
-                        raise truncate_error
+                conn.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
             
-            # 插入新数据（如果是replace模式则表已被清空，如果是append则直接添加）
             df.to_sql(
                 name=table_name,
-                con=engine,
-                if_exists="append",  # 统一使用append，因为replace情况已通过TRUNCATE处理
+                con=conn,
+                if_exists="append",
                 index=False,
                 chunksize=1000
             )
@@ -218,17 +210,19 @@ if __name__ == "__main__":
 
     rb_material_type = ttk.Radiobutton(frame_material, text="物料分类", variable=func_var, value="物料分类")
     rb_material_type.grid(row=0, column=0, padx=10, pady=1)
+    rb_material_unit = ttk.Radiobutton(frame_material, text="物料单位", variable=func_var, value="物料单位")
+    rb_material_unit.grid(row=0, column=1, padx=10, pady=1)
     rb_material = ttk.Radiobutton(frame_material, text="物料明细", variable=func_var, value="物料明细")
-    rb_material.grid(row=0, column=1, padx=10, pady=1)
+    rb_material.grid(row=0, column=2, padx=10, pady=1)
 
     # 4. 操作区域
     frame_operate = ttk.Frame(root, padding=(20, 10))
     frame_operate.pack(fill="x", padx=20, pady=20)
 
-    btn_new = ttk.Button(frame_operate, text="新建", width=15, command=new_button_click)
+    btn_new = ttk.Button(frame_operate, text="导入", width=15, command=new_button_click)
     btn_new.grid(row=0, column=0, padx=20)
 
-    btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
-    btn_append.grid(row=0, column=1, padx=20)
+    # btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
+    # btn_append.grid(row=0, column=1, padx=20)
 
     root.mainloop()
