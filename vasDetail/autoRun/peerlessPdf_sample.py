@@ -280,8 +280,12 @@ ________________________________________________________________________________
                 detail_info.append(
                     int("".join(list(filter(str.isdigit, temp_info_list[6])))))
                 # ZROH
-                detail_info.append(self.get_value_two_word(
-                    temp_info_list[11], self.keyword['zroh'], self.keyword['color_des']))
+                var_zroh = self.get_value_two_word(
+                    temp_info_list[11], self.keyword['zroh'], self.keyword['color_des'])
+                # 如果var_zroh第一个字符是0,则去掉0
+                if var_zroh[0] == '0':
+                    var_zroh = var_zroh[1:]
+                detail_info.append(var_zroh)
                 # 面料描述
                 detail_info.append(self.get_value_two_word(temp_info_list[11], self.keyword['color_des'], None))
                 # 排产日
