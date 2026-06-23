@@ -1,66 +1,43 @@
-import http.client
-import mimetypes
-from codecs import encode 
+import requests
 
-class VAS_GUI():
-    def get_files(self):
-        conn = http.client.HTTPSConnection("api.openai.com")
-        dataList = []
-        boundary = 'wL36Yn8afVp8Ag7AmP8qZ0SA4n1v9T'
-        dataList.append(encode('--' + boundary))
-        dataList.append(encode('Content-Disposition: form-data; name=file; filename={0}'.format('')))
+# ========== 你只需要改这里 ==========
+APPKEY = "dingrww58ramug37ijoh"
+APPSECRET = "XhlOHGtGI_dTIdHC_9bVJCgyzCXvlHKiKKwGuYce53BUzeFf1KBfrKYgElpFxMZ1"
+# ===================================
 
-        fileType = mimetypes.guess_type('')[0] or 'application/octet-stream'
-        dataList.append(encode('Content-Type: {}'.format(fileType)))
-        dataList.append(encode(''))
+# 1. 获取access_token（老接口没变）
+def get_token():
+    url = f"https://oapi.dingtalk.com/gettoken?appkey={APPKEY}&appsecret={APPSECRET}"
+    return requests.get(url).json()["access_token"]
 
-        with open('F:\\下载\\001.txt', 'rb') as f:
-            dataList.append(f.read())
-            dataList.append(encode('--' + boundary))
-            dataList.append(encode('Content-Disposition: form-data; name=model;'))
+# 2. 获取所有流程（还是老接口，没变）
+def get_all_processes(token):
+    url = f"https://oapi.dingtalk.com/topapi/process/listbyuserid?access_token={token}"
+    return requests.get(url).json().get("process_list", [])
 
-            dataList.append(encode('Content-Type: {}'.format('text/plain')))
-            dataList.append(encode(''))
+# 3. 新版：用 Schema 接口判断是否有附件
+def has_attachment(token, process_code):
+    url = f"https://api.dingtalk.com/v1.0/workflow/forms/schemas?processCode={process_code}"
+    headers = {"x-acs-dingtalk-access-token": token}
+    res = requests.get(url, headers=headers).json()
 
-            dataList.append(encode(""))
-            dataList.append(encode('--' + boundary))
-            dataList.append(encode('Content-Disposition: form-data; name=prompt;'))
+    # 遍历 schema 找 attachment 组件
+    schema = res.get("schema", {})
+    components = schema.get("components", [])
+    print(components)
+    for comp in components:
+        if comp.get("type") == "DDAttachment":
+            return True
+    return False
 
-            dataList.append(encode('Content-Type: {}'.format('text/plain')))
-            dataList.append(encode(''))
+# 主程序
+if __name__ == "__main__":
+    token = get_token()
+    processes = get_all_processes(token)
 
-            dataList.append(encode(""))
-            dataList.append(encode('--' + boundary))
-            dataList.append(encode('Content-Disposition: form-data; name=response_format;'))
-
-            dataList.append(encode('Content-Type: {}'.format('text/plain')))
-            dataList.append(encode(''))
-
-            dataList.append(encode(""))
-            dataList.append(encode('--' + boundary))
-            dataList.append(encode('Content-Disposition: form-data; name=temperature;'))
-
-            dataList.append(encode('Content-Type: {}'.format('text/plain')))
-            dataList.append(encode(''))
-
-            dataList.append(encode(""))
-            dataList.append(encode('--'+boundary+'--'))
-            dataList.append(encode(''))
-            body = b'\r\n'.join(dataList)
-        payload = body
-        headers = {
-            'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
-            'Content-type': 'multipart/form-data; boundary={}'.format(boundary)
-        }
-        conn.request("GET", "/v1/audio/translations", payload, headers)
-        res = conn.getresponse()
-        data = res.read()
-        print(data.decode("utf-8"))
-        
-def gui_start():
-    VAS = VAS_GUI()
-    VAS.get_files()
-
-
-if __name__ == '__main__':
-    gui_start()
+    print("=== 含附件的审批流程（新版Schema接口）===")
+    for p in processes:
+        name = p.get("name")
+        code = p.get("process_code")
+        if has_attachment(token, code):
+            print(f"✅ {name} | {code}")

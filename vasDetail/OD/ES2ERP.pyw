@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import pandas as pd
 import pyodbc
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 import pymysql
 
 # -------------------------- 全局配置 --------------------------
@@ -33,7 +33,8 @@ FUNC_TABLE_MAP = {
     "三方": "sys_third_company",
     "物料分类": "sys_material_type",
     "物料单位": "sys_biz_dict",
-    "物料明细": "sys_material"
+    "物料明细": "sys_material",
+    "物料价格": "material_price"
 }
 
 # 新增：功能和勤哲表中的视图名的映射字典，
@@ -46,7 +47,8 @@ FUNC_VIEW_MAP = {
     "三方": "view_third2ERP",
     "物料分类": "view_material_type2ERP",
     "物料单位": "view_material_unit2ERP",
-    "物料明细": "view_material2ERP"
+    "物料明细": "view_material2ERP",
+    "物料价格": "view_material2ERP_base"
 }
 
 # -------------------------- 核心功能函数 --------------------------
@@ -85,15 +87,13 @@ def import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, table_name,
         engine = create_engine(engine_str, pool_pre_ping=True)
         
         with engine.begin() as conn:
-            from sqlalchemy import text
-            
             if if_exists == "replace":
-                conn.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+                conn.exec_driver_sql("SET FOREIGN_KEY_CHECKS = 0;")
                 if table_name == "sys_biz_dict":
-                    conn.execute(text(f"DELETE FROM {table_name} WHERE dictionary = 'MaterialUnit';"))
+                    conn.exec_driver_sql(f"DELETE FROM {table_name} WHERE dictionary = 'MaterialUnit';")
                 else:
-                    conn.execute(text(f"TRUNCATE TABLE {table_name};"))
-                conn.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
+                    conn.exec_driver_sql(f"TRUNCATE TABLE {table_name};")
+                conn.exec_driver_sql("SET FOREIGN_KEY_CHECKS = 1;")
             
             df.to_sql(
                 name=table_name,
@@ -107,6 +107,83 @@ def import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, table_name,
     except Exception as e:
         messagebox.showerror("MySQL导入失败", f"错误信息：{str(e)}")
         return False
+
+def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
+    """物料价格导入：从MySQL取物料id/code，从SQL Server取价格，拼接后导入material_price表"""
+    try:
+        # 1. 从MySQL查询sys_material表的id和code
+        engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
+        engine = create_engine(engine_str, pool_pre_ping=True)
+
+        with engine.connect() as conn:
+            sys_material_df = pd.read_sql(text("SELECT id, code FROM sys_material"), conn)
+
+        if sys_material_df.empty:
+            messagebox.showwarning("提示", "MySQL的sys_material表中无数据！")
+            return False
+
+        # 2. 从SQL Server查询view_material2ERP_base的code、purchase_currency、price
+        view_name = FUNC_VIEW_MAP["物料价格"]
+        conn_str = (
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={SQL_SERVER_CONFIG['host']},{SQL_SERVER_CONFIG['port']};"
+            f"DATABASE={SQL_SERVER_CONFIG['database']};"
+            f"UID={SQL_SERVER_CONFIG['user']};"
+            f"PWD={SQL_SERVER_CONFIG['password']}"
+        )
+        conn2 = pyodbc.connect(conn_str, timeout=10)
+        base_df = pd.read_sql(f"SELECT code, purchase_currency, price FROM {view_name}", conn2)
+        conn2.close()
+
+        if base_df.empty:
+            messagebox.showwarning("提示", f"视图{view_name}中无数据！")
+            return False
+
+        # 3. 按code拼接，构建新DataFrame
+        merged = pd.merge(sys_material_df, base_df, on="code", how="inner")
+        if merged.empty:
+            messagebox.showwarning("提示", "没有匹配到任何物料价格数据！")
+            return False
+
+        result_df = pd.DataFrame({
+            "create_at": "2026-1-1",
+            "create_by": 1,
+            "update_at": "2026-1-1",
+            "update_by": 1,
+            "version": 1,
+            "currency": merged["purchase_currency"],
+            "disabled": 0,
+            "no": "WLQZ260101" + merged["id"].astype(str).str.zfill(5),
+            "price": merged["price"],
+            "price_type": "STANDARD",
+            "remark": "",
+            "status": "ENABLED",
+            "customer_id": None,
+            "material_id": merged["id"]
+        })
+
+        # 4. 导入MySQL material_price表
+        with engine.connect() as conn:
+            trans = conn.begin()
+            conn.exec_driver_sql("SET FOREIGN_KEY_CHECKS = 0;")
+            conn.exec_driver_sql("TRUNCATE TABLE material_price;")
+            result_df.to_sql(
+                name="material_price",
+                con=conn,
+                if_exists="append",
+                index=False,
+                chunksize=1000
+            )
+            conn.exec_driver_sql("SET FOREIGN_KEY_CHECKS = 1;")
+            trans.commit()
+
+        messagebox.showinfo("成功", f"物料价格已导入，共 {len(result_df)} 条记录！")
+        return True
+
+    except Exception as e:
+        messagebox.showerror("物料价格导入失败", f"错误信息：{str(e)}")
+        return False
+
 
 # -------------------------- 按钮点击事件 --------------------------
 def new_button_click():
@@ -125,6 +202,11 @@ def new_button_click():
     # 3. 校验输入
     if not (mysql_db and mysql_user and mysql_pwd):
         messagebox.warning("提示", "请填写完整的MySQL数据库名、用户名、密码！")
+        return
+    
+    # 物料价格特殊处理
+    if selected_func == "物料价格":
+        material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd)
         return
     
     # 4. 取数并导入（传入动态表名）
@@ -214,6 +296,8 @@ if __name__ == "__main__":
     rb_material_unit.grid(row=0, column=1, padx=10, pady=1)
     rb_material = ttk.Radiobutton(frame_material, text="物料明细", variable=func_var, value="物料明细")
     rb_material.grid(row=0, column=2, padx=10, pady=1)
+    rb_material_price = ttk.Radiobutton(frame_material, text="物料价格", variable=func_var, value="物料价格")
+    rb_material_price.grid(row=0, column=3, padx=10, pady=1)
 
     # 4. 操作区域
     frame_operate = ttk.Frame(root, padding=(20, 10))
