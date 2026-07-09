@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 import pandas as pd
 import pyodbc
 from sqlalchemy import create_engine, text
@@ -52,7 +53,7 @@ FUNC_VIEW_MAP = {
 }
 
 # -------------------------- 核心功能函数 --------------------------
-def get_sqlserver_data(view_name):
+def get_sqlserver_data(view_name, start_date=None):
     """连接SQL Server，查询指定视图数据并返回DataFrame"""
     conn_str = (
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
@@ -64,7 +65,10 @@ def get_sqlserver_data(view_name):
     
     try:
         conn = pyodbc.connect(conn_str, timeout=10)
-        df = pd.read_sql(f"SELECT * FROM {view_name}", conn)
+        query = f"SELECT * FROM {view_name}"
+        if start_date:
+            query += f" WHERE create_at >= '{start_date}'"
+        df = pd.read_sql(query, conn)
         conn.close()
         if df.empty:
             messagebox.warning("提示", f"视图{view_name}中无数据！")
@@ -215,25 +219,59 @@ def new_button_click():
 
 def append_button_click():
     """追加按钮点击事件：导入数据（追加模式）"""
-    # 1. 获取用户输入的MySQL信息
     mysql_host = entry_host.get().strip()
     mysql_db = entry_db.get().strip()
     mysql_user = entry_user.get().strip()
     mysql_pwd = entry_pwd.get().strip()
     
-    # 2. 获取用户选择的功能选项及对应表名（核心修改）
     selected_func = func_var.get()
-    target_table = FUNC_TABLE_MAP[selected_func] # 从映射字典中获取表名
-    target_view = FUNC_VIEW_MAP[selected_func]  # 从映射字典中获取视图名
+    target_table = FUNC_TABLE_MAP[selected_func]
+    target_view = FUNC_VIEW_MAP[selected_func]
     
-    # 3. 校验输入
     if not (mysql_db and mysql_user and mysql_pwd):
         messagebox.warning("提示", "请填写完整的MySQL数据库名、用户名、密码！")
         return
     
-    # 4. 取数并导入（传入动态表名）
-    df = get_sqlserver_data(target_view + '_append')
-    import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, target_table, if_exists="append")
+    def on_confirm():
+        date_str = entry_date.get().strip()
+        if not date_str:
+            messagebox.warning("提示", "请输入日期！")
+            return
+        try:
+            datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            messagebox.warning("提示", "日期格式不正确，请输入YYYY-MM-DD格式！")
+            return
+        date_dialog.destroy()
+        df = get_sqlserver_data(target_view + '_replace', start_date=date_str)
+        import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, target_table, if_exists="append")
+    
+    def on_cancel():
+        date_dialog.destroy()
+    
+    date_dialog = tk.Toplevel()
+    date_dialog.title("输入日期")
+    date_dialog.geometry("300x150")
+    date_dialog.resizable(False, False)
+    date_dialog.transient(root)
+    date_dialog.grab_set()
+    
+    label_date = ttk.Label(date_dialog, text="请输入日期：")
+    label_date.pack(pady=15)
+    
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    entry_date = ttk.Entry(date_dialog, width=20)
+    entry_date.insert(0, today_str)
+    entry_date.pack(pady=5)
+    
+    frame_btn = ttk.Frame(date_dialog)
+    frame_btn.pack(pady=15)
+    
+    btn_confirm = ttk.Button(frame_btn, text="确认", width=10, command=on_confirm)
+    btn_confirm.pack(side="left", padx=10)
+    
+    btn_cancel = ttk.Button(frame_btn, text="取消", width=10, command=on_cancel)
+    btn_cancel.pack(side="right", padx=10)
 
 # -------------------------- GUI界面构建 --------------------------
 if __name__ == "__main__":
@@ -306,7 +344,7 @@ if __name__ == "__main__":
     btn_new = ttk.Button(frame_operate, text="导入", width=15, command=new_button_click)
     btn_new.grid(row=0, column=0, padx=20)
 
-    # btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
-    # btn_append.grid(row=0, column=1, padx=20)
+    btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
+    btn_append.grid(row=0, column=1, padx=20)
 
     root.mainloop()
