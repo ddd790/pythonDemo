@@ -101,15 +101,15 @@ class VAS_GUI():
                 pdf_df.loc[:, self.add_data_title[10]] = tmp_size_list
                 pdf_df.loc[:, self.add_data_title[9]] = k
                 pdf_df.loc[:, self.add_data_title[11]] = type_val[k]
-                pdf_df.loc[:, self.add_data_title[0]] = Saison
-                pdf_df.loc[:, self.add_data_title[1]] = Kollektion
-                pdf_df.loc[:, self.add_data_title[2]] = Produktionsdekade
-                pdf_df.loc[:, self.add_data_title[3]] = Produzent
-                pdf_df.loc[:, self.add_data_title[4]] = Auftrag
+                pdf_df.loc[:, self.add_data_title[0]] = self.replace_confusable_chars(Saison)
+                pdf_df.loc[:, self.add_data_title[1]] = self.replace_confusable_chars(Kollektion)
+                pdf_df.loc[:, self.add_data_title[2]] = self.replace_confusable_chars(Produktionsdekade)
+                pdf_df.loc[:, self.add_data_title[3]] = self.replace_confusable_chars(Produzent)
+                pdf_df.loc[:, self.add_data_title[4]] = self.replace_confusable_chars(Auftrag)
                 pdf_df.loc[:, self.add_data_title[5]] = self.change_date(Liefertermin)
-                pdf_df.loc[:, self.add_data_title[6]] = Artikelbezeichnung
-                pdf_df.loc[:, self.add_data_title[7]] = Artikel
-                pdf_df.loc[:, self.add_data_title[8]] = Grundware
+                pdf_df.loc[:, self.add_data_title[6]] = self.replace_confusable_chars(Artikelbezeichnung)
+                pdf_df.loc[:, self.add_data_title[7]] = self.replace_fake_spaces(self.replace_confusable_chars(Artikel))
+                pdf_df.loc[:, self.add_data_title[8]] = self.replace_confusable_chars(Grundware)
                 pdf_df.loc[:, self.add_data_title[12]] = lfile
                 self.table_data = self.table_data.append(pdf_df, ignore_index=True)
             # 删除Qty为空的数据
@@ -148,6 +148,22 @@ class VAS_GUI():
         # 使用正则表达式提取所有数字
         digits = re.sub(r'\D', '', str(date))
         return str(digits[4:]) + '-' + str(digits[2:4]) + '-' + str(digits[:2])
+
+    def replace_confusable_chars(self, text):
+        # 替换易混淆的 Unicode 字符为中划线
+        # U+2013: EN DASH (–)
+        # U+2014: EM DASH (—)
+        # U+00AD: SOFT HYPHEN (­)
+        return re.sub('[\u2013\u2014\u00ad]', '-', str(text))
+
+    def replace_fake_spaces(self, text):
+        # 替换所有假空格为普通空格
+        # U+00A0: NO-BREAK SPACE (NBSP)
+        # U+2000-U+200A: 各种宽度空格
+        # U+202F: NARROW NO-BREAK SPACE
+        # U+200B: ZERO WIDTH SPACE
+        # U+FEFF: ZERO WIDTH NO-BREAK SPACE / BOM
+        return re.sub('[\u00a0\u2000-\u200a\u202f\u200b\ufeff]', ' ', str(text))
 
 def gui_start():
     VAS = VAS_GUI()

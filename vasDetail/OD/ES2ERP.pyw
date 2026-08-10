@@ -32,9 +32,9 @@ FUNC_TABLE_MAP = {
     "客户": "sys_customer",
     "货代": "sys_forwarder",
     "三方": "sys_third_company",
-    "物料分类": "sys_material_type",
+    "物料分类": "material_type",
     "物料单位": "sys_biz_dict",
-    "物料明细": "sys_material",
+    "物料明细": "material",
     "物料价格": "material_price"
 }
 
@@ -106,27 +106,84 @@ def import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, table_name,
                 index=False,
                 chunksize=1000
             )
-        messagebox.showinfo("成功", f"数据已{if_exists}模式导入MySQL表【{table_name}】！")
+        if table_name != "sys_supplier":
+            messagebox.showinfo("成功", f"数据已{if_exists}模式导入MySQL表【{table_name}】！")
         return True
     except Exception as e:
         messagebox.showerror("MySQL导入失败", f"错误信息：{str(e)}")
         return False
 
+def sync_supplier_to_sqlserver(mysql_host, mysql_db, mysql_user, mysql_pwd):
+    """
+    从MySQL查询sys_supplier数据，同步到SQL Server的supplier_ERP表
+    先清空SQL Server原supplier_ERP表数据，再插入新数据
+    """
+    try:
+        # 1. 从MySQL查询sys_supplier数据
+        mysql_engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
+        mysql_engine = create_engine(mysql_engine_str, pool_pre_ping=True)
+        with mysql_engine.connect() as mysql_conn:
+            supplier_df = pd.read_sql(
+                text("SELECT id, name, settlement_currency, status FROM sys_supplier"),
+                mysql_conn
+            )
+        if supplier_df.empty:
+            messagebox.showwarning("提示", "MySQL的sys_supplier表中无数据，跳过供应商同步！")
+            return True
+
+        # 2. 连接SQL Server，清空supplier_ERP表并插入新数据
+        conn_str = (
+            f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+            f"SERVER={SQL_SERVER_CONFIG['host']},{SQL_SERVER_CONFIG['port']};"
+            f"DATABASE={SQL_SERVER_CONFIG['database']};"
+            f"UID={SQL_SERVER_CONFIG['user']};"
+            f"PWD={SQL_SERVER_CONFIG['password']}"
+        )
+        sqlserver_conn = pyodbc.connect(conn_str, timeout=10)
+        cursor = sqlserver_conn.cursor()
+
+        # 清空原数据
+        cursor.execute("TRUNCATE TABLE supplier_ERP")
+        sqlserver_conn.commit()
+
+        # 批量插入新数据
+        insert_sql = (
+            "INSERT INTO supplier_ERP (id, name, settlement_currency, status) VALUES (?, ?, ?, ?)"
+        )
+        params = [
+            (
+                int(row["id"]) if pd.notna(row["id"]) else None,
+                str(row["name"]) if pd.notna(row["name"]) else None,
+                str(row["settlement_currency"]) if pd.notna(row["settlement_currency"]) else None,
+                str(row["status"]) if pd.notna(row["status"]) else None
+            )
+            for _, row in supplier_df.iterrows()
+        ]
+        cursor.executemany(insert_sql, params)
+        sqlserver_conn.commit()
+
+        cursor.close()
+        sqlserver_conn.close()
+        return True
+    except Exception as e:
+        messagebox.showerror("供应商同步失败", f"错误信息：{str(e)}")
+        return False
+
 def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
     """物料价格导入：从MySQL取物料id/code，从SQL Server取价格，拼接后导入material_price表"""
     try:
-        # 1. 从MySQL查询sys_material表的id和code
+        # 1. 从MySQL查询material表的id和code
         engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
         engine = create_engine(engine_str, pool_pre_ping=True)
 
         with engine.connect() as conn:
-            sys_material_df = pd.read_sql(text("SELECT id, code FROM sys_material"), conn)
+            material_df = pd.read_sql(text("SELECT id, code FROM material"), conn)
 
-        if sys_material_df.empty:
-            messagebox.showwarning("提示", "MySQL的sys_material表中无数据！")
+        if material_df.empty:
+            messagebox.showwarning("提示", "MySQL的material表中无数据！")
             return False
 
-        # 2. 从SQL Server查询view_material2ERP_base的code、purchase_currency、price
+        # 2. 从SQL Server查询view_material2ERP_base的code、purchase_currency、current_price
         view_name = FUNC_VIEW_MAP["物料价格"]
         conn_str = (
             f"DRIVER={{ODBC Driver 17 for SQL Server}};"
@@ -136,7 +193,7 @@ def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
             f"PWD={SQL_SERVER_CONFIG['password']}"
         )
         conn2 = pyodbc.connect(conn_str, timeout=10)
-        base_df = pd.read_sql(f"SELECT code, purchase_currency, price FROM {view_name}", conn2)
+        base_df = pd.read_sql(f"SELECT code, purchase_currency, current_price FROM {view_name}", conn2)
         conn2.close()
 
         if base_df.empty:
@@ -144,7 +201,7 @@ def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
             return False
 
         # 3. 按code拼接，构建新DataFrame
-        merged = pd.merge(sys_material_df, base_df, on="code", how="inner")
+        merged = pd.merge(material_df, base_df, on="code", how="inner")
         if merged.empty:
             messagebox.showwarning("提示", "没有匹配到任何物料价格数据！")
             return False
@@ -156,14 +213,16 @@ def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
             "update_by": 1,
             "version": 1,
             "currency": merged["purchase_currency"],
-            "disabled": 0,
-            "no": "WLQZ260101" + merged["id"].astype(str).str.zfill(5),
-            "price": merged["price"],
-            "price_type": "STANDARD",
+            # "disabled": 0,
+            # "no": "WLQZ260101" + merged["id"].astype(str).str.zfill(5),
+            "price": merged["current_price"],
+            # "price_type": "STANDARD",
             "remark": "",
             "status": "ENABLED",
-            "customer_id": None,
-            "material_id": merged["id"]
+            # "customer_id": None,
+            "material_id": merged["id"],
+            "effective_date": "2026-1-1",
+            "is_current": 1
         })
 
         # 4. 导入MySQL material_price表
@@ -215,7 +274,14 @@ def new_button_click():
     
     # 4. 取数并导入（传入动态表名）
     df = get_sqlserver_data(target_view + '_replace')
+
     import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, target_table, if_exists="replace")
+    # 供应商特殊处理，将数据同步到SQL Server
+    if selected_func == "供应商":
+        if not sync_supplier_to_sqlserver(mysql_host, mysql_db, mysql_user, mysql_pwd):
+            messagebox.showerror("错误", "供应商数据同步失败，已中止后续操作！")
+            return
+        messagebox.showinfo("成功", f"供应商数据同步成功！")
 
 def append_button_click():
     """追加按钮点击事件：导入数据（追加模式）"""
@@ -244,6 +310,13 @@ def append_button_click():
             return
         date_dialog.destroy()
         df = get_sqlserver_data(target_view + '_replace', start_date=date_str)
+
+        # 物料明细：在导入之前，先同步MySQL的sys_supplier到SQL Server的supplier_ERP
+        if selected_func == "物料明细":
+            if not sync_supplier_to_sqlserver(mysql_host, mysql_db, mysql_user, mysql_pwd):
+                messagebox.showerror("错误", "供应商数据同步失败，已中止后续操作！")
+                return
+
         import_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, target_table, if_exists="append")
     
     def on_cancel():
@@ -328,10 +401,10 @@ if __name__ == "__main__":
     frame_material = ttk.LabelFrame(root, text="物料相关", padding=(20, 10))
     frame_material.pack(fill="x", padx=20, pady=10)
 
-    rb_material_type = ttk.Radiobutton(frame_material, text="物料分类", variable=func_var, value="物料分类")
-    rb_material_type.grid(row=0, column=0, padx=10, pady=1)
-    rb_material_unit = ttk.Radiobutton(frame_material, text="物料单位", variable=func_var, value="物料单位")
-    rb_material_unit.grid(row=0, column=1, padx=10, pady=1)
+    # rb_material_type = ttk.Radiobutton(frame_material, text="物料分类", variable=func_var, value="物料分类")
+    # rb_material_type.grid(row=0, column=0, padx=10, pady=1)
+    # rb_material_unit = ttk.Radiobutton(frame_material, text="物料单位", variable=func_var, value="物料单位")
+    # rb_material_unit.grid(row=0, column=1, padx=10, pady=1)
     rb_material = ttk.Radiobutton(frame_material, text="物料明细", variable=func_var, value="物料明细")
     rb_material.grid(row=0, column=2, padx=10, pady=1)
     rb_material_price = ttk.Radiobutton(frame_material, text="物料价格", variable=func_var, value="物料价格")
