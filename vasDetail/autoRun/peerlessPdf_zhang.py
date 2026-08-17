@@ -25,7 +25,7 @@ class VAS_GUI():
         # 追加的dataFrame的title
         self.add_data_title = ['FileName', 'FileNameJ', 'Version', 'Item', 'PO', 'Material', 'MaterialNo', 'Description', 'Component', 'FabricNo', 'Qty', 'ZROH',
                                'FabricDis', 'ExfactDate', 'ShipDate', 'Season', 'Price', 'Brand', 'District', 'Via', 'Style', 'ContanctPerson', 'Note',
-                               'Rmk', 'HSCode', 'CreateDate', 'DeliverDate']
+                               'Rmk', 'HSCode', 'CreateDate', 'DeliverTo', 'MillName', 'DeliveryTerms', 'DeliverDate']
         # 数字类型的字段
         self.number_item = ['Qty', 'Price']
         # 备注的公司名
@@ -95,6 +95,7 @@ ________________________________________________________________________________
 
         # 更新数据库
         print('开始更新数据！' + str(datetime.datetime.now()).split('.')[0])
+        # print(self.table_value)
         self.update_db()
         print('已经完成操作！' + str(datetime.datetime.now()).split('.')[0])
         input('按回车退出~~~~~')
@@ -152,6 +153,16 @@ ________________________________________________________________________________
             tx_Rmk = self.company_rmk[1]
         else:
             tx_Rmk = self.company_rmk[2]
+        # DeliverTo (取Please deliver to:下面5行中每行的中间段,左中右3段结构)
+        tx_deliver_to = self.get_deliver_to(pdfreader)
+        # MillName (取MILL NAME:行后面的内容)
+        tx_mill_name = ''
+        if tx.find('MILL NAME:') >= 0:
+            tx_mill_name = tx[tx.find('MILL NAME:') + len('MILL NAME:'):].split('\n')[0].strip()
+        # DeliveryTerms (取Delivery terms:行后面的内容)
+        tx_delivery_terms = ''
+        if tx.find('Delivery terms:') >= 0:
+            tx_delivery_terms = tx[tx.find('Delivery terms:') + len('Delivery terms:'):].split('\n')[0].strip()
         # 去掉无用的数据
         tx = tx.replace(self.division_word_one, '')
         tx = tx.replace('\n', '|')
@@ -295,6 +306,12 @@ ________________________________________________________________________________
                     temp_info_list[12], self.keyword['hscode'], None))
                 # CreateDate
                 detail_info.append(create_time)
+                # DeliverTo
+                detail_info.append(tx_deliver_to)
+                # MillName
+                detail_info.append(tx_mill_name)
+                # DeliveryTerms
+                detail_info.append(tx_delivery_terms)
                 # deliver_date
                 detail_info.append(self.str2datatime(deliver_date))
                 self.pdf_data_val.append(detail_info)
@@ -306,6 +323,73 @@ ________________________________________________________________________________
         if two == None:
             return txt_str[txt_str.find(one) + len(one):]
         return txt_str[txt_str.find(one) + len(one):txt_str.find(two)]
+
+    # 取Please deliver to:下面5行中每行的中间段(每行左中右3段结构,取中间段)
+    def get_deliver_to(self, pdfreader):
+        for index in range(len(pdfreader.pages)):
+            pageReader = pdfreader.pages[index]
+            page_text = pageReader.extract_text()
+            if self.keyword['first_word'] not in page_text:
+                continue
+            words = pageReader.extract_words()
+            # 找到"Please deliver to:"所在行的底部坐标
+            deliver_to_bottom = None
+            for i, w in enumerate(words):
+                if w['text'] == 'Please' and i + 2 < len(words) and \
+                   words[i + 1]['text'] == 'deliver' and \
+                   words[i + 2]['text'].startswith('to'):
+                    deliver_to_bottom = max(w['bottom'], words[i + 1]['bottom'], words[i + 2]['bottom'])
+                    break
+            if deliver_to_bottom is None:
+                continue
+            # 筛选出标签行下方的words(top >= 标签行底部,即下一行及以下)
+            below_words = sorted(
+                [w for w in words if w['top'] >= deliver_to_bottom],
+                key=lambda x: (x['top'], x['x0']))
+            line_groups = []
+            current_line = []
+            current_top = None
+            for w in below_words:
+                if current_top is None or abs(w['top'] - current_top) <= 5:
+                    current_line.append(w)
+                    if current_top is None:
+                        current_top = w['top']
+                else:
+                    line_groups.append(current_line)
+                    current_line = [w]
+                    current_top = w['top']
+            if current_line:
+                line_groups.append(current_line)
+            # 取前5行,每行按间隙分割取中间段
+            middle_segments = []
+            for line_idx, line_words in enumerate(line_groups[:6]):
+                line_sorted = sorted(line_words, key=lambda x: x['x0'])
+                if line_idx == 0:
+                    # 第1行: 取Peerless及之后的所有内容(包含Peerless)
+                    peerless_idx = None
+                    for j, w in enumerate(line_sorted):
+                        if 'Peerless' in w['text']:
+                            peerless_idx = j
+                            break
+                    if peerless_idx is not None:
+                        text = ' '.join(w['text'] for w in line_sorted[peerless_idx:])
+                        if text:
+                            middle_segments.append(text)
+                else:
+                    # 第2行及以上: 按间隙分割取中间段,只取有左中右3段结构的行
+                    groups = [[line_sorted[0]]]
+                    for w in line_sorted[1:]:
+                        if w['x0'] - groups[-1][-1]['x1'] > 15:
+                            groups.append([w])
+                        else:
+                            groups[-1].append(w)
+                    if len(groups) < 3:
+                        continue
+                    text = ' '.join(w['text'] for w in groups[1])
+                    if text:
+                        middle_segments.append(text)
+            return ' '.join(middle_segments)
+        return ''
 
     # 删除重复字符
     def deduplicate(self, string, char):
