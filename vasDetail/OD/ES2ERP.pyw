@@ -52,6 +52,9 @@ FUNC_VIEW_MAP = {
     "物料价格": "view_material2ERP_base"
 }
 
+# 物料明细增量追加的基准日期：对比SQL Server中 create_at > 此日期 的新增物料
+MATERIAL_INCREMENT_DATE = "2025-09-14"
+
 # -------------------------- 核心功能函数 --------------------------
 def get_sqlserver_data(view_name, start_date=None):
     """连接SQL Server，查询指定视图数据并返回DataFrame"""
@@ -218,7 +221,7 @@ def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
             "price": merged["current_price"],
             # "price_type": "STANDARD",
             "remark": "",
-            "status": "ENABLED",
+            # "status": "ENABLED",
             # "customer_id": None,
             "material_id": merged["id"],
             "effective_date": "2026-1-1",
@@ -246,6 +249,155 @@ def material_price_import(mysql_host, mysql_db, mysql_user, mysql_pwd):
     except Exception as e:
         messagebox.showerror("物料价格导入失败", f"错误信息：{str(e)}")
         return False
+
+
+# -------------------------- 增量追加功能函数 --------------------------
+def query_sqlserver_df(query):
+    """连接SQL Server执行查询并返回DataFrame（底层查询，不带弹窗提示）"""
+    conn_str = (
+        f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+        f"SERVER={SQL_SERVER_CONFIG['host']},{SQL_SERVER_CONFIG['port']};"
+        f"DATABASE={SQL_SERVER_CONFIG['database']};"
+        f"UID={SQL_SERVER_CONFIG['user']};"
+        f"PWD={SQL_SERVER_CONFIG['password']}"
+    )
+    conn = pyodbc.connect(conn_str, timeout=10)
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+
+def query_mysql_df(mysql_host, mysql_db, mysql_user, mysql_pwd, query):
+    """连接MySQL执行查询并返回DataFrame"""
+    engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
+    engine = create_engine(engine_str, pool_pre_ping=True)
+    with engine.connect() as conn:
+        return pd.read_sql(text(query), conn)
+
+def find_new_rows(sqlserver_df, mysql_df, key_col):
+    """以key_col为键，找出SQL Server中有而MySQL中没有的新增行（对比时去除首尾空格）"""
+    existing_keys = set(mysql_df[key_col].dropna().astype(str).str.strip())
+    mask = ~sqlserver_df[key_col].fillna("").astype(str).str.strip().isin(existing_keys)
+    return sqlserver_df[mask].copy()
+
+def append_df_to_mysql(df, mysql_host, mysql_db, mysql_user, mysql_pwd, table_name):
+    """将DataFrame以追加模式写入MySQL表，返回写入行数"""
+    engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
+    engine = create_engine(engine_str, pool_pre_ping=True)
+    df.to_sql(name=table_name, con=engine, if_exists="append", index=False, chunksize=1000)
+    return len(df)
+
+def increment_sync_partner(mysql_host, mysql_db, mysql_user, mysql_pwd, selected_func):
+    """合作单位增量追加：对比SQL Server视图与MySQL表的name，将SQL Server中新增的name记录加入MySQL对应表"""
+    target_table = FUNC_TABLE_MAP[selected_func]
+    target_view = FUNC_VIEW_MAP[selected_func] + '_replace'
+    try:
+        # 1. 从SQL Server视图取全量数据
+        sqlserver_df = query_sqlserver_df(f"SELECT * FROM {target_view}")
+        if sqlserver_df.empty:
+            messagebox.showwarning("提示", f"视图{target_view}中无数据！")
+            return
+        if "name" not in sqlserver_df.columns:
+            messagebox.showwarning("提示", f"视图{target_view}中缺少name列，无法对比！")
+            return
+
+        # 2. 从MySQL对应表取现有name
+        mysql_df = query_mysql_df(mysql_host, mysql_db, mysql_user, mysql_pwd,
+                                  f"SELECT name FROM {target_table}")
+
+        # 3. 找出SQL Server中新增的记录
+        new_df = find_new_rows(sqlserver_df, mysql_df, "name")
+        if new_df.empty:
+            messagebox.showinfo("提示", f"【{selected_func}】无新增数据，无需追加！")
+            return
+
+        # 4. 将新增记录追加到MySQL对应表
+        count = append_df_to_mysql(new_df, mysql_host, mysql_db, mysql_user, mysql_pwd, target_table)
+        messagebox.showinfo("成功", f"【{selected_func}】增量追加完成，共新增 {count} 条到MySQL表【{target_table}】！")
+    except Exception as e:
+        messagebox.showerror("增量追加失败", f"错误信息：{str(e)}")
+
+def increment_sync_material(mysql_host, mysql_db, mysql_user, mysql_pwd):
+    """物料明细增量追加：用MySQL material表的code，对比SQL Server中 create_at > 基准日期 的code，
+    将SQL Server中新追加code的物料信息追加到MySQL material表；
+    同时将SQL Server中已存在code物料的current_price更新到MySQL material表"""
+    target_table = FUNC_TABLE_MAP["物料明细"]               # material
+    target_view = FUNC_VIEW_MAP["物料明细"] + '_replace'    # view_material2ERP_replace
+    price_view = FUNC_VIEW_MAP["物料价格"]                  # view_material2ERP_base
+    try:
+        # 0. 与【追加】流程保持一致：先同步MySQL供应商到SQL Server
+        if not sync_supplier_to_sqlserver(mysql_host, mysql_db, mysql_user, mysql_pwd):
+            messagebox.showerror("错误", "供应商数据同步失败，已中止后续操作！")
+            return
+
+        # 1. 从SQL Server视图取 create_at > 基准日期 的物料数据
+        sqlserver_df = query_sqlserver_df(
+            f"SELECT * FROM {target_view} WHERE create_at > '{MATERIAL_INCREMENT_DATE}'"
+        )
+        if not sqlserver_df.empty and "code" not in sqlserver_df.columns:
+            messagebox.showwarning("提示", f"视图{target_view}中缺少code列，无法对比！")
+            return
+
+        # 2. 从MySQL material表取现有code
+        mysql_df = query_mysql_df(mysql_host, mysql_db, mysql_user, mysql_pwd,
+                                  f"SELECT code FROM {target_table}")
+
+        # 3. 找出SQL Server中新追加code的物料，追加到MySQL material表
+        new_df = find_new_rows(sqlserver_df, mysql_df, "code")
+        appended_count = 0
+        if not new_df.empty:
+            appended_count = append_df_to_mysql(new_df, mysql_host, mysql_db, mysql_user, mysql_pwd, target_table)
+
+        # 4. 将SQL Server中已存在code物料的current_price更新到MySQL material表
+        updated_count = update_material_price(mysql_host, mysql_db, mysql_user, mysql_pwd,
+                                              price_view, target_table)
+
+        messagebox.showinfo("成功", f"物料明细增量处理完成：新增追加 {appended_count} 条，"
+                                   f"更新current_price {updated_count} 条！")
+    except Exception as e:
+        messagebox.showerror("增量追加失败", f"错误信息：{str(e)}")
+
+def update_material_price(mysql_host, mysql_db, mysql_user, mysql_pwd, price_view, target_table):
+    """将SQL Server中已存在code物料的current_price更新到MySQL material表：
+    比对两边code与价格，只更新code相同但价格不同的记录，按MySQL主键id更新以保证效率，返回更新条数"""
+    # 1. 从SQL Server价格视图取code与current_price
+    price_df = query_sqlserver_df(f"SELECT code, current_price FROM {price_view}")
+    if price_df.empty or "current_price" not in price_df.columns:
+        return 0
+
+    # 2. 从MySQL material表取id、code、current_price
+    mysql_df = query_mysql_df(mysql_host, mysql_db, mysql_user, mysql_pwd,
+                              f"SELECT id, code, current_price FROM {target_table}")
+    if mysql_df.empty:
+        return 0
+
+    # 3. 比对：按code关联，统一转数值并round(6)消除小数尾差，找出价格不同的记录
+    price_df["code"] = price_df["code"].fillna("").astype(str).str.strip()
+    price_df["current_price_sqlserver"] = pd.to_numeric(price_df["current_price"], errors="coerce").round(6)
+    price_df = price_df[price_df["current_price_sqlserver"].notna()][["code", "current_price_sqlserver"]]
+
+    mysql_df["code"] = mysql_df["code"].fillna("").astype(str).str.strip()
+    mysql_df["current_price_mysql"] = pd.to_numeric(mysql_df["current_price"], errors="coerce").round(6)
+
+    merged = pd.merge(mysql_df, price_df, on="code", how="inner")
+
+    # code相同但价格不同的记录（MySQL价格为空视为不同，需补价格）
+    diff_df = merged[merged["current_price_mysql"].fillna(-1) != merged["current_price_sqlserver"]].copy()
+    if diff_df.empty:
+        return 0
+
+    # 4. 按MySQL主键id批量更新current_price
+    engine_str = f"mysql+pymysql://{mysql_user}:{mysql_pwd}@{mysql_host}:{MYSQL_SERVER_CONFIG['port']}/{mysql_db}"
+    engine = create_engine(engine_str, pool_pre_ping=True)
+    update_rows = [
+        {"id": int(row["id"]), "current_price": float(row["current_price_sqlserver"])}
+        for _, row in diff_df.iterrows()
+    ]
+    with engine.begin() as conn:
+        conn.execute(
+            text(f"UPDATE {target_table} SET current_price = :current_price WHERE id = :id"),
+            update_rows
+        )
+    return len(update_rows)
 
 
 # -------------------------- 按钮点击事件 --------------------------
@@ -346,11 +498,36 @@ def append_button_click():
     btn_cancel = ttk.Button(frame_btn, text="取消", width=10, command=on_cancel)
     btn_cancel.pack(side="right", padx=10)
 
+def increment_button_click():
+    """增量追加按钮点击事件：合作单位按name对比增量，物料明细按code对比增量"""
+    mysql_host = entry_host.get().strip()
+    mysql_db = entry_db.get().strip()
+    mysql_user = entry_user.get().strip()
+    mysql_pwd = entry_pwd.get().strip()
+
+    if not (mysql_db and mysql_user and mysql_pwd):
+        messagebox.showwarning("提示", "请填写完整的MySQL数据库名、用户名、密码！")
+        return
+
+    selected_func = func_var.get()
+    if selected_func == "物料明细":
+        # 物料明细：按code对比，追加SQL Server中create_at > 基准日期的新增物料
+        increment_sync_material(mysql_host, mysql_db, mysql_user, mysql_pwd)
+    elif selected_func in ("供应商", "工厂", "客户", "货代", "三方"):
+        # 合作单位：按name对比，追加SQL Server中新增的记录
+        increment_sync_partner(mysql_host, mysql_db, mysql_user, mysql_pwd, selected_func)
+        if selected_func == "供应商":
+            if not sync_supplier_to_sqlserver(mysql_host, mysql_db, mysql_user, mysql_pwd):
+                messagebox.showerror("错误", "供应商数据同步失败，已中止后续操作！")
+                return
+    else:
+        messagebox.showwarning("提示", f"【{selected_func}】不支持增量追加，请选择合作单位或物料明细！")
+
 # -------------------------- GUI界面构建 --------------------------
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("数据导入工具")
-    root.geometry("450x500")
+    root.geometry("540x500")
     root.resizable(False, False)
 
     # 1. 数据库连接区域
@@ -407,17 +584,20 @@ if __name__ == "__main__":
     # rb_material_unit.grid(row=0, column=1, padx=10, pady=1)
     rb_material = ttk.Radiobutton(frame_material, text="物料明细", variable=func_var, value="物料明细")
     rb_material.grid(row=0, column=2, padx=10, pady=1)
-    rb_material_price = ttk.Radiobutton(frame_material, text="物料价格", variable=func_var, value="物料价格")
-    rb_material_price.grid(row=0, column=3, padx=10, pady=1)
+    # rb_material_price = ttk.Radiobutton(frame_material, text="物料价格", variable=func_var, value="物料价格")
+    # rb_material_price.grid(row=0, column=3, padx=10, pady=1)
 
     # 4. 操作区域
     frame_operate = ttk.Frame(root, padding=(20, 10))
     frame_operate.pack(fill="x", padx=20, pady=20)
 
-    btn_new = ttk.Button(frame_operate, text="导入", width=15, command=new_button_click)
+    btn_new = ttk.Button(frame_operate, text="初始导入", width=15, command=new_button_click)
     btn_new.grid(row=0, column=0, padx=20)
 
-    btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
-    btn_append.grid(row=0, column=1, padx=20)
+    # btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
+    # btn_append.grid(row=0, column=1, padx=20)
+
+    btn_increment = ttk.Button(frame_operate, text="增量追加", width=15, command=increment_button_click)
+    btn_increment.grid(row=0, column=2, padx=20)
 
     root.mainloop()
