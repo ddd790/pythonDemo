@@ -18,7 +18,7 @@ class VAS_GUI():
         # 数据库名
         self.dbName = 'ESApp1'
         # 追加的dataFrame的title
-        self.base_title = ['品类', '品号', '用料颜色', '规格', '供应商', '用料名称', '单耗', '单位', '损耗率', '备注']
+        self.base_title = ['品类', '品号', '用料颜色', '规格', '供应商', '用料名称', '单耗', '单位', '缩水率', '损耗率', '备注']
         self.jv_title = ['品类', '品号', '用料颜色', '规格', '供应商', '用料名称', '单耗', '单位', '损耗率', '单价', '美金单价', '克重', '成份', '起订量', '小缸费', '生产周期', '备注']
         self.add_data_title = self.base_title.copy()
         self.add_data_title.extend(['BOM类型', '款号', 'PO号', '颜色', 'delKey', 'rowNum', '客户'])
@@ -89,7 +89,6 @@ class VAS_GUI():
             vas_first_index = table_data[table_data['品类'] == 'VAS'].index.min()
             # 从 "VAS" 分割 DataFrame
             # 上半部分的行
-            # print(vas_first_index)
             upper_half = table_data.iloc[:vas_first_index]
             upper_half['BOM类型'] = '面辅料'
             # upper_half.drop(upper_half.index[-1], inplace=True)
