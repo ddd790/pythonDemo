@@ -18,11 +18,11 @@ SQL_SERVER_CONFIG = {
 
 # MySQL固定配置
 MYSQL_SERVER_CONFIG = {
-    "host": "127.0.0.1",
+    "host": "192.168.0.11",
     "port": 3306,
-    "database": "motives_erp_local",
-    "user": "root",
-    "password": "11111111"
+    "database": "motives_erp_test",
+    "user": "erp",
+    "password": "Pai=3.1415"
 }
 
 # 新增：功能选项与MySQL表名的映射字典（核心修改）
@@ -591,8 +591,8 @@ if __name__ == "__main__":
     frame_operate = ttk.Frame(root, padding=(20, 10))
     frame_operate.pack(fill="x", padx=20, pady=20)
 
-    btn_new = ttk.Button(frame_operate, text="初始导入", width=15, command=new_button_click)
-    btn_new.grid(row=0, column=0, padx=20)
+    # btn_new = ttk.Button(frame_operate, text="初始导入", width=15, command=new_button_click)
+    # btn_new.grid(row=0, column=0, padx=20)
 
     # btn_append = ttk.Button(frame_operate, text="追加", width=15, command=append_button_click)
     # btn_append.grid(row=0, column=1, padx=20)

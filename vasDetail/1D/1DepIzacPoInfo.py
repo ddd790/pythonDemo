@@ -25,7 +25,7 @@ class VAS_GUI():
         # 日期类型的字段
         self.date_item = ['来单日期', '客人到料时间', '采购到料时间', '给生产到料时间', '交期']
         # 循环文件，处理合并，并存入数据库
-        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  IZAC\8.H26\H26 IZAC PO.xlsx'
+        self.local_vas_detail_file = r'\\192.168.0.3\01-业务一部资料\A  IZAC\9.E27\E27 IZAC PO.xlsx'
         # self.local_vas_detail_file = r'D:\temp\H25 IZAC PO.xlsx'
         self.table_value = []
         # 删除文件的list
