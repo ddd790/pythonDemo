@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}成绩后台{% endblock %}
+{% block body_class %}page-wide-body{% endblock %}
+{% block content %}
+<div class="page-wide">
+<div class="top-nav">
+  <span class="muted">商务英语情景剧大赛 · 成绩后台</span>
+  <span>
+    <a href="{{ url_for('admin_export') }}">导出 CSV</a>
+    &nbsp;·&nbsp;
+    <a href="{{ url_for('admin_logout') }}">退出</a>
+  </span>
+</div>
+
+<div class="stat-grid">
+  <div class="stat"><div class="n">{{ teams|length }}</div><div class="l">参赛队伍</div></div>
+  <div class="stat"><div class="n">{{ total_scores }}</div><div class="l">已收评分份数</div></div>
+  <div class="stat"><div class="n">{{ pro_scores }}</div><div class="l">专业评委评分</div></div>
+  <div class="stat"><div class="n">{{ pub_scores }}</div><div class="l">大众评委评分</div></div>
+</div>
+
+<div class="card">
+  <p class="card-title mt-0">评委扫码入口 <span class="tag">现场投放</span></p>
+  <div class="qr-box">
+    <img src="{{ url_for('admin_qr') }}" alt="评委入口二维码">
+    <div class="qr-info">
+      评委手机连接同一网络后扫码或输入网址进入评分页：
+      <span class="url">{{ lan_url }}</span>
+      当前访问地址：<span class="url">{{ entry_url }}</span>
+      <span class="note">若部署在公网域名上，请先设置环境变量 PUBLIC_URL 再生成二维码。</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <p class="card-title mt-0">实时成绩 <span class="tag">合计 = 专业×{{ weight_pro }} + 大众×{{ weight_pub }}</span></p>
+  <p class="card-sub">
+    专业评委总分：剔除该队一个最高分和一个最低分后取平均（不足 3 人时直接平均）；
+    大众评委总分：该队全部评分取平均。
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>名次</th>
+          <th>参赛队伍</th>
+          <th class="num">专业评委总分</th>
+          <th class="num">大众评委总分</th>
+          <th class="num">合计总分</th>
+          <th>明细</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in results %}
+        <tr class="{% if item.rank == 1 %}row-top{% endif %}">
+          <td class="rank {% if item.rank == 1 %}top1{% endif %}">{{ item.rank }}</td>
+          <td>
+            <div class="team-name">{{ item.team.name }}</div>
+            <div class="muted">
+              {% if item.team.order_no %}出场序号 {{ item.team.order_no }} · {% endif %}{{ item.stat.pro_count + item.stat.pub_count }} 位评委已评分
+            </div>
+          </td>
+          <td class="num">
+            {% if item.stat.pro_avg is not none %}
+              {{ item.stat.pro_avg }}
+              <div class="muted">{{ item.stat.pro_count }} 人{% if item.stat.pro_count >= 3 %} · 去高低{% endif %}</div>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td class="num">
+            {% if item.stat.pub_avg is not none %}
+              {{ item.stat.pub_avg }}
+              <div class="muted">{{ item.stat.pub_count }} 人</div>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td class="num">
+            {% if item.stat.total is not none %}
+              <span class="total-strong">{{ item.stat.total }}</span>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td>
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('admin_team', team_id=item.team.id) }}">查看明细</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="center muted" style="padding:30px;">还没有队伍，请先在下方添加参赛队伍</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" id="teams">
+  <p class="card-title mt-0">参赛队伍管理</p>
+  <p class="card-sub">提前添加队伍名单后，评委在入口页可直接下拉选择，避免队名书写不一致。</p>
+  <form class="form-inline" method="post" action="{{ url_for('admin_add_team') }}">
+    <input type="text" name="name" placeholder="队伍名称" required autocomplete="off">
+    <input type="number" name="order_no" placeholder="序号" min="1" step="1">
+    <button class="btn" type="submit">添加队伍</button>
+  </form>
+  <div class="team-chips">
+    {% for team in teams %}
+    <span class="chip">
+      {% if team.order_no %}{{ team.order_no }}. {% endif %}{{ team.name }}
+      <form method="post" action="{{ url_for('admin_delete_team', team_id=team.id) }}"
+            onsubmit="return confirm('删除「{{ team.name }}」及其所有评分？');">
+        <button type="submit" title="删除">×</button>
+      </form>
+    </span>
+    {% else %}
+    <span class="muted">暂无队伍</span>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <p class="card-title mt-0">数据操作</p>
+  <div class="form-inline">
+    <a class="btn btn-ghost" href="{{ url_for('admin_export') }}">导出成绩明细 CSV</a>
+    <form method="post" action="{{ url_for('admin_reset') }}" onsubmit="return confirm('确定清空全部评分记录？该操作不可恢复。');">
+      <button class="btn btn-danger" type="submit">清空全部评分</button>
+    </form>
+  </div>
+</div>
+</div>
+{% endblock %}

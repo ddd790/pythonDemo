@@ -94,9 +94,29 @@ class VAS_GUI():
                     else:
                         os.remove(os.path.join(eroot, name))
 
+    # 读取excel文件，兼容格式与扩展名不匹配的情况(如.xls扩展名但实际是制表符分隔的文本文件)
+    def read_any_excel(self, io):
+        raw = open(io, 'rb').read(512)
+        if raw.startswith(b'\xD0\xCF\x11\xE0') or raw.startswith(b'PK'):
+            # 真实的xls/xlsx文件
+            return pd.read_excel(io, header=None, keep_default_na=False)
+        # 扩展名是.xls但实际是文本文件，按内容判断编码后按制表符分隔读取
+        if b'\x00' in raw:
+            enc_list = ['utf-16', 'utf-16-le']
+        else:
+            enc_list = ['utf-8-sig', 'gbk']
+        for enc in enc_list:
+            try:
+                return pd.read_csv(io, sep='\t', header=None, keep_default_na=False,
+                                   encoding=enc, dtype=str)
+            except (UnicodeError, UnicodeDecodeError):
+                continue
+        return pd.read_csv(io, sep='\t', header=None, keep_default_na=False,
+                           encoding='gbk', dtype=str)
+
     def file_to_dataframe(self, io, version, ctime):
         # 读取文件版本最大的
-        excelData = pd.read_excel(io, header=None, keep_default_na=False)
+        excelData = self.read_any_excel(io)
         # csv中的title
         formartExcelTitle = []
         # csv数据

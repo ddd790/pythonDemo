@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}后台登录{% endblock %}
+{% block content %}
+<div class="hero" style="margin-top:40px;">
+  <div class="eyebrow">Admin</div>
+  <h1>成绩后台</h1>
+  <div class="divider"></div>
+  <p>请输入管理员密码查看实时成绩</p>
+</div>
+
+<form class="card" method="post">
+  <div class="field">
+    <label for="password">管理员密码</label>
+    <input type="password" name="password" id="password" placeholder="请输入密码" autofocus required>
+  </div>
+  <button class="btn btn-block" type="submit">进入后台</button>
+  <p class="note center" style="margin-bottom:0; margin-top:12px;">
+    <a href="{{ url_for('index') }}">← 返回评委入口</a>
+  </p>
+</form>
+{% endblock %}

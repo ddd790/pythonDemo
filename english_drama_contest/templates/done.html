@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}提交成功{% endblock %}
+{% block content %}
+<div class="card done-box">
+  <div class="tick">✓</div>
+  <h2>评分提交成功</h2>
+  <p>感谢您的评分，结果已记录。</p>
+
+  <div class="done-score">{{ row.final_total }}<span> 分</span></div>
+  <div style="margin: 6px 0 18px;">
+    <span class="badge {% if row.judge_role == 'pro' %}badge-pro{% else %}badge-pub{% endif %}">{{ role_text }}</span>
+  </div>
+
+  <div class="done-meta">
+    <div><span>参赛队伍</span>{{ row.team_name }}</div>
+    <div><span>评委</span>{{ row.judge_name }}</div>
+    <div><span>基础总分</span>{{ row.base_total }}</div>
+    <div><span>浮动加减分</span>{{ row.adjustment|adj }}</div>
+    <div><span>提交时间</span>{{ row.updated_at }}</div>
+  </div>
+
+  <div class="total-actions" style="justify-content:center; flex-wrap:wrap;">
+    <a class="btn btn-ghost" href="{{ url_for('score', team_id=team_id, judge=judge) }}">修改本队评分</a>
+    <a class="btn btn-accent" href="{{ url_for('index') }}">为下一支队伍评分</a>
+  </div>
+</div>
+{% endblock %}

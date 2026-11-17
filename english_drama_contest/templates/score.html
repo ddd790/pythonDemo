@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}评分 · {{ team.name }}{% endblock %}
+{% block content %}
+
+<div class="score-head">
+  <div>
+    <div class="t">{{ team.name }}</div>
+    <div class="j">{% if team.order_no %}出场序号 {{ team.order_no }} · {% endif %}评委：{{ judge }}</div>
+  </div>
+  <span class="badge {% if role == 'pro' %}badge-pro{% else %}badge-pub{% endif %}">{{ role_text }}</span>
+</div>
+
+{% if existing %}
+<div class="flash flash-ok">你已提交过本队伍的评分（{{ existing.updated_at }}），可在原分数上修改后重新提交。</div>
+{% endif %}
+
+<form method="post" action="{{ url_for('submit') }}" id="scoreForm">
+  <input type="hidden" name="team_id" value="{{ team.id }}">
+  <input type="hidden" name="judge_name" value="{{ judge }}">
+
+  {% for dim in dimensions %}
+  <div class="card">
+    <div class="dim-head">
+      <h2>{{ dim.name }}</h2>
+      <span class="pts">满分 {{ dim.max }} 分</span>
+    </div>
+    {% for item in dim['items'] %}
+    <div class="item">
+      <div class="item-top">
+        <span class="item-label">{{ item.label }}</span>
+        <span class="item-max">满分 {{ item.max }}</span>
+      </div>
+      <div class="item-desc">{{ item.desc }}</div>
+      <div class="stepper">
+        <button type="button" class="minus" data-target="{{ item.code }}">−</button>
+        <input type="number" name="{{ item.code }}" id="{{ item.code }}" class="score-input"
+               data-max="{{ item.max }}" min="0" max="{{ item.max }}" step="0.5"
+               inputmode="decimal" placeholder="0"
+               value="{{ old_items.get(item.code, '') }}">
+        <button type="button" class="plus" data-target="{{ item.code }}">+</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <div class="card">
+    <p class="card-title mt-0">浮动加减分</p>
+    <p class="card-sub">加分上限 +5；扣分下限 0 分。加分项：主动脱稿、运用课程所学知识点或案例；扣分项：严重超时、成员全程无有效台词、业务常识重大错误。</p>
+    <div class="stepper" style="max-width:220px;">
+      <button type="button" class="minus" data-target="adjustment">−</button>
+      <input type="number" name="adjustment" id="adjustment" min="-5" max="5" step="0.5"
+             inputmode="decimal" value="{{ existing.adjustment if existing else 0 }}">
+      <button type="button" class="plus" data-target="adjustment">+</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="card-title mt-0">备注 / 亮点记录</p>
+    <p class="card-sub">可记录该队的亮点、失误或建议，供赛后复盘使用（选填）。</p>
+    <textarea name="remark" placeholder="例如：谈判环节术语准确，索赔段落处理专业……">{{ existing.remark if existing else '' }}</textarea>
+  </div>
+
+  <div class="card" style="padding-bottom:0;">
+    <div class="total-bar">
+      <div class="total-row">
+        <span>基础总分（各项之和，满分 {{ base_max }}）</span>
+        <strong id="baseTotal">0</strong>
+      </div>
+      <div class="total-row">
+        <span>浮动加减分</span>
+        <strong id="adjShow">0</strong>
+      </div>
+      <div class="total-row grand">
+        <span>最终总分</span>
+        <strong id="finalTotal">0</strong>
+      </div>
+      <div class="total-actions">
+        <button type="submit" class="btn btn-accent" style="flex:1;">提交评分</button>
+        <a class="btn btn-ghost" href="{{ url_for('index') }}">返回</a>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var inputs = document.querySelectorAll('.score-input');
+  var adjInput = document.getElementById('adjustment');
+  var baseEl = document.getElementById('baseTotal');
+  var adjEl = document.getElementById('adjShow');
+  var finalEl = document.getElementById('finalTotal');
+
+  function num(el) {
+    var v = parseFloat(el.value);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function recalc() {
+    var sum = 0;
+    inputs.forEach(function (el) {
+      var max = parseFloat(el.getAttribute('data-max'));
+      if (el.value !== '' && num(el) > max) { el.value = max; }
+      if (el.value !== '' && num(el) < 0) { el.value = 0; }
+      sum += num(el);
+    });
+    sum = Math.round(sum * 100) / 100;
+    var adj = num(adjInput);
+    if (adj > 5) { adj = 5; adjInput.value = 5; }
+    if (adj < -5) { adj = -5; adjInput.value = -5; }
+    var final = Math.max(0, Math.round((sum + adj) * 100) / 100);
+    baseEl.textContent = sum;
+    adjEl.textContent = (adj > 0 ? '+' : '') + adj;
+    finalEl.textContent = final;
+  }
+
+  inputs.forEach(function (el) { el.addEventListener('input', recalc); });
+  adjInput.addEventListener('input', recalc);
+
+  document.querySelectorAll('.stepper button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = document.getElementById(this.getAttribute('data-target'));
+      var step = 0.5;
+      var v = num(target);
+      v = this.classList.contains('plus') ? v + step : v - step;
+      var min = target.getAttribute('min') ? parseFloat(target.getAttribute('min')) : 0;
+      var max = target.getAttribute('max') ? parseFloat(target.getAttribute('max')) : 100;
+      if (v < min) v = min;
+      if (v > max) v = max;
+      target.value = Math.round(v * 100) / 100;
+      recalc();
+    });
+  });
+
+  document.getElementById('scoreForm').addEventListener('submit', function (e) {
+    var missing = [];
+    inputs.forEach(function (el) {
+      if (el.value === '') {
+        missing.push(el.closest('.item').querySelector('.item-label').textContent);
+      }
+    });
+    if (missing.length) {
+      e.preventDefault();
+      alert('还有 ' + missing.length + ' 项未打分：\n' + missing.join('、'));
+      return;
+    }
+    var msg = '确认提交评分？\n\n基础总分：' + baseEl.textContent +
+              '\n浮动：' + adjEl.textContent +
+              '\n最终总分：' + finalEl.textContent;
+    if (!confirm(msg)) { e.preventDefault(); }
+  });
+
+  recalc();
+</script>
+{% endblock %}

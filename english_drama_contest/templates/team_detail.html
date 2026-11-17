@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ detail.team.name }} · 评分明细{% endblock %}
+{% block body_class %}page-wide-body{% endblock %}
+{% block content %}
+<div class="page-wide">
+<div class="top-nav">
+  <a href="{{ url_for('admin') }}">← 返回成绩榜</a>
+  <a href="{{ url_for('admin_logout') }}">退出</a>
+</div>
+
+<div class="card">
+  <p class="card-title mt-0">
+    {{ detail.team.name }}
+    {% if detail.team.order_no %}<span class="tag">出场序号 {{ detail.team.order_no }}</span>{% endif %}
+    <span class="tag">共 {{ detail.stat.pro_count + detail.stat.pub_count }} 位评委</span>
+  </p>
+  <p class="card-sub">专业评委剔除一个最高分和一个最低分后平均；合计 = 专业 × {{ weight_pro }} + 大众 × {{ weight_pub }}。</p>
+
+  <div class="summary-grid">
+    <div class="summary">
+      <div class="l">专业评委总分（×{{ weight_pro }}）</div>
+      <div class="v">{% if detail.stat.pro_avg is not none %}{{ detail.stat.pro_avg }}{% else %}—{% endif %}</div>
+      <div class="f">{{ detail.stat.pro_count }} 位专业评委{% if detail.stat.pro_count >= 3 %}，已剔除最高 / 最低各 1 个{% endif %}</div>
+    </div>
+    <div class="summary">
+      <div class="l">大众评委总分（×{{ weight_pub }}）</div>
+      <div class="v">{% if detail.stat.pub_avg is not none %}{{ detail.stat.pub_avg }}{% else %}—{% endif %}</div>
+      <div class="f">{{ detail.stat.pub_count }} 位大众评委全部平均</div>
+    </div>
+    <div class="summary highlight">
+      <div class="l">合计总分</div>
+      <div class="v">{% if detail.stat.total is not none %}{{ detail.stat.total }}{% else %}—{% endif %}</div>
+      <div class="f">专业 × {{ weight_pro }} + 大众 × {{ weight_pub }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <p class="card-title mt-0">评分明细</p>
+  <p class="card-sub">点击评委条目可展开查看 12 项评分与备注。</p>
+
+  {% for row in detail.rows %}
+  <div class="judge-card {% if row.id in detail.stat.dropped_ids %}dropped{% endif %}">
+    <div class="judge-head" onclick="this.parentNode.classList.toggle('open')">
+      <div>
+        <span class="name">{{ row.judge_name }}</span>
+        <span class="badge {% if row.judge_role == 'pro' %}badge-pro{% else %}badge-pub{% endif %}" style="margin-left:6px;">
+          {% if row.judge_role == 'pro' %}专业评委{% else %}大众评委{% endif %}
+        </span>
+        {% if row.id in detail.stat.dropped_ids %}
+          <span class="dropped-mark">已剔除（最高/最低）</span>
+        {% elif row.judge_role == 'pro' and detail.stat.pro_count >= 3 %}
+          <span class="kept-mark">计入</span>
+        {% endif %}
+      </div>
+      <div class="right">
+        <span class="muted">{{ row.updated_at }}</span>
+        <span class="score">{{ row.final_total }}</span>
+        <span class="muted">▾</span>
+      </div>
+    </div>
+    <div class="judge-body">
+      <table class="detail-table">
+        {% for dim in dimensions %}
+        <tr>
+          <td colspan="2" style="padding-top:12px; font-weight:600; color:#12324f; border-bottom:1px solid #dfe6ef;">
+            {{ dim.name }}（{{ dim.max }} 分）
+          </td>
+        </tr>
+        {% for item in dim['items'] %}
+        <tr>
+          <td>{{ item.label }} <span class="max">（满分 {{ item.max }}）</span></td>
+          <td class="num">{{ row.scores.get(item.code, '—') }}</td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+        <tr>
+          <td style="font-weight:600;">基础总分</td>
+          <td class="num" style="font-weight:600;">{{ row.base_total }}</td>
+        </tr>
+        <tr>
+          <td>浮动加减分</td>
+          <td class="num">{{ row.adjustment|adj }}</td>
+        </tr>
+        <tr>
+          <td style="font-weight:700; color:#0e7490;">最终总分</td>
+          <td class="num" style="font-weight:700; color:#0e7490;">{{ row.final_total }}</td>
+        </tr>
+      </table>
+      {% if row.remark %}
+      <div class="remark-box"><strong style="color:#12324f;">备注 / 亮点：</strong>{{ row.remark }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <p class="center muted" style="padding:26px;">该队伍暂无评分记录</p>
+  {% endfor %}
+</div>
+</div>
+{% endblock %}

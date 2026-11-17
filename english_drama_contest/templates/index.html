@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}评委入场 · 商务英语情景剧大赛{% endblock %}
+{% block content %}
+<div class="hero">
+  <div class="eyebrow">Business English Drama Contest</div>
+  <h1>商务英语情景剧大赛</h1>
+  <div class="divider"></div>
+  <p>评委评分系统 · 请填写下方信息后进入评分</p>
+</div>
+
+<form class="card" method="post" action="{{ url_for('start') }}" id="entryForm"
+      data-pro-judges="{{ pro_judges|join(',') }}">
+  <div class="field">
+    <label for="team_id">参赛队伍</label>
+    {% if teams %}
+      <select name="team_id" id="team_id" required>
+        <option value="">请选择参赛队伍</option>
+        {% for team in teams %}
+          <option value="{{ team.id }}">{% if team.order_no %}{{ team.order_no }} 号 · {% endif %}{{ team.name }}</option>
+        {% endfor %}
+        <option value="other">其他（手动填写队名）</option>
+      </select>
+      <div id="otherWrap" style="display:none; margin-top:10px;">
+        <input type="text" name="team_other" id="team_other" placeholder="请输入参赛队伍名称" autocomplete="off">
+      </div>
+    {% else %}
+      <input type="text" name="team_other" placeholder="请输入参赛队伍名称" required autocomplete="off">
+      <input type="hidden" name="team_id" value="other">
+    {% endif %}
+  </div>
+
+  <div class="field">
+    <label for="judge_name">评委姓名 <span class="hint">系统据此自动识别评委类型</span></label>
+    <input type="text" name="judge_name" id="judge_name" placeholder="请输入您的姓名" required autocomplete="off">
+    <div class="role-line">当前身份：<span class="badge badge-none" id="roleBadge">待填写</span></div>
+  </div>
+
+  <button class="btn btn-accent btn-block" type="submit">开始评分</button>
+</form>
+
+<div class="card">
+  <p class="card-title mt-0">评分说明</p>
+  <p class="card-sub mb-0" style="margin-bottom:10px;">
+    本次比赛考核重点为「商务英语 + 外贸业务落地演练」，演技仅作辅助参考。
+    允许少量小失误，重点看业务信息能否准确传递、英文是否符合商务沟通习惯。
+  </p>
+  <p class="note mb-0">
+    评分维度：商务英语表达 37 分 · 外贸业务逻辑与专业度 28 分 · 团队参与度 15 分 · 舞台呈现与现场表现力 15 分，
+    另有浮动加减分（加分上限 +5，扣分下限 0 分）。
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  var entryForm = document.getElementById('entryForm');
+  var PRO_JUDGES = (entryForm.getAttribute('data-pro-judges') || '').split(',').filter(Boolean);
+  var nameInput = document.getElementById('judge_name');
+  var badge = document.getElementById('roleBadge');
+  var teamSelect = document.getElementById('team_id');
+  var otherWrap = document.getElementById('otherWrap');
+  var teamOther = document.getElementById('team_other');
+
+  function normalize(s) {
+    return (s || '').replace(/\s|　/g, '');
+  }
+
+  nameInput.addEventListener('input', function () {
+    var name = normalize(this.value);
+    if (!name) {
+      badge.className = 'badge badge-none';
+      badge.textContent = '待填写';
+      return;
+    }
+    if (PRO_JUDGES.indexOf(name) > -1) {
+      badge.className = 'badge badge-pro';
+      badge.textContent = '专业评委';
+    } else {
+      badge.className = 'badge badge-pub';
+      badge.textContent = '大众评委';
+    }
+  });
+
+  if (teamSelect) {
+    teamSelect.addEventListener('change', function () {
+      if (this.value === 'other') {
+        otherWrap.style.display = 'block';
+        teamOther.required = true;
+        teamOther.focus();
+      } else {
+        otherWrap.style.display = 'none';
+        teamOther.required = false;
+        teamOther.value = '';
+      }
+    });
+  }
+
+  var saved = localStorage.getItem('judge_name');
+  if (saved && !nameInput.value) {
+    nameInput.value = saved;
+    nameInput.dispatchEvent(new Event('input'));
+  }
+
+  entryForm.addEventListener('submit', function () {
+    localStorage.setItem('judge_name', normalize(nameInput.value));
+  });
+</script>
+{% endblock %}
